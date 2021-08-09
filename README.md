@@ -137,4 +137,3 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `addEventLog(eventSignature, address, topics, data)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is a list with only the `keccak256` hash of the signature by default, and `data` is the empty string by default.
 - `addInvolvedAddress(address)` This method add an address to `addresses` field.
 - `addTrace({ to, from, input, output })` This method adds an item to the `traces` field. All the fields in the argument are optional.
-   
