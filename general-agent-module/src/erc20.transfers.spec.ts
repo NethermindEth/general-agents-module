@@ -38,7 +38,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       "0x0",
       createAddress("0x0"),
       createAddress("0x0"),
-      createAddress("0x0")
+      "0"
     );
     const findings: Finding[] = await handleTransaction(txEvent);
 
@@ -52,11 +52,11 @@ describe("ERC20 Transfer Agent Tests", () => {
       TOKEN_ADDRESS,
       createAddress("0x0"),
       createAddress("0x0"),
-      createAddress("0x0")
+      "0"
     );
     const findings: Finding[] = await handleTransaction(txEvent);
 
-    expect(findings).toStrictEqual([]);
+    expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent)]);
   });
 
   it("should returns a finding only if the event has in the field `to` the correct address", async () => {
