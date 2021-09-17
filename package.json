@@ -1,6 +1,6 @@
 {
   "name": "@nethermindeth/general-agents-module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Forta Agents for common approaches",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
