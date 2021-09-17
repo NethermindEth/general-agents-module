@@ -1,0 +1,17 @@
+name: Node.js Package
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+          registry-url: "https://npm.pkg.github.com/"
+          scope: "@nethermindeth"
+      - run: cd general-agent-module && npm install
+      - run: cd general-agent-module && npm publish --verbose
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
