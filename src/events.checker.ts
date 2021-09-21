@@ -1,5 +1,5 @@
-import { Finding, HandleTransaction, Log, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "./utils";
+import { Finding, HandleTransaction, Log, TransactionEvent } from 'forta-agent';
+import { FindingGenerator } from './utils';
 
 export default function provideEventCheckerHandler(
   createFinding: FindingGenerator,
@@ -10,15 +10,15 @@ export default function provideEventCheckerHandler(
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     const findings: Finding[] = [];
 
-    if (txEvent.filterEvent(eventSignature, address).length > 0) {
-      if (filter) {
-        txEvent
-          .filterEvent(eventSignature, address)
-          .filter(filter)
-          .map(() => findings.push(createFinding()));
-      } else {
-        findings.push(createFinding());
-      }
+    if (filter) {
+      txEvent
+        .filterEvent(eventSignature, address)
+        .filter(filter)
+        .map(() => findings.push(createFinding()));
+    } else {
+      txEvent
+        .filterEvent(eventSignature, address)
+        .map(() => findings.push(createFinding()));
     }
 
     return findings;
