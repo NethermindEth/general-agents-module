@@ -1,7 +1,8 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, Trace, TransactionEvent } from "forta-agent";
 import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "./tests.utils";
-import Web3 from "web3";
 import provideFunctionCallsDetectorAgent from "./function.calls";
+import { AbiItem } from "web3-utils";
+import Web3 from "web3";
 
 const abi = new Web3().eth.abi;
 
@@ -117,22 +118,22 @@ describe("Function calls detector Agent Tests", () => {
         },
       });
     };
-    const signature: string = "myMethod(uint256,string)";
+    const signature: AbiItem = {
+      name: "myMethod",
+      type: "function",
+      inputs: [
+        {
+          type: "uint256",
+          name: "myNumber",
+        },
+        {
+          type: "string",
+          name: "myString",
+        },
+      ],
+    } as AbiItem;
     const input: string = abi.encodeFunctionCall(
-      {
-        name: "myMethod",
-        type: "function",
-        inputs: [
-          {
-            type: "uint256",
-            name: "myNumber",
-          },
-          {
-            type: "string",
-            name: "myString",
-          },
-        ],
-      },
+      signature,
       ["2345675643", "Hello!%"]
     );
 
