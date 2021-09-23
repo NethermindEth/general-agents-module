@@ -156,7 +156,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "2"
     );
-    let findings: Finding[] = await handleTransaction(txEvent1);
+    const findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
   });
 
