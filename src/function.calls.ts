@@ -1,5 +1,6 @@
 import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
 import { FindingGenerator } from "./utils";
+import { AbiItem } from "web3-utils";
 import Web3 from "web3";
 
 const abi = new Web3().eth.abi;
@@ -7,14 +8,15 @@ const abi = new Web3().eth.abi;
 interface AgentOptions {
   from?: string;
   to?: string;
-}
+};
 
 interface TraceInfo {
   from: string;
   to: string;
   input: string;
-}
+};
 
+type Signature = string | AbiItem;
 type Filter = (traceInfo: TraceInfo) => boolean;
 
 const fromTraceActionToTraceInfo = (trace: Trace): TraceInfo => {
@@ -25,7 +27,7 @@ const fromTraceActionToTraceInfo = (trace: Trace): TraceInfo => {
   };
 };
 
-const createFilter = (functionSignature: string, options: AgentOptions | undefined): Filter => {
+const createFilter = (functionSignature: Signature, options: AgentOptions | undefined): Filter => {
   if (options === undefined) {
     return (_) => true;
   }
@@ -45,7 +47,7 @@ const createFilter = (functionSignature: string, options: AgentOptions | undefin
 
 export default function provideFunctionCallsDetectorAgent(
   findingGenerator: FindingGenerator,
-  functionSignature: string,
+  functionSignature: Signature,
   agentOptions?: AgentOptions
 ): HandleTransaction {
   const filterTransferInfo: Filter = createFilter(functionSignature, agentOptions);
@@ -55,4 +57,4 @@ export default function provideFunctionCallsDetectorAgent(
       .filter(filterTransferInfo)
       .map((traceInfo) => findingGenerator(traceInfo));
   };
-}
+};

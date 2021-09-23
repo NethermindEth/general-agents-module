@@ -81,7 +81,7 @@ describe("Event Checker Agent Tests", () => {
       [],
       "0x000000000000000000000000000000000000000000000000000eebe0b40e8000" // 0.0042
     );
-    let findings: Finding[] = await transactionHandler(txEvent);
+    const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([]);
   });
@@ -109,7 +109,7 @@ describe("Event Checker Agent Tests", () => {
       [],
       "0x00000000000000000000000000000000000000000000000029a2241af62c0000" // 3
     );
-    let findings: Finding[] = await transactionHandler(txEvent);
+    const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent)]);
   });
