@@ -113,8 +113,8 @@ export class TestTransactionEvent extends TransactionEvent {
       },
       result: {
         output
-      }
-    } as Trace;
+      },
+    } as any;
     this.traces.push(trace);
     return this;
   }
