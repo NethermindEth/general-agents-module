@@ -18,6 +18,7 @@ interface TraceProps {
   to?: string;
   from?: string;
   input?: string;
+  output?: string;
 }
 
 export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
@@ -103,13 +104,16 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
-  public addTrace({ to, from, input }: TraceProps): TestTransactionEvent {
+  public addTrace({ to, from, input, output }: TraceProps): TestTransactionEvent {
     const trace: Trace = {
       action: {
         to,
         from,
         input,
       },
+      result: {
+        output
+      }
     } as Trace;
     this.traces.push(trace);
     return this;
