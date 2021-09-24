@@ -52,9 +52,12 @@ export default function provideFunctionCallsDetectorAgent(
 ): HandleTransaction {
   const filterTransferInfo: Filter = createFilter(functionSignature, agentOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
+    if(!txEvent.traces){
+      return [];
+    }
     return txEvent.traces
       .map(fromTraceActionToTraceInfo)
       .filter(filterTransferInfo)
-      .map((traceInfo) => findingGenerator(traceInfo));
+      .map((traceInfo: TraceInfo) => findingGenerator(traceInfo));
   };
 };
