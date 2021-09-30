@@ -12,10 +12,7 @@ describe("Function calls detector Agent Tests", () => {
   it("Should returns empty findings if the expected function wasn't called", async () => {
     handleTransaction = provideFunctionCallsDetectorAgent(generalTestFindingGenerator, "Func()");
 
-    const txEvent: TransactionEvent = {
-      addresses: { "0x": true },
-    } as any;
-
+    const txEvent: TransactionEvent = new TestTransactionEvent();
     const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([]);
@@ -27,7 +24,9 @@ describe("Function calls detector Agent Tests", () => {
       to: createAddress("0x0"),
     });
 
-    const txEvent: TransactionEvent = new TestTransactionEvent();
+    const txEvent: TransactionEvent = {
+      addresses: { "0x": true },
+    } as any;
     let findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([]);
   });
