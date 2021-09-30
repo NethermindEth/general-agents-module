@@ -85,6 +85,11 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
+  public setTimestamp(timestamp: number): TestTransactionEvent {
+    this.block.timestamp = timestamp;
+    return this;
+  }
+
   public addEventLog(
     eventSignature: string,
     address: string = createAddress("0x0"),
