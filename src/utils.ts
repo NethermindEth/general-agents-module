@@ -1,7 +1,7 @@
 import { Finding } from "forta-agent";
 import Web3 from "web3";
 
-type metadataVault = { [key: string]: any };
+export type metadataVault = { [key: string]: any };
 
 export type FindingGenerator = (metadata?: metadataVault) => Finding;
 
