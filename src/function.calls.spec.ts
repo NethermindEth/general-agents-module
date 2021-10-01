@@ -18,6 +18,18 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([]);
   });
 
+  it("Should not break if no trace is passed", async () => {
+    const signature: string = "Func()";
+    handleTransaction = provideFunctionCallsDetectorAgent(generalTestFindingGenerator, signature, {
+      to: createAddress("0x0"),
+    });
+
+    const txEvent: TransactionEvent = {
+      addresses: { "0x": true },
+    } as any;
+    let findings: Finding[] = await handleTransaction(txEvent);
+    expect(findings).toStrictEqual([]);
+  });
   it("Should returns a findings only if the function is called in the contract target `to`", async () => {
     const signature: string = "Func()";
     const selector: string = abi.encodeFunctionSignature(signature);
@@ -132,10 +144,7 @@ describe("Function calls detector Agent Tests", () => {
         },
       ],
     } as AbiItem;
-    const input: string = abi.encodeFunctionCall(
-      signature,
-      ["2345675643", "Hello!%"]
-    );
+    const input: string = abi.encodeFunctionCall(signature, ["2345675643", "Hello!%"]);
 
     const to: string = createAddress("0x1");
     const from: string = createAddress("0x2");
