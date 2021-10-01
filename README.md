@@ -97,7 +97,7 @@ This approach detects ERC-20 transfers. You will need to provide the address of 
 #### How to use it
 
 ```
-import {provideERC20TransferAgent} from "general-agent-module";
+import { provideERC20TransferAgent } from "general-agent-module";
 
 const agent = await provideERC20TransferAgent(findingGenerator,  tokenAddress, agentOptions?);
 ```
@@ -112,3 +112,30 @@ const agent = await provideERC20TransferAgent(findingGenerator,  tokenAddress, a
   - `from`: If provided, the approach will only detects transfers from the specified account.
   - `to`: If provided, the approach will only detects transfers to the specified account.
   - `valueThreshold`: If provided, the approach will only detects transfers with a greater or equal amount tokens.
+
+## Utils
+
+###  TestTransactionEvent
+
+This is a helper class for creating `TransactionEvents` using the fluent interface pattern.
+
+#### How to use it
+
+```
+import { TestTransactionEvent } from "general-agent-module";
+
+const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
+```
+
+There are multiple methods you can use for creating the exact `TransactionEvent` you want:
+- `setFrom(address)` This method sets the `transaction.from` field in the event.
+- `setTo(address)` This method sets the `transaction.to` field in the event.
+- `setValue(value)` This method sets the `transaction.value` field in the event.
+- `setData(data)` This method sets the `transaction.data` field in the event.
+- `setGasUsed(value)` This method sets the `receipt.gasUsed` field in the event.
+- `setStatus(status)` This method sets the `receipt.status` field in the event.
+- `setTimestamp(timestamp)` This method sets the `block.timestamp` field in the event.
+- `addEventLog(eventSignature, address, topics, data)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is address zero by default, `topics` is a list with only the `keccak256` hash of the signature by default, and `data` is the empty string by default.
+- `addInvolvedAddress(address)` This method add an address to `addresses` field.
+- `addTrace({ to, from, input, output })` This method add an item to the `traces` field. All the arguments are fields in the argument are optional.
+   
