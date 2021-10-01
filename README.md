@@ -21,7 +21,7 @@ There are multiple types used across all the module.
 -  `metadataVault`
     > This type works as a store for every data that is passed to the `FindingGenerator`. It is a `dict` with `string` as keys and `any` type in its values.
 -  `FindingGenerator`
-    > All the approaches receives a function with this type. This function will be in charge of creating the Findings when the agent's conditions are met. This function can receives a `metadataVault` as parameter where finding's relevant information will be set, this information can be used for creating more informative findings. This type is an alias for `(metadata?: metadataVault) => Finding`. The information set in the `metadataVault` for every approach will be describe in the approach documentation.
+    > All the approaches receives a function with this type. This function will be in charge of creating the Findings when the agent's conditions are met. This function can receives a `metadataVault` as parameter where finding's relevant information will be pass, this information can be used for creating more informative findings. This type is an alias for `(metadata?: metadataVault) => Finding`. The information set in the `metadataVault` for every approach will be describe in the approach documentation.
 
 ## Approaches
 
@@ -30,14 +30,14 @@ There are multiple types used across all the module.
 This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters as "what account made the call" or "what contract was called".
 #### How to use it
 ```
-import { provideFunctionCallsDetectorAgent } from "general-agent-module";
+import { provideFunctionCallsDetectorAgent } from "@nethermindeth/general-agent-module";
 
 const agent = await provideFunctionCallsDetectorAgent(findingGenerator, functionSignature, agentOptions?);
 ```
 
 #### Arguments
 
-- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provide as argument will receive a `metadataVault` with the keys:
+- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provided as argument will receive a `metadataVault` with the keys:
   - `from`: The account calling the method.
   - `to`: The Smart Contract called.
   - `input`: The transaction data.
@@ -52,14 +52,14 @@ const agent = await provideFunctionCallsDetectorAgent(findingGenerator, function
 This approach detects events emitted. You need to provide the signature of the event you want to detect. You can also provide other arguments for specifying extra filters as "who did emit the event" or manually adding an specific filtering function.
 #### How to use it
 ```
-import { provideEventCheckerHandler } from "general-agent-module";
+import { provideEventCheckerHandler } from "@nethermindeth/general-agent-module";
 
 const agent = await provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
 ```
 
 #### Arguments
 
-- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provide as argument will receive a `metadataVault` with the keys:
+- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provided as argument will receive a `metadataVault` with the keys:
   - `topics`: An array containing the event's topics.
   - `data`: The event's data
   - `address`: The address emitting the event.
@@ -73,14 +73,14 @@ This approach detects eth transfers. You can also provide more arguments for spe
 #### How to use it
 
 ```
-import { provideETHTransferAgent } from "general-agent-module";
+import { provideETHTransferAgent } from "@nethermindeth/general-agent-module";
 
 const agent = await provideETHTransferAgent(findingGenerator, agentOptions?);
 ```
 
 #### Arguments
 
-- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provide as argument will receive a `metadataVault` with the keys:
+- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provided as argument will receive a `metadataVault` with the keys:
   - `from`: The account making the transfer.
   - `to`: The account receiving the transfer.
   - `amount`: The amount of `eth` sent in `wei`.
@@ -97,13 +97,13 @@ This approach detects ERC-20 transfers. You will need to provide the address of 
 #### How to use it
 
 ```
-import { provideERC20TransferAgent } from "general-agent-module";
+import { provideERC20TransferAgent } from "@nethermindeth/general-agent-module";
 
 const agent = await provideERC20TransferAgent(findingGenerator,  tokenAddress, agentOptions?);
 ```
 
 #### Arguments
-- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provide as argument will receive a `metadataVault` with the keys:
+- `findingGenerator`: The purpose of this argument was explained in "General Types" section. The function provided as argument will receive a `metadataVault` with the keys:
   - `from`: The account making the transfer.
   - `to`: The account receiving the transfer.
   - `amount`: The amount of tokens sent
@@ -122,7 +122,7 @@ This is a helper class for creating `TransactionEvents` using the fluent interfa
 #### How to use it
 
 ```
-import { TestTransactionEvent } from "general-agent-module";
+import { TestTransactionEvent } from "@nethermindeth/general-agent-module";
 
 const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
 ```
@@ -137,5 +137,5 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `setTimestamp(timestamp)` This method sets the `block.timestamp` field in the event.
 - `addEventLog(eventSignature, address, topics, data)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is address zero by default, `topics` is a list with only the `keccak256` hash of the signature by default, and `data` is the empty string by default.
 - `addInvolvedAddress(address)` This method add an address to `addresses` field.
-- `addTrace({ to, from, input, output })` This method add an item to the `traces` field. All the arguments are fields in the argument are optional.
+- `addTrace({ to, from, input, output })` This method add an item to the `traces` field. All the fields in the argument are optional.
    
