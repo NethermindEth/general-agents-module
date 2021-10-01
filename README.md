@@ -27,7 +27,7 @@ There are multiple types used across all the module.
 
 ### - Function Call Detector Agent
 
-This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters as "who account made the call" or "what contract was called".
+This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters as "what account made the call" or "what contract was called".
 #### How to use it
 ```
 import { provideFunctionCallsDetectorAgent } from "general-agent-module";
