@@ -29,10 +29,10 @@ There are multiple types used across all the module.
 
 This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters as "who account made the call" or "what contract was called".
 #### How to use it
-```
+```ts
 import { provideFunctionCallsDetectorAgent } from "general-agent-module";
 
-const agent = await provideFunctionCallsDetectorAgent(findingGenerator, functionSignature, agentOptions?);
+const agent = provideFunctionCallsDetectorAgent(findingGenerator, functionSignature, agentOptions?);
 ```
 
 #### Arguments
@@ -51,10 +51,10 @@ const agent = await provideFunctionCallsDetectorAgent(findingGenerator, function
 
 This approach detects events emitted. You need to provide the signature of the event you want to detect. You can also provide other arguments for specifying extra filters as "who did emit the event" or manually adding an specific filtering function.
 #### How to use it
-```
+```ts
 import { provideEventCheckerHandler } from "general-agent-module";
 
-const agent = await provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
+const agent = provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
 ```
 
 #### Arguments
@@ -72,10 +72,10 @@ This approach detects eth transfers. You can also provide more arguments for spe
 
 #### How to use it
 
-```
+```ts
 import { provideETHTransferAgent } from "general-agent-module";
 
-const agent = await provideETHTransferAgent(findingGenerator, agentOptions?);
+const agent = provideETHTransferAgent(findingGenerator, agentOptions?);
 ```
 
 #### Arguments
@@ -96,10 +96,10 @@ This approach detects ERC-20 transfers. You will need to provide the address of 
 
 #### How to use it
 
-```
+```ts
 import { provideERC20TransferAgent } from "general-agent-module";
 
-const agent = await provideERC20TransferAgent(findingGenerator,  tokenAddress, agentOptions?);
+const agent = provideERC20TransferAgent(findingGenerator,  tokenAddress, agentOptions?);
 ```
 
 #### Arguments
@@ -121,7 +121,7 @@ This is a helper class for creating `TransactionEvents` using the fluent interfa
 
 #### How to use it
 
-```
+```ts
 import { TestTransactionEvent } from "general-agent-module";
 
 const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
