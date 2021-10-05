@@ -12,7 +12,7 @@ const findingGenerator: FindingGenerator = (event?: metadataVault): Finding =>
     description: "Finding for test",
     alertId: "TEST",
     severity: FindingSeverity.Low,
-    type: FindingType.Unknown,
+    type: FindingType.Info,
     metadata: {
       topics: JSON.stringify(event?.topics),
       data: event?.data,

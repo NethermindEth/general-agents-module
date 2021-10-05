@@ -27,7 +27,7 @@ export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
     description: "Finding for test",
     alertId: "TEST",
     severity: FindingSeverity.Low,
-    type: FindingType.Unknown,
+    type: FindingType.Info,
   });
 };
 
