@@ -1,8 +1,7 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { generalTestFindingGenerator, createAddress, TestTransactionEvent } from "./tests.utils";
-
-import Web3 from "web3";
 import provideERC20TransferAgent from "./erc20.transfers";
+import { encodeParameter } from "./utils";
 
 const TOKEN_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
@@ -12,10 +11,9 @@ const createTransactionEventWithTransferLog = (
   to: string,
   amount: string
 ): TransactionEvent => {
-  const web3: Web3 = new Web3();
-  const fromTopic: string = web3.eth.abi.encodeParameter("address", from);
-  const toTopic: string = web3.eth.abi.encodeParameter("address", to);
-  const data: string = web3.eth.abi.encodeParameter("uint256", amount);
+  const fromTopic: string = encodeParameter("address", from);
+  const toTopic: string = encodeParameter("address", to);
+  const data: string = encodeParameter("uint256", amount);
   return new TestTransactionEvent().addEventLog(
     "Transfer(address,address,uint256)",
     tokenAddress,
