@@ -1,8 +1,5 @@
 import { Finding, HandleTransaction, TransactionEvent, Log } from "forta-agent";
-import { FindingGenerator } from "./utils";
-import Web3 from "web3";
-
-const web3 = new Web3();
+import { FindingGenerator, decodeParameter } from "./utils";
 
 const EVENT_SIGNATURE = "Transfer(address,address,uint256)";
 
@@ -20,9 +17,9 @@ type transferInfo = {
 
 const fromLogToTransferInfo = (log: Log): transferInfo => {
   return {
-    to: web3.eth.abi.decodeParameter("address", log.topics[2]) as any,
-    from: web3.eth.abi.decodeParameter("address", log.topics[1]) as any,
-    amount: web3.eth.abi.decodeParameter("uint256", log.data) as any,
+    to: decodeParameter("address", log.topics[2]) as any,
+    from: decodeParameter("address", log.topics[1]) as any,
+    amount: decodeParameter("uint256", log.data) as any,
   };
 };
 
