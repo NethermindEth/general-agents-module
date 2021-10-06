@@ -112,6 +112,25 @@ const agent = provideERC20TransferAgent(findingGenerator,  tokenAddress, agentOp
   - `to`: If provided, the approach will only detect transfers to the specified account.
   - `valueThreshold`: If provided, the approach will only detect transfers with a greater or equal number of tokens.
 
+### - Blacklisted Addresses
+
+This approach detects transactions involving at least one blacklisted address. You will need to provide a list with the addresses you want to blacklist.
+
+#### How to use it
+
+```ts
+import { provideBlacklistedAddressesHandler } from "@nethermindeth/general-agent-module";
+
+const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAddressesList);
+```
+
+#### Arguments
+
+- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
+  - `addresses`: The list of blacklisted addresses involved in the transaction.
+- `blacklistedAddressesList`: The list of blacklisted addresses.
+  
+
 ## Utils
 
 ###  TestTransactionEvent
