@@ -45,7 +45,7 @@ const createFilter = (options: agentOptions | undefined): ((transferInfo: transf
   };
 };
 
-export default function provideERC20TransferAgent(
+export default function provideERC20TransferHandler(
   findingGenerator: FindingGenerator,
   tokenAddress: string,
   agentOptions?: agentOptions

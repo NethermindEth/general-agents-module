@@ -1,6 +1,6 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { generalTestFindingGenerator, createAddress, TestTransactionEvent } from "./tests.utils";
-import provideERC20TransferAgent from "./erc20.transfers";
+import provideERC20TransferHandler from "./erc20.transfers";
 import { encodeParameter } from "./utils";
 
 const TOKEN_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
@@ -26,7 +26,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   let handleTransaction: HandleTransaction;
 
   it("should returns empty findings if the expected event wasn't emitted", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS);
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS);
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog("badSignature", TOKEN_ADDRESS);
 
     const findings: Finding[] = await handleTransaction(txEvent);
@@ -35,7 +35,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should returns empty findings if the expected event wasn't emitted from the correct token", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS);
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS);
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
       "0x0",
@@ -49,7 +49,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should returns a finding only if the expected event was emitted from the correct token", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS);
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS);
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -63,7 +63,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should returns a finding only if the event has in the field `to` the correct address", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
       to: createAddress("0x12"),
     });
 
@@ -87,7 +87,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should returns a finding only if the event has in the field `from` the correct address", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
       from: createAddress("0x12"),
     });
 
@@ -111,7 +111,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should returns a finding only if the event has in the field `value` a value greater than the specified threshold", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
       amountThreshold: "350",
     });
 
@@ -144,7 +144,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should not compare thresholds using lexicographic order", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
       amountThreshold: "10",
     });
 
@@ -159,7 +159,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should returns a finding only if all the conditions are met", async () => {
-    handleTransaction = provideERC20TransferAgent(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
       from: createAddress("0x1"),
       to: createAddress("0x2"),
       amountThreshold: "350",
@@ -217,7 +217,7 @@ describe("ERC20 Transfer Agent Tests", () => {
         },
       });
     };
-    handleTransaction = provideERC20TransferAgent(findingGenerator, TOKEN_ADDRESS);
+    handleTransaction = provideERC20TransferHandler(findingGenerator, TOKEN_ADDRESS);
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,

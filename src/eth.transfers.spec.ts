@@ -1,5 +1,5 @@
 import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
-import provideETHTransferAgent from "./eth.transfers";
+import provideETHTransferHandler from "./eth.transfers";
 import { createAddress, generalTestFindingGenerator, TestTransactionEvent } from "./tests.utils";
 import { toWei } from "./utils";
 
@@ -7,7 +7,7 @@ describe("ETH Transfer Agent Tests", () => {
   let handleTransaction: HandleTransaction;
 
   it("should returns empty findings if no threshold was specified and transactions are below 10 ETH", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator);
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().setValue(toWei("9"));
 
@@ -17,7 +17,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns empty findings if no threshold was specified and transactions are 10 ETH or more", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator);
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator);
 
     const txEvent1: TransactionEvent = new TestTransactionEvent().setValue(toWei("10"));
     let findings: Finding[] = await handleTransaction(txEvent1);
@@ -29,7 +29,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns empty findings if value is under specified threshold", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, { valueThreshold: toWei("100") });
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, { valueThreshold: toWei("100") });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().setValue(toWei("99"));
 
@@ -39,7 +39,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns findings if value is equal or greater to specified threshold ", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, { valueThreshold: toWei("100") });
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, { valueThreshold: toWei("100") });
 
     const txEvent1: TransactionEvent = new TestTransactionEvent().setValue(toWei("100"));
     let findings: Finding[] = await handleTransaction(txEvent1);
@@ -51,7 +51,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns empty findings if transaction are not from the specified address", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, { from: createAddress("0x12") });
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, { from: createAddress("0x12") });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().setValue(toWei("15")).setFrom(createAddress("0x13"));
 
@@ -61,7 +61,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns findings if transactions are from the specified address", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, { from: createAddress("0x12") });
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, { from: createAddress("0x12") });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().setValue(toWei("15")).setFrom(createAddress("0x12"));
 
@@ -71,7 +71,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns empty findings if transactions are not to specified address", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, { to: createAddress("0x12") });
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, { to: createAddress("0x12") });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().setValue(toWei("15")).setTo(createAddress("0x13"));
 
@@ -81,7 +81,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns findings if transactions are to specified address", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, { to: createAddress("0x12") });
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, { to: createAddress("0x12") });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().setValue(toWei("15")).setTo(createAddress("0x12"));
 
@@ -91,7 +91,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should returns findings only when all the specified conditions are met", async () => {
-    handleTransaction = provideETHTransferAgent(generalTestFindingGenerator, {
+    handleTransaction = provideETHTransferHandler(generalTestFindingGenerator, {
       from: createAddress("0x12"),
       to: createAddress("0x13"),
       valueThreshold: toWei("50"),

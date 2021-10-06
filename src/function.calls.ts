@@ -44,7 +44,7 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
   };
 };
 
-export default function provideFunctionCallsDetectorAgent(
+export default function provideFunctionCallsDetectorHandler(
   findingGenerator: FindingGenerator,
   functionSignature: Signature,
   agentOptions?: AgentOptions
