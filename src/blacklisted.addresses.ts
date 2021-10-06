@@ -13,7 +13,7 @@ export default function provideBlacklistedAddresessHandler(
     );
 
     if (blacklistedAddressesInvolved.length > 0) {
-      findings.push(findingGenerator({ addresses: blacklistedAddresses }));
+      findings.push(findingGenerator({ addresses: blacklistedAddressesInvolved }));
     }
 
     return findings;
