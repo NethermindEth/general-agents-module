@@ -29,9 +29,6 @@
   "dependencies": {
     "forta-agent": "0.0.18"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/nethermindeth"
-  },
   "directories": {
     "lib": "lib"
   },
