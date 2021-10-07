@@ -9,7 +9,7 @@ type agentOptions = {
   valueThreshold?: string;
 };
 
-export default function provideETHTransferAgent(
+export default function provideETHTransferHandler(
   findingGenerator: FindingGenerator,
   agentOptions?: agentOptions
 ): HandleTransaction {
