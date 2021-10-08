@@ -1,8 +1,9 @@
 import { HandleTransaction, TransactionEvent, Finding } from "forta-agent";
 import { createAddress, generalTestFindingGenerator, TestTransactionEvent } from "./tests.utils";
+import { FindingGenerator } from "./utils";
 import provideBlacklistedAddresessHandler from "./blacklisted.addresses";
 
-const testBlacklistedAddresses = [createAddress("0x0"), createAddress("0x1")];
+const testBlacklistedAddresses = [createAddress("0x0"), createAddress("0x1"), createAddress("0x2")];
 
 describe("Blacklisted Addresses Agent Tests", () => {
   let handleTrasaction: HandleTransaction;
@@ -37,5 +38,22 @@ describe("Blacklisted Addresses Agent Tests", () => {
     const findings: Finding[] = await handleTrasaction(txEvent);
 
     expect(findings).toStrictEqual([generalTestFindingGenerator()]);
+  });
+
+  it("should return pass the correct information to the finding", async () => {
+    const mockFindingGenerator: FindingGenerator = (metadata: { [key: string]: any } | undefined): Finding =>
+      metadata as Finding;
+
+    handleTrasaction = provideBlacklistedAddresessHandler(mockFindingGenerator, testBlacklistedAddresses);
+
+    const txEvent: TransactionEvent = new TestTransactionEvent()
+      .addInvolvedAddress(testBlacklistedAddresses[0])
+      .addInvolvedAddress(testBlacklistedAddresses[1]);
+
+    const findings: Finding[] = await handleTrasaction(txEvent);
+
+    expect(findings).toStrictEqual([{
+      addresses: [testBlacklistedAddresses[0], testBlacklistedAddresses[1]]
+    }]);
   });
 });
