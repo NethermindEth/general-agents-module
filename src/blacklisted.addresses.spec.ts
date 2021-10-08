@@ -5,7 +5,7 @@ import provideBlacklistedAddresessHandler from "./blacklisted.addresses";
 
 const testBlacklistedAddresses = [createAddress("0x0"), createAddress("0x1"), createAddress("0x2")];
 
-describe("Blacklisted Addresses Agent Tests", () => {
+describe("Blacklisted Addresses Handler Tests", () => {
   let handleTrasaction: HandleTransaction;
 
   it("should returns empty findings if not blacklisted address is involved", async () => {
