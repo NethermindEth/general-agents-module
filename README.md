@@ -112,6 +112,25 @@ const handler = provideERC20TransferHandler(findingGenerator,  tokenAddress, age
   - `to`: If provided, the approach will only detect transfers to the specified account.
   - `valueThreshold`: If provided, the approach will only detect transfers with a greater or equal number of tokens.
 
+### - Blacklisted Addresses Handler
+
+This approach detects transactions involving at least one blacklisted address. You will need to provide a list with the addresses you want to blacklist.
+
+#### How to use it
+
+```ts
+import { provideBlacklistedAddressesHandler } from "nethermindeth-general-agents-module";
+
+const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAddressesList);
+```
+
+#### Arguments
+
+- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
+  - `addresses`: The list of blacklisted addresses involved in the transaction.
+- `blacklistedAddressesList`: The list of blacklisted addresses.
+  
+
 ## Utils
 
 ###  TestTransactionEvent
@@ -137,4 +156,3 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `addEventLog(eventSignature, address, topics, data)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is a list with only the `keccak256` hash of the signature by default, and `data` is the empty string by default.
 - `addInvolvedAddress(address)` This method add an address to `addresses` field.
 - `addTrace({ to, from, input, output })` This method adds an item to the `traces` field. All the fields in the argument are optional.
-   

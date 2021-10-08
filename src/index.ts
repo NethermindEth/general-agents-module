@@ -2,6 +2,7 @@ import provideERC20TransferHandler from "./erc20.transfers";
 import provideETHTransferHandler from "./eth.transfers";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import provideEventCheckerHandler from "./events.checker";
+import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
 import { 
   FindingGenerator, 
   encodeParameter, 
@@ -20,6 +21,7 @@ export {
   provideETHTransferHandler,
   provideFunctionCallsDetectorHandler,
   provideEventCheckerHandler,
+  provideBlacklistedAddressesHandler,
   createAddress,
   FindingGenerator,
   TestTransactionEvent,
