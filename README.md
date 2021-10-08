@@ -6,7 +6,7 @@ This module contains some common approaches for building Forta Agents. You will 
 
 ## Installation
 
-- Using npm: `npm install @nethermindeth/general-agents-module`
+- Using npm: `npm i nethermindeth-general-agents-module`
 
 or
 
@@ -25,14 +25,14 @@ There are multiple types used across all the modules.
 
 ## Approaches
 
-### - Function Call Detector Agent
+### - Function Call Detector Handler
 
 This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters as "what account made the call" or "what contract was called".
 #### How to use it
 ```ts
-import { provideFunctionCallsDetectorAgent } from "@nethermindeth/general-agent-module";
+import { provideFunctionCallsDetectorHandler } from "nethermindeth-general-agents-module";
 
-const agent = provideFunctionCallsDetectorAgent(findingGenerator, functionSignature, agentOptions?);
+const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionSignature, agentOptions?);
 ```
 
 #### Arguments
@@ -47,14 +47,14 @@ const agent = provideFunctionCallsDetectorAgent(findingGenerator, functionSignat
   - `to`: If provided, the approach will only detect method calls to the specified Smart Contract.
 
 
-### - Event Checker Agent
+### - Event Checker Handler 
 
 This approach detects events emitted. You need to provide the signature of the event you want to detect. You can also provide other arguments for specifying extra filters as "who did emit the event" or manually adding a specific filtering function.
 #### How to use it
 ```ts
-import { provideEventCheckerHandler } from "@nethermindeth/general-agent-module";
+import { provideEventCheckerHandler } from "nethermindeth-general-agents-module";
 
-const agent = provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
+const handler = provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
 ```
 
 #### Arguments
@@ -66,16 +66,16 @@ const agent = provideEventCheckerHandler(findingGenerator, eventSignature, addre
 - `address`: If provided, the approach will only detect events emitted from the specified account.
 - `filter`: If provided, the approach will only detect events that are not discarded by the filter. This function has the type `(log: Log, index?: number, array?: Log[]) => boolean`, it will be used as argument for the common `filter` arrays function.
 
-### - Eth Transfer Agent
+### - Eth Transfer Handler
 
 This approach detects eth transfers. You can also provide more arguments for specifying extra filters as "who made the transfer", "who is the receiver", and a minimum amount for detecting transfers
 
 #### How to use it
 
 ```ts
-import { provideETHTransferAgent } from "@nethermindeth/general-agent-module";
+import { provideETHTransferHandler } from "nethermindeth-general-agents-module";
 
-const agent = provideETHTransferAgent(findingGenerator, agentOptions?);
+const handler = provideETHTransferHandler(findingGenerator, agentOptions?);
 ```
 
 #### Arguments
@@ -89,16 +89,16 @@ const agent = provideETHTransferAgent(findingGenerator, agentOptions?);
   - `to`: If provided, the approach will only detect transfers to the specified account.
   - `valueThreshold`: If provided, the approach will only detect transfers with a greater or equal amount of `eth` in `wei`.
 
-### - ERC20 Transfer Agent
+### - ERC20 Transfer Handler
 
 This approach detects ERC-20 transfers. You will need to provide the address of the ERC-20 contract you want to detect transfers of. You can also provide more arguments for specifying extra filters as "who made the transfer", "who is the receiver of the transfer". and a minimum amount for detecting transfers.
 
 #### How to use it
 
 ```ts
-import { provideERC20TransferAgent } from "@nethermindeth/general-agent-module";
+import { provideERC20TransferHandler } from "nethermindeth-general-agents-module";
 
-const agent = provideERC20TransferAgent(findingGenerator,  tokenAddress, agentOptions?);
+const handler = provideERC20TransferHandler(findingGenerator,  tokenAddress, agentOptions?);
 ```
 
 #### Arguments
@@ -140,7 +140,7 @@ This is a helper class for creating `TransactionEvents` using the fluent interfa
 #### How to use it
 
 ```ts
-import { TestTransactionEvent } from "@nethermindeth/general-agent-module";
+import { TestTransactionEvent } from "nethermindeth-general-agents-module";
 
 const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
 ```
