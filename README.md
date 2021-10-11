@@ -6,7 +6,7 @@ This module contains some common approaches for building Forta Agents. You will 
 
 ## Installation
 
-- Using npm: `npm i nethermindeth-general-agents-module`
+- Using npm: `npm i forta-agent-tools`
 
 or
 
@@ -30,7 +30,7 @@ There are multiple types used across all the modules.
 This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters as "what account made the call" or "what contract was called".
 #### How to use it
 ```ts
-import { provideFunctionCallsDetectorHandler } from "nethermindeth-general-agents-module";
+import { provideFunctionCallsDetectorHandler } from "forta-agent-tools";
 
 const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionSignature, agentOptions?);
 ```
@@ -52,7 +52,7 @@ const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionS
 This approach detects events emitted. You need to provide the signature of the event you want to detect. You can also provide other arguments for specifying extra filters as "who did emit the event" or manually adding a specific filtering function.
 #### How to use it
 ```ts
-import { provideEventCheckerHandler } from "nethermindeth-general-agents-module";
+import { provideEventCheckerHandler } from "forta-agent-tools";
 
 const handler = provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
 ```
@@ -73,7 +73,7 @@ This approach detects eth transfers. You can also provide more arguments for spe
 #### How to use it
 
 ```ts
-import { provideETHTransferHandler } from "nethermindeth-general-agents-module";
+import { provideETHTransferHandler } from "forta-agent-tools";
 
 const handler = provideETHTransferHandler(findingGenerator, agentOptions?);
 ```
@@ -96,7 +96,7 @@ This approach detects ERC-20 transfers. You will need to provide the address of 
 #### How to use it
 
 ```ts
-import { provideERC20TransferHandler } from "nethermindeth-general-agents-module";
+import { provideERC20TransferHandler } from "forta-agent-tools";
 
 const handler = provideERC20TransferHandler(findingGenerator,  tokenAddress, agentOptions?);
 ```
@@ -119,7 +119,7 @@ This approach detects transactions involving at least one blacklisted address. Y
 #### How to use it
 
 ```ts
-import { provideBlacklistedAddressesHandler } from "nethermindeth-general-agents-module";
+import { provideBlacklistedAddressesHandler } from "forta-agent-tools";
 
 const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAddressesList);
 ```
@@ -140,7 +140,7 @@ This is a helper class for creating `TransactionEvents` using the fluent interfa
 #### How to use it
 
 ```ts
-import { TestTransactionEvent } from "nethermindeth-general-agents-module";
+import { TestTransactionEvent } from "forta-agent-tools";
 
 const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
 ```
