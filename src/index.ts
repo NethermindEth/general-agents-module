@@ -14,7 +14,12 @@ import {
   getFunctionSelector,
 } from "./utils";
         
-import { TestTransactionEvent, createAddress } from "./tests.utils";
+import { 
+  TestTransactionEvent,
+  TestBlockEvent,
+  runBlock,
+  createAddress, 
+} from "./tests.utils";
 
 export {
   provideERC20TransferHandler,

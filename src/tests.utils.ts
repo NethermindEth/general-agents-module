@@ -10,16 +10,24 @@ import {
   Transaction,
   Block,
   Trace,
+  BlockEvent,
+  HandleTransaction,
+  HandleBlock,
 } from "forta-agent";
 import { FindingGenerator } from "./utils";
 import { keccak256 } from "forta-agent/dist/sdk/utils";
+
+interface Agent {
+  handleTransaction: HandleTransaction,
+  handleBlock: HandleBlock,
+};
 
 interface TraceProps {
   to?: string;
   from?: string;
   input?: string;
   output?: string;
-}
+};
 
 export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
   return Finding.fromObject({
@@ -39,6 +47,7 @@ export class TestTransactionEvent extends TransactionEvent {
   constructor() {
     const transaction: Transaction = {
       data: "",
+      hash: "",
       from: createAddress("0x0"),
       to: createAddress("0x1"),
       value: "0",
@@ -53,6 +62,11 @@ export class TestTransactionEvent extends TransactionEvent {
     const block: Block = {} as any;
 
     super(EventType.BLOCK, Network.MAINNET, transaction, receipt, [], {}, block);
+  }
+
+  public setHash(hash: string): TestTransactionEvent {
+    this.transaction.hash = hash;
+    return this;
   }
 
   public setFrom(address: string): TestTransactionEvent {
@@ -123,4 +137,52 @@ export class TestTransactionEvent extends TransactionEvent {
     this.traces.push(trace);
     return this;
   }
-}
+};
+
+export class TestBlockEvent extends BlockEvent {
+  constructor(blockNumber: number = 0, blockHash: string = createAddress("0x0")) {
+    const block: Block = {
+      transactions: [],
+      hash: blockHash,
+      number: blockNumber,
+    } as any;
+
+    super(EventType.BLOCK, Network.MAINNET, blockHash, blockNumber, block);
+  }
+
+  public setNumber(blockNumber: number): TestBlockEvent{
+    this.block.number = blockNumber;
+    return this;
+  }
+
+  public setHash(blockHash: string): TestBlockEvent{
+    this.block.hash = blockHash;
+    return this;
+  }
+
+  public addTransactions(...txns: TestTransactionEvent[]): TestBlockEvent {
+    this.block.transactions.push(
+      ...txns.map(tx => tx.hash)
+    )
+    return this;
+  }
+
+  public addTransactionsHashes(...hashes: string[]): TestBlockEvent {
+    this.block.transactions.push(...hashes);
+    return this;
+  }
+};
+
+export async function runBlock(
+  agent: Agent, 
+  block: TestBlockEvent,
+  ...txns: TestTransactionEvent[]
+): Promise<Finding[]> {
+  let findings: Finding[] = [];
+
+  findings.push(...await agent.handleBlock(block));
+  for(let tx of txns)
+    findings.push(...await agent.handleTransaction(tx));
+
+  return findings;
+};
