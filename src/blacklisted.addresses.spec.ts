@@ -11,7 +11,7 @@ describe("Blacklisted Addresses Handler Tests", () => {
   it("should returns empty findings if not blacklisted address is involved", async () => {
     handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddress(createAddress("0x5"));
+    const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(createAddress("0x5"));
 
     const findings: Finding[] = await handleTrasaction(txEvent);
 
@@ -21,7 +21,7 @@ describe("Blacklisted Addresses Handler Tests", () => {
   it("should returns a finding when a blacklisted address is involved", async () => {
     handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddress(testBlacklistedAddresses[0]);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(testBlacklistedAddresses[0]);
 
     const findings: Finding[] = await handleTrasaction(txEvent);
 
@@ -32,8 +32,10 @@ describe("Blacklisted Addresses Handler Tests", () => {
     handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
     const txEvent: TransactionEvent = new TestTransactionEvent()
-      .addInvolvedAddress(testBlacklistedAddresses[0])
-      .addInvolvedAddress(testBlacklistedAddresses[1]);
+      .addInvolvedAddresses(
+        testBlacklistedAddresses[0],
+        testBlacklistedAddresses[1]
+      );
 
     const findings: Finding[] = await handleTrasaction(txEvent);
 
@@ -47,8 +49,10 @@ describe("Blacklisted Addresses Handler Tests", () => {
     handleTrasaction = provideBlacklistedAddresessHandler(mockFindingGenerator, testBlacklistedAddresses);
 
     const txEvent: TransactionEvent = new TestTransactionEvent()
-      .addInvolvedAddress(testBlacklistedAddresses[0])
-      .addInvolvedAddress(testBlacklistedAddresses[1]);
+      .addInvolvedAddresses(
+        testBlacklistedAddresses[0],
+        testBlacklistedAddresses[1]
+      );
 
     const findings: Finding[] = await handleTrasaction(txEvent);
 

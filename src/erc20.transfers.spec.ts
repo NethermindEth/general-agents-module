@@ -17,8 +17,9 @@ const createTransactionEventWithTransferLog = (
   return new TestTransactionEvent().addEventLog(
     "Transfer(address,address,uint256)",
     tokenAddress,
-    [fromTopic, toTopic],
-    data
+    data,
+    fromTopic, 
+    toTopic,
   );
 };
 

@@ -37,14 +37,14 @@ describe("Function calls detector Agent Tests", () => {
       to: createAddress("0x0"),
     });
 
-    const txEvent1: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
       to: createAddress("0x1"),
       input: selector,
     });
     let findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
 
-    const txEvent2: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({
       to: createAddress("0x0"),
       input: selector,
     });
@@ -59,14 +59,14 @@ describe("Function calls detector Agent Tests", () => {
       from: createAddress("0x0"),
     });
 
-    const txEvent1: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
       from: createAddress("0x1"),
       input: selector,
     });
     let findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
 
-    const txEvent2: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({
       from: createAddress("0x0"),
       input: selector,
     });
@@ -82,7 +82,7 @@ describe("Function calls detector Agent Tests", () => {
       to: createAddress("0x2"),
     });
 
-    const txEvent1: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
       from: createAddress("0x0"),
       to: createAddress("0x2"),
       input: selector,
@@ -90,7 +90,7 @@ describe("Function calls detector Agent Tests", () => {
     let findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
 
-    const txEvent2: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({
       from: createAddress("0x1"),
       to: createAddress("0x0"),
       input: selector,
@@ -98,7 +98,7 @@ describe("Function calls detector Agent Tests", () => {
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([]);
 
-    const txEvent3: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent3: TransactionEvent = new TestTransactionEvent().addTraces({
       from: createAddress("0x0"),
       to: createAddress("0x3"),
       input: selector,
@@ -106,7 +106,7 @@ describe("Function calls detector Agent Tests", () => {
     findings = findings.concat(await handleTransaction(txEvent3));
     expect(findings).toStrictEqual([]);
 
-    const txEvent4: TransactionEvent = new TestTransactionEvent().addTrace({
+    const txEvent4: TransactionEvent = new TestTransactionEvent().addTraces({
       from: createAddress("0x1"),
       to: createAddress("0x2"),
       input: selector,
@@ -150,7 +150,7 @@ describe("Function calls detector Agent Tests", () => {
     const from: string = createAddress("0x2");
     handleTransaction = provideFunctionCallsDetectorHandler(findingGenerator, signature, { to, from });
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addTrace({ to, from, input });
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input });
 
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([findingGenerator({ to, from, input })]);

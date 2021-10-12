@@ -153,9 +153,11 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `setGasUsed(value)` This method sets the `receipt.gasUsed` field in the event.
 - `setStatus(status)` This method sets the `receipt.status` field in the event.
 - `setTimestamp(timestamp)` This method sets the `block.timestamp` field in the event.
-- `addEventLog(eventSignature, address, topics, data)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is a list with only the `keccak256` hash of the signature by default, and `data` is the empty string by default.
-- `addInvolvedAddress(address)` This method add an address to `addresses` field.
-- `addTrace({ to, from, input, output })` This method adds an item to the `traces` field. All the fields in the argument are optional.
+- `addEventLog(eventSignature, address, data, topics)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is an spread list with the indexed event arguments, and `data` is the empty string by default.
+  > The `keccak256` hash of the signature is added at the beggining of the `topics` list automatically.
+- `addInvolvedAddresses(addresses)` This method add an spread list of addresses to `addresses` field.
+- `addTrace(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
+  > `TraceProps` is a TS object with the following optional fields `{ to, from, input, output }`.
 
 ###  TestBlockEvent
 
@@ -172,8 +174,8 @@ const blockEvent: BlockEvent = new TestBlockEvent().setHash(blockHash).setNumber
 There are multiple methods you can use for creating the exact `BlockEvent` you want:
 - `setHash(blockHash)` This method sets the `block.hash` field in the event.
 - `setNumber(blockNumber)` This method sets the `block.number` field in the event.
-- `addTransactions(txns)` This method adds the hashes of a list of transaction events at the end of `block.transactions` field in the event.
-- `addTransactionsHashes(hashes)` This method adds a hashes list to the end of `block.transactions` field in the event.
+- `addTransactions(txns)` This method adds the hashes of an spread list of transaction events at the end of `block.transactions` field in the event.
+- `addTransactionsHashes(hashes)` This method adds a hashes spread list to the end of `block.transactions` field in the event.
 
 ###  runBlock
 
