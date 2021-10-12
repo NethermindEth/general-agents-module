@@ -125,6 +125,19 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
+  public addAnonymousEventLog(
+    address: string = createAddress("0x0"),
+    data: string = "",
+    ...topics: string[]
+  ): TestTransactionEvent {
+    this.receipt.logs.push({
+      address,
+      topics,
+      data,
+    } as Log);
+    return this;
+  }
+
   public addInvolvedAddresses(...addresses: string[]): TestTransactionEvent {
     for(let address of addresses)
       this.addresses[address.toLowerCase()] = true;
