@@ -107,8 +107,8 @@ export class TestTransactionEvent extends TransactionEvent {
   public addEventLog(
     eventSignature: string,
     address: string = createAddress("0x0"),
-    topics: string[] = [],
-    data: string = ""
+    data: string = "",
+    ...topics: string[]
   ): TestTransactionEvent {
     this.receipt.logs.push({
       address,

@@ -94,7 +94,6 @@ describe("Event Checker Agent Tests", () => {
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
       EVENT_SIGNATURE,
       "0x121212",
-      [],
       "0x000000000000000000000000000000000000000000000000000eebe0b40e8000" // 0.0042
     );
     const findings: Finding[] = await transactionHandler(txEvent);
@@ -122,7 +121,6 @@ describe("Event Checker Agent Tests", () => {
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
       EVENT_SIGNATURE,
       "0x121212",
-      [],
       "0x00000000000000000000000000000000000000000000000029a2241af62c0000" // 3
     );
     const findings: Finding[] = await transactionHandler(txEvent);
@@ -154,8 +152,8 @@ describe("Event Checker Agent Tests", () => {
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
       EVENT_SIGNATURE,
       address,
-      topics,
       data,
+      ...topics,
     );
     const findings: Finding[] = await transactionHandler(txEvent);
 
@@ -182,8 +180,8 @@ describe("Event Checker Agent Tests", () => {
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
       EVENT_SIGNATURE,
       address,
-      topics,
       data,
+      ...topics,
     );
     const findings: Finding[] = await transactionHandler(txEvent);
 
