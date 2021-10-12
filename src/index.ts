@@ -30,6 +30,8 @@ export {
   createAddress,
   FindingGenerator,
   TestTransactionEvent,
+  TestBlockEvent,
+  runBlock,
   encodeParameter,
   encodeParameters,
   encodeFunctionCall,
