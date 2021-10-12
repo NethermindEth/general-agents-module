@@ -160,7 +160,7 @@ export class TestBlockEvent extends BlockEvent {
     return this;
   }
 
-  public addTransactions(...txns: TestTransactionEvent[]): TestBlockEvent {
+  public addTransactions(...txns: TransactionEvent[]): TestBlockEvent {
     this.block.transactions.push(
       ...txns.map(tx => tx.hash)
     )
