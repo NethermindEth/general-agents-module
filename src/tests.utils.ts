@@ -175,8 +175,8 @@ export class TestBlockEvent extends BlockEvent {
 
 export async function runBlock(
   agent: Agent, 
-  block: TestBlockEvent,
-  ...txns: TestTransactionEvent[]
+  block: BlockEvent,
+  ...txns: TransactionEvent[]
 ): Promise<Finding[]> {
   let findings: Finding[] = [];
 
