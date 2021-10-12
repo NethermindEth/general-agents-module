@@ -19,6 +19,8 @@ import {
   TestBlockEvent,
   runBlock,
   createAddress, 
+  Agent, 
+  TraceProps,
 } from "./tests.utils";
 
 export {
@@ -39,4 +41,6 @@ export {
   decodeParameters,
   decodeParameteresFromFunctionCall,
   getFunctionSelector,
+  Agent, 
+  TraceProps,
 };

@@ -17,12 +17,12 @@ import {
 import { FindingGenerator } from "./utils";
 import { keccak256 } from "forta-agent/dist/sdk/utils";
 
-interface Agent {
+export interface Agent {
   handleTransaction: HandleTransaction,
   handleBlock: HandleBlock,
 };
 
-interface TraceProps {
+export interface TraceProps {
   to?: string;
   from?: string;
   input?: string;
@@ -118,23 +118,20 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
-  public addInvolvedAddress(address: string): TestTransactionEvent {
-    this.addresses[address] = true;
+  public addInvolvedAddresses(...addresses: string[]): TestTransactionEvent {
+    for(let address of addresses)
+      this.addresses[address] = true;
     return this;
   }
 
-  public addTrace({ to, from, input, output }: TraceProps): TestTransactionEvent {
-    const trace: Trace = {
-      action: {
-        to,
-        from,
-        input,
-      },
-      result: {
-        output
-      },
-    } as any;
-    this.traces.push(trace);
+  public addTraces(...traceProps: TraceProps[]): TestTransactionEvent {
+    const toTrace = ({to, from, input, output}:TraceProps) => {
+      return {
+        action: {to, from, input},
+        result: {output},
+      } as Trace;
+    };
+    this.traces.push(...traceProps.map(toTrace));
     return this;
   }
 };
