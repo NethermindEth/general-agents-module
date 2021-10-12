@@ -1,4 +1,7 @@
 import Web3 from "web3";
+import { 
+  leftPad, 
+} from "web3-utils";
 import {
   TransactionEvent,
   Network,
@@ -13,9 +16,13 @@ import {
   BlockEvent,
   HandleTransaction,
   HandleBlock,
+  Log,
 } from "forta-agent";
-import { FindingGenerator } from "./utils";
-import { keccak256 } from "forta-agent/dist/sdk/utils";
+import { 
+  FindingGenerator,
+  encodeEventSignature,
+} from "./utils";
+import { AbiItem } from "web3-utils";
 
 export interface Agent {
   handleTransaction: HandleTransaction,
@@ -40,7 +47,7 @@ export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
 };
 
 export const createAddress = (suffix: string): string => {
-  return Web3.utils.leftPad(suffix, 40);
+  return leftPad(suffix, 40);
 };
 
 export class TestTransactionEvent extends TransactionEvent {
@@ -105,16 +112,29 @@ export class TestTransactionEvent extends TransactionEvent {
   }
 
   public addEventLog(
-    eventSignature: string,
+    eventSignature: string | AbiItem,
     address: string = createAddress("0x0"),
     data: string = "",
     ...topics: string[]
   ): TestTransactionEvent {
     this.receipt.logs.push({
       address,
-      topics: [keccak256(eventSignature), ...topics],
+      topics: [encodeEventSignature(eventSignature), ...topics],
       data,
-    } as any);
+    } as Log);
+    return this;
+  }
+
+  public addAnonymousEventLog(
+    address: string = createAddress("0x0"),
+    data: string = "",
+    ...topics: string[]
+  ): TestTransactionEvent {
+    this.receipt.logs.push({
+      address,
+      topics,
+      data,
+    } as Log);
     return this;
   }
 

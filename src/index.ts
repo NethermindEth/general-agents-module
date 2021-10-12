@@ -11,7 +11,8 @@ import {
   decodeParameter, 
   decodeParameters, 
   decodeParameteresFromFunctionCall,
-  getFunctionSelector,
+  encodeFunctionSignature,
+  encodeEventSignature,
 } from "./utils";
         
 import { 
@@ -40,7 +41,8 @@ export {
   decodeParameter,
   decodeParameters,
   decodeParameteresFromFunctionCall,
-  getFunctionSelector,
+  encodeEventSignature,
+  encodeFunctionSignature,
   Agent, 
   TraceProps,
 };

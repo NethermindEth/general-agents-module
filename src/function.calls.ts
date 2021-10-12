@@ -1,7 +1,7 @@
 import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
 import { FindingGenerator } from "./utils";
 import { AbiItem } from "web3-utils";
-import { getFunctionSelector } from "./utils";
+import { encodeFunctionSignature } from "./utils";
 
 
 interface AgentOptions {
@@ -36,7 +36,7 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
 
     if (options.to !== undefined && options.to !== traceInfo.to) return false;
 
-    const expectedSelector: string = getFunctionSelector(functionSignature);
+    const expectedSelector: string = encodeFunctionSignature(functionSignature);
     const functionSelector: string = traceInfo.input.slice(0, 10);
     if (expectedSelector !== functionSelector) return false;
 
