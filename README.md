@@ -156,3 +156,42 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `addEventLog(eventSignature, address, topics, data)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is a list with only the `keccak256` hash of the signature by default, and `data` is the empty string by default.
 - `addInvolvedAddress(address)` This method add an address to `addresses` field.
 - `addTrace({ to, from, input, output })` This method adds an item to the `traces` field. All the fields in the argument are optional.
+
+###  TestBlockEvent
+
+This is a helper class for creating `BlockEvents` using the fluent interface pattern.
+
+#### How to use it
+
+```ts
+import { TestBlockEvent } from "forta-agent-tools";
+
+const blockEvent: BlockEvent = new TestBlockEvent().setHash(blockHash).setNumber(blockNumber);
+```
+
+There are multiple methods you can use for creating the exact `BlockEvent` you want:
+- `setHash(blockHash)` This method sets the `block.hash` field in the event.
+- `setNumber(blockNumber)` This method sets the `block.number` field in the event.
+- `addTransactions(txns)` This method adds the hashes of a list of transactions at the end of `block.transactions` field in the event.
+- `addTransactionsHashes(hashes)` This method adds a hashes list to the end of `block.transactions` field in the event.
+
+###  runBlock
+
+This is a helper function to simulate the execution of `run block` cli command when the agent has implemented a `handleTransaction` and a `handleBlock`.
+
+#### How to use it
+
+```ts
+import { runBlock } from "forta-agent-tools";
+
+async myFunction(params) => {
+  ...
+  const findings: Findings[] = await runBlock(agent, block, tx1, tx2, tx3, ..., txN);
+  ...
+};
+```
+Parameter description:
+- `agent`: It is a JS object with two properties, `handleTransaction` and `handleBlock`.
+- `block`: It is the `BlockEvent` that the agent will handle.
+- `tx#`: These are the `TransactionEvent` objects asociated with the `BlockEvent` that the agent will handle.
+
