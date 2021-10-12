@@ -155,6 +155,7 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `setTimestamp(timestamp)` This method sets the `block.timestamp` field in the event.
 - `addEventLog(eventSignature, address, data, topics)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is an spread list with the indexed event arguments, and `data` is the empty string by default.
   > The `keccak256` hash of the signature is added at the beggining of the `topics` list automatically.
+- `addAnonymousEventLog(address, data, topics)` This method add a log to the `receipt.logs` field. `address` argument is the zero address by default, `topics` is an spread list with the indexed event arguments, and `data` is the empty string by default.
 - `addInvolvedAddresses(addresses)` This method add an spread list of addresses to `addresses` field.
 - `addTrace(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
   > `TraceProps` is a TS object with the following optional fields `{ to, from, input, output }`.
