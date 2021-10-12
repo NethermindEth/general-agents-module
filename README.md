@@ -172,7 +172,7 @@ const blockEvent: BlockEvent = new TestBlockEvent().setHash(blockHash).setNumber
 There are multiple methods you can use for creating the exact `BlockEvent` you want:
 - `setHash(blockHash)` This method sets the `block.hash` field in the event.
 - `setNumber(blockNumber)` This method sets the `block.number` field in the event.
-- `addTransactions(txns)` This method adds the hashes of a list of transactions at the end of `block.transactions` field in the event.
+- `addTransactions(txns)` This method adds the hashes of a list of transaction events at the end of `block.transactions` field in the event.
 - `addTransactionsHashes(hashes)` This method adds a hashes list to the end of `block.transactions` field in the event.
 
 ###  runBlock
