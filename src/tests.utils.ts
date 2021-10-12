@@ -160,7 +160,7 @@ export class TestBlockEvent extends BlockEvent {
     return this;
   }
 
-  public addTransactions(...txns: TestTransactionEvent[]): TestBlockEvent {
+  public addTransactions(...txns: TransactionEvent[]): TestBlockEvent {
     this.block.transactions.push(
       ...txns.map(tx => tx.hash)
     )
@@ -175,8 +175,8 @@ export class TestBlockEvent extends BlockEvent {
 
 export async function runBlock(
   agent: Agent, 
-  block: TestBlockEvent,
-  ...txns: TestTransactionEvent[]
+  block: BlockEvent,
+  ...txns: TransactionEvent[]
 ): Promise<Finding[]> {
   let findings: Finding[] = [];
 
