@@ -120,7 +120,7 @@ export class TestTransactionEvent extends TransactionEvent {
 
   public addInvolvedAddresses(...addresses: string[]): TestTransactionEvent {
     for(let address of addresses)
-      this.addresses[address] = true;
+      this.addresses[address.toLowerCase()] = true;
     return this;
   }
 
