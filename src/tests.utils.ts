@@ -1,7 +1,5 @@
 import Web3 from "web3";
-import { 
-  leftPad, 
-} from "web3-utils";
+import { leftPad } from "web3-utils";
 import {
   TransactionEvent,
   Network,
@@ -18,23 +16,23 @@ import {
   HandleBlock,
   Log,
 } from "forta-agent";
-import { 
-  FindingGenerator,
-  encodeEventSignature,
-} from "./utils";
+import { FindingGenerator, encodeEventSignature } from "./utils";
 import { AbiItem } from "web3-utils";
 
+// @ts-ignore
+import abiDecoder from "abi-decoder";
+
 export interface Agent {
-  handleTransaction: HandleTransaction,
-  handleBlock: HandleBlock,
-};
+  handleTransaction: HandleTransaction;
+  handleBlock: HandleBlock;
+}
 
 export interface TraceProps {
   to?: string;
   from?: string;
   input?: string;
   output?: string;
-};
+}
 
 export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
   return Finding.fromObject({
@@ -139,21 +137,27 @@ export class TestTransactionEvent extends TransactionEvent {
   }
 
   public addInvolvedAddresses(...addresses: string[]): TestTransactionEvent {
-    for(let address of addresses)
-      this.addresses[address.toLowerCase()] = true;
+    for (let address of addresses) this.addresses[address.toLowerCase()] = true;
     return this;
   }
 
   public addTraces(...traceProps: TraceProps[]): TestTransactionEvent {
-    const toTrace = ({to, from, input, output}:TraceProps) => {
+    const toTrace = ({ to, from, input, output }: TraceProps) => {
       return {
-        action: {to, from, input},
-        result: {output},
+        action: { to, from, input },
+        result: { output },
       } as Trace;
     };
     this.traces.push(...traceProps.map(toTrace));
     return this;
   }
+}
+
+export const abiDecode = (testABI: any, testData?: string, txReciept?: string): Array<any> => {
+  abiDecoder.addABI(testABI);
+  if (testData) return abiDecoder.decodeMethod(testData);
+  if (txReciept) return abiDecoder.decodeLogs(txReciept);
+  return [];
 };
 
 export class TestBlockEvent extends BlockEvent {
@@ -167,20 +171,18 @@ export class TestBlockEvent extends BlockEvent {
     super(EventType.BLOCK, Network.MAINNET, blockHash, blockNumber, block);
   }
 
-  public setNumber(blockNumber: number): TestBlockEvent{
+  public setNumber(blockNumber: number): TestBlockEvent {
     this.block.number = blockNumber;
     return this;
   }
 
-  public setHash(blockHash: string): TestBlockEvent{
+  public setHash(blockHash: string): TestBlockEvent {
     this.block.hash = blockHash;
     return this;
   }
 
   public addTransactions(...txns: TransactionEvent[]): TestBlockEvent {
-    this.block.transactions.push(
-      ...txns.map(tx => tx.hash)
-    )
+    this.block.transactions.push(...txns.map((tx) => tx.hash));
     return this;
   }
 
@@ -188,18 +190,13 @@ export class TestBlockEvent extends BlockEvent {
     this.block.transactions.push(...hashes);
     return this;
   }
-};
+}
 
-export async function runBlock(
-  agent: Agent, 
-  block: BlockEvent,
-  ...txns: TransactionEvent[]
-): Promise<Finding[]> {
+export async function runBlock(agent: Agent, block: BlockEvent, ...txns: TransactionEvent[]): Promise<Finding[]> {
   let findings: Finding[] = [];
 
-  findings.push(...await agent.handleBlock(block));
-  for(let tx of txns)
-    findings.push(...await agent.handleTransaction(tx));
+  findings.push(...(await agent.handleBlock(block)));
+  for (let tx of txns) findings.push(...(await agent.handleTransaction(tx)));
 
   return findings;
-};
+}

@@ -1,5 +1,5 @@
-import { Finding, FindingSeverity, FindingType, HandleTransaction, Trace, TransactionEvent } from "forta-agent";
-import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "./tests.utils";
+import { Finding, FindingSeverity, FindingType, HandleTransaction, TraceAction, TransactionEvent } from "forta-agent";
+import { TestTransactionEvent, createAddress, generalTestFindingGenerator, abiDecode } from "./tests.utils";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import { AbiItem } from "web3-utils";
 import Web3 from "web3";
@@ -154,5 +154,77 @@ describe("Function calls detector Agent Tests", () => {
 
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([findingGenerator({ to, from, input })]);
+  });
+
+  it("Should be able to handle additional filter function passed inside functionCallGenerator", async () => {
+    const abiItem = {
+      name: "myMethod",
+      type: "function",
+      inputs: [
+        {
+          type: "uint256",
+          name: "myNumber",
+        },
+        {
+          type: "uint256",
+          name: "myNumber",
+        },
+      ],
+    } as AbiItem;
+
+    const filterFn = (value: TraceAction): boolean => {
+      const input = value.input;
+      const decode = abiDecode([abiItem], input) as any;
+      if (decode.params[0].value === "1000" && decode.params[1].value === "100") return false;
+      else return true;
+    };
+
+    const input = abi.encodeFunctionCall(abiItem, ["1000", "100"]);
+    const falseValue = filterFn({ input } as any);
+
+    const inputForFailingCase = abi.encodeFunctionCall(abiItem, ["100", "100"]);
+    // dont emit a warning if return value is true for our case
+    const trueValue = filterFn({ input: inputForFailingCase } as any);
+
+    expect(trueValue).toBe(true);
+    expect(falseValue).toBe(false);
+
+    const functionCallDetector = provideFunctionCallsDetectorHandler(
+      generalTestFindingGenerator,
+      abiItem as any,
+      undefined,
+      filterFn
+    );
+
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
+      from: createAddress("0x0"),
+      to: createAddress("0x2"),
+      input: input,
+    });
+
+    const agentcall1 = await functionCallDetector(txEvent1);
+
+    expect(agentcall1).toStrictEqual([]);
+
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({
+      from: createAddress("0x0"),
+      to: createAddress("0x2"),
+      input: inputForFailingCase,
+    });
+
+    const agentCall2 = await functionCallDetector(txEvent2);
+
+    expect(agentCall2).toStrictEqual([
+      Finding.fromObject({
+        name: "Finding Test",
+        description: "Finding for test",
+        alertId: "TEST",
+        protocol: "ethereum",
+        severity: 2,
+        type: 4,
+        everestId: undefined,
+        metadata: {},
+      }),
+    ]);
   });
 });

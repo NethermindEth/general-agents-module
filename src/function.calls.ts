@@ -1,8 +1,9 @@
-import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
+import { Finding, HandleTransaction, TransactionEvent, Trace, TraceAction } from "forta-agent";
 import { FindingGenerator } from "./utils";
 import { AbiItem } from "web3-utils";
-import { encodeFunctionSignature } from "./utils";
+import Web3 from "web3";
 
+const abi = new Web3().eth.abi;
 
 interface AgentOptions {
   from?: string;
@@ -36,7 +37,7 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
 
     if (options.to !== undefined && options.to !== traceInfo.to) return false;
 
-    const expectedSelector: string = encodeFunctionSignature(functionSignature);
+    const expectedSelector: string = abi.encodeFunctionSignature(functionSignature);
     const functionSelector: string = traceInfo.input.slice(0, 10);
     if (expectedSelector !== functionSelector) return false;
 
@@ -44,17 +45,27 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
   };
 };
 
-export default function provideFunctionCallsDetectorHandler(
+export default function provideFunctionCallsDetectorAgent(
   findingGenerator: FindingGenerator,
   functionSignature: Signature,
-  agentOptions?: AgentOptions
+  agentOptions?: AgentOptions,
+  filter?: (value: TraceAction) => boolean
 ): HandleTransaction {
   const filterTransferInfo: Filter = createFilter(functionSignature, agentOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     if (!txEvent.traces) {
       return [];
     }
-    return txEvent.traces
+
+    let traces = txEvent.traces;
+
+    if (filter) {
+      traces = txEvent.traces.filter((value) => {
+        return filter(value.action);
+      });
+    }
+
+    return traces
       .map(fromTraceActionToTraceInfo)
       .filter(filterTransferInfo)
       .map((traceInfo: TraceInfo) => findingGenerator(traceInfo));
