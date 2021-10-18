@@ -8,9 +8,9 @@ export type metadataVault = { [key: string]: any };
 
 export type FindingGenerator = (metadata?: metadataVault) => Finding;
 
-export const encodeParameter = (type: any, value: any): string => web3.eth.abi.encodeParameter(type, value) as any;
+export const encodeParameter = (type: any, value: any): string => web3.eth.abi.encodeParameter(type, value);
 
-export const encodeParameters = (types: any[], values: any[]): string => web3.eth.abi.encodeParameters(types, values) as any;
+export const encodeParameters = (types: any[], values: any[]): string => web3.eth.abi.encodeParameters(types, values);
 
 export const decodeParameter = (type: any, value: string): any => web3.eth.abi.decodeParameter(type, value);
 

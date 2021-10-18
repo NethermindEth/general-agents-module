@@ -10,7 +10,7 @@ import {
   encodeFunctionCall, 
   decodeParameter, 
   decodeParameters, 
-  decodeParameteresFromFunctionCall,
+  decodeFunctionCallParameters,
   encodeFunctionSignature,
   encodeEventSignature,
 } from "./utils";
@@ -40,7 +40,7 @@ export {
   encodeFunctionCall,
   decodeParameter,
   decodeParameters,
-  decodeParameteresFromFunctionCall,
+  decodeFunctionCallParameters,
   encodeEventSignature,
   encodeFunctionSignature,
   Agent, 
