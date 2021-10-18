@@ -8,17 +8,17 @@ export type metadataVault = { [key: string]: any };
 
 export type FindingGenerator = (metadata?: metadataVault) => Finding;
 
-export const encodeParameter = (type: string, value: string): string => web3.eth.abi.encodeParameter(type, value) as any;
+export const encodeParameter = (type: any, value: any): string => web3.eth.abi.encodeParameter(type, value) as any;
 
-export const encodeParameters = (types: string[], values: string[]): string => web3.eth.abi.encodeParameters(types, values) as any;
+export const encodeParameters = (types: any[], values: any[]): string => web3.eth.abi.encodeParameters(types, values) as any;
 
-export const decodeParameter = (type: string, value: string): any => web3.eth.abi.decodeParameter(type, value);
+export const decodeParameter = (type: any, value: string): any => web3.eth.abi.decodeParameter(type, value);
 
-export const decodeParameters = (types: string[], value: string): any => web3.eth.abi.decodeParameter(types, value);
+export const decodeParameters = (types: any[], value: string): any => web3.eth.abi.decodeParameters(types, value);
 
 export const stripFunctionSelector = (txData: string): string => stripHexPrefix(txData).slice(8); 
 
-export const decodeParameteresFromFunctionCall = (types: string[], txData: string): any => {
+export const decodeFunctionCallParameters = (types: any[], txData: string): any => {
   const encodedParameters: string = stripFunctionSelector(txData); 
   return decodeParameters(types, encodedParameters);
 };
