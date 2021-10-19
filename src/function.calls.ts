@@ -8,6 +8,7 @@ const abi = new Web3().eth.abi;
 interface AgentOptions {
   from?: string;
   to?: string;
+  filter?: (value: TraceAction) => boolean;
 }
 
 interface TraceInfo {
@@ -48,8 +49,7 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
 export default function provideFunctionCallsDetectorAgent(
   findingGenerator: FindingGenerator,
   functionSignature: Signature,
-  agentOptions?: AgentOptions,
-  filter?: (value: TraceAction) => boolean
+  agentOptions?: AgentOptions
 ): HandleTransaction {
   const filterTransferInfo: Filter = createFilter(functionSignature, agentOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
@@ -59,11 +59,11 @@ export default function provideFunctionCallsDetectorAgent(
 
     let traces = txEvent.traces;
 
-    if (filter) {
+    if (agentOptions && agentOptions.filter)
       traces = txEvent.traces.filter((value) => {
-        return filter(value.action);
+        // @ts-ignore
+        return agentOptions.filter(value.action);
       });
-    }
 
     return traces
       .map(fromTraceActionToTraceInfo)

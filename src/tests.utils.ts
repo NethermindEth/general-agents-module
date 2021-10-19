@@ -19,9 +19,6 @@ import {
 import { FindingGenerator, encodeEventSignature } from "./utils";
 import { AbiItem } from "web3-utils";
 
-// @ts-ignore
-import abiDecoder from "abi-decoder";
-
 export interface Agent {
   handleTransaction: HandleTransaction;
   handleBlock: HandleBlock;
@@ -152,13 +149,6 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 }
-
-export const abiDecode = (testABI: any, testData?: string, txReciept?: string): Array<any> => {
-  abiDecoder.addABI(testABI);
-  if (testData) return abiDecoder.decodeMethod(testData);
-  if (txReciept) return abiDecoder.decodeLogs(txReciept);
-  return [];
-};
 
 export class TestBlockEvent extends BlockEvent {
   constructor(blockNumber: number = 0, blockHash: string = createAddress("0x0")) {

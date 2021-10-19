@@ -1,6 +1,8 @@
 import Web3 from "web3";
 import { Finding } from "forta-agent";
 import { AbiItem, stripHexPrefix } from "web3-utils";
+// @ts-ignore
+import abiDecoder from "abi-decoder";
 
 const web3: Web3 = new Web3();
 
@@ -16,15 +18,25 @@ export const decodeParameter = (type: any, value: string): any => web3.eth.abi.d
 
 export const decodeParameters = (types: any[], value: string): any => web3.eth.abi.decodeParameters(types, value);
 
-export const stripFunctionSelector = (txData: string): string => stripHexPrefix(txData).slice(8); 
+export const stripFunctionSelector = (txData: string): string => stripHexPrefix(txData).slice(8);
 
 export const decodeFunctionCallParameters = (types: any[], txData: string): any => {
-  const encodedParameters: string = stripFunctionSelector(txData); 
+  const encodedParameters: string = stripFunctionSelector(txData);
   return decodeParameters(types, encodedParameters);
 };
 
-export const encodeFunctionSignature = (functionsSignature: string | AbiItem): string => web3.eth.abi.encodeFunctionSignature(functionsSignature);
+export const encodeFunctionSignature = (functionsSignature: string | AbiItem): string =>
+  web3.eth.abi.encodeFunctionSignature(functionsSignature);
 
-export const encodeFunctionCall = (functionAbi: AbiItem, values: string[]): string => web3.eth.abi.encodeFunctionCall(functionAbi, values);
+export const encodeFunctionCall = (functionAbi: AbiItem, values: string[]): string =>
+  web3.eth.abi.encodeFunctionCall(functionAbi, values);
 
-export const encodeEventSignature = (functionAbi: string | AbiItem): string => web3.eth.abi.encodeEventSignature(functionAbi);
+export const encodeEventSignature = (functionAbi: string | AbiItem): string =>
+  web3.eth.abi.encodeEventSignature(functionAbi);
+
+export const abiDecode = (testABI: any, testData?: string, txReciept?: string): Array<any> => {
+  abiDecoder.addABI(testABI);
+  if (testData) return abiDecoder.decodeMethod(testData);
+  if (txReciept) return abiDecoder.decodeLogs(txReciept);
+  return [];
+};
