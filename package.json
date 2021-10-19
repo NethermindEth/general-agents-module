@@ -27,7 +27,6 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
-    "abi-decoder": "^2.4.0",
     "forta-agent": "0.0.18"
   },
   "directories": {

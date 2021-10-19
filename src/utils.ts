@@ -1,8 +1,6 @@
 import Web3 from "web3";
 import { Finding } from "forta-agent";
 import { AbiItem, stripHexPrefix } from "web3-utils";
-// @ts-ignore
-import abiDecoder from "abi-decoder";
 
 const web3: Web3 = new Web3();
 
