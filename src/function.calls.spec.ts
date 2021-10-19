@@ -162,19 +162,19 @@ describe("Function calls detector Agent Tests", () => {
       inputs: [
         {
           type: "uint256",
-          name: "myNumber",
+          name: "arg1",
         },
         {
           type: "uint256",
-          name: "myNumber",
+          name: "arg2",
         },
       ],
     } as AbiItem;
 
     const filterFn = (value: TraceAction): boolean => {
       const input = value.input;
-      const result = decodeFunctionCallParameters(["uint256", "uint256"], input);
-      if (result["0"] === "1000" && result["1"] === "100") return false;
+      const result = decodeFunctionCallParameters(abiItem.inputs as any, input);
+      if (result.arg1 === "1000" && result.arg2 === "100") return false;
       else return true;
     };
 
