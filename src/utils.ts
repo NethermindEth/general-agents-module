@@ -33,10 +33,3 @@ export const encodeFunctionCall = (functionAbi: AbiItem, values: string[]): stri
 
 export const encodeEventSignature = (functionAbi: string | AbiItem): string =>
   web3.eth.abi.encodeEventSignature(functionAbi);
-
-export const abiDecode = (testABI: any, testData?: string, txReciept?: string): Array<any> => {
-  abiDecoder.addABI(testABI);
-  if (testData) return abiDecoder.decodeMethod(testData);
-  if (txReciept) return abiDecoder.decodeLogs(txReciept);
-  return [];
-};

@@ -2,7 +2,7 @@ import { Finding, FindingSeverity, FindingType, HandleTransaction, TraceAction, 
 import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "./tests.utils";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import { AbiItem } from "web3-utils";
-import { encodeFunctionSignature, encodeFunctionCall, abiDecode } from "./utils";
+import { encodeFunctionSignature, encodeFunctionCall } from "./utils";
 import { decodeFunctionCallParameters } from ".";
 
 describe("Function calls detector Agent Tests", () => {
