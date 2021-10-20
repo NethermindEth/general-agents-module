@@ -177,6 +177,11 @@ export class TestBlockEvent extends BlockEvent {
     return this;
   }
 
+  public setTimestamp(timestamp: number): TestBlockEvent{
+    this.block.timestamp = timestamp;
+    return this;
+  }
+
   public addTransactions(...txns: TransactionEvent[]): TestBlockEvent {
     this.block.transactions.push(
       ...txns.map(tx => tx.hash)
