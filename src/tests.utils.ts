@@ -111,6 +111,11 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
+  public setBlock(block: number): TestTransactionEvent {
+    this.block.number = block;
+    return this;
+  }
+
   public addEventLog(
     eventSignature: string | AbiItem,
     address: string = createAddress("0x0"),
