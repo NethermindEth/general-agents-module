@@ -2,11 +2,13 @@ import { Finding, HandleTransaction, TransactionEvent, Trace, TraceAction } from
 import { FindingGenerator } from "./utils";
 import { AbiItem } from "web3-utils";
 import { encodeFunctionSignature, encodeFunctionCall } from "./utils";
+import { decodeFunctionCallParameters } from ".";
 
 interface AgentOptions {
   from?: string;
   to?: string;
-  filter?: (value: TraceAction) => boolean;
+  filter?: (value: any) => boolean;
+  filterValues?: Array<any>;
 }
 
 interface TraceInfo {
@@ -38,7 +40,13 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
 
     const expectedSelector: string = encodeFunctionSignature(functionSignature);
     const functionSelector: string = traceInfo.input.slice(0, 10);
-    if (expectedSelector !== functionSelector) return false;
+
+    let filtered = false;
+
+    if (options.filter && options.filterValues) {
+      filtered = !options.filter(Object.values(decodeFunctionCallParameters(options.filterValues, traceInfo.input)));
+    }
+    if (expectedSelector !== functionSelector || filtered) return false;
 
     return true;
   };
@@ -56,12 +64,6 @@ export default function provideFunctionCallsDetectorHandler(
     }
 
     let traces = txEvent.traces;
-
-    if (agentOptions && agentOptions.filter)
-      traces = txEvent.traces.filter((value) => {
-        // @ts-ignore
-        return agentOptions.filter(value.action);
-      });
 
     return traces
       .map(fromTraceActionToTraceInfo)

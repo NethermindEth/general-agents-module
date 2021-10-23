@@ -171,11 +171,9 @@ describe("Function calls detector Agent Tests", () => {
       ],
     } as AbiItem;
 
-    const filterFn = (value: TraceAction): boolean => {
-      const input = value.input;
-      const result = decodeFunctionCallParameters(abiItem.inputs as any, input);
-      if (result.arg1 === "1000" && result.arg2 === "100") return false;
-      else return true;
+    const filterFn = (arg: Array<any>): boolean => {
+      if (arg[0] === "1000" && arg[1] === "100") return false;
+      else return true; // if values are 1000 and 100, ignore this call since we need to know about calls which dont have these values
     };
 
     const input = encodeFunctionCall(abiItem, ["1000", "100"]);
@@ -184,6 +182,7 @@ describe("Function calls detector Agent Tests", () => {
 
     const functionCallDetector = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, abiItem, {
       filter: filterFn,
+      filterValues: ["uint256", "uint256"],
     });
 
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
@@ -203,7 +202,6 @@ describe("Function calls detector Agent Tests", () => {
     });
 
     const agentCall2 = await functionCallDetector(txEvent2);
-
     expect(agentCall2).toStrictEqual([generalTestFindingGenerator()]);
   });
 });
