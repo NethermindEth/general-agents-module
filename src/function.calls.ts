@@ -4,14 +4,14 @@ import {
   encodeFunctionSignature,
   decodeFunctionCallParameters,
   extractFunctionSelector,
-  fromSignatureToArgumentTypes,
+  extractArgumentTypes
 } from "./utils";
 import { AbiItem } from "web3-utils";
 
 interface HandlerOptions {
   from?: string;
   to?: string;
-  filter?: (value: any) => boolean;
+  filterOnInput?: (value: string[]) => boolean;
 }
 
 interface FunctionCallInfo {
@@ -24,9 +24,9 @@ interface FunctionCallInfo {
 type Signature = string | AbiItem;
 type Filter = (functionCallInfo: FunctionCallInfo) => boolean;
 
-const fromTraceActionToFunctionCallInfo = (functionSignature: string, trace: Trace): FunctionCallInfo => {
+const fromTraceActionToFunctionCallInfo = (functionSignature: Signature, trace: Trace): FunctionCallInfo => {
   const functionSelector = extractFunctionSelector(trace.action.input);
-  const argumentTypes = fromSignatureToArgumentTypes(functionSignature);
+  const argumentTypes = extractArgumentTypes(functionSignature);
   const args = decodeFunctionCallParameters(argumentTypes, trace.action.input);
 
   return {
@@ -42,20 +42,16 @@ const createFilter = (functionSignature: Signature, options: HandlerOptions | un
     return (_) => true;
   }
 
-  return (functionCallInfo) => {
+  const expectedSelector: string = encodeFunctionSignature(functionSignature);
+
+  return (functionCallInfo: FunctionCallInfo) => {
     if (options.from !== undefined && options.from !== functionCallInfo.from) return false;
 
     if (options.to !== undefined && options.to !== functionCallInfo.to) return false;
 
-    const expectedSelector: string = encodeFunctionSignature(functionSignature);
-    const functionSelector: string = functionCallInfo.input.slice(0, 10);
+    if (expectedSelector !== functionCallInfo.functionSelector) return false;
 
-    let filtered = false;
-
-    if (options.filter && options.filterValues) {
-      filtered = !options.filter(Object.values(decodeFunctionCallParameters(options.filterValues, functionCallInfo.input)));
-    }
-    if (expectedSelector !== functionSelector || filtered) return false;
+    if (options.filterOnInput !== undefined && !options.filterOnInput(functionCallInfo.arguments)) return false;
 
     return true;
   };
@@ -64,7 +60,7 @@ const createFilter = (functionSignature: Signature, options: HandlerOptions | un
 export default function provideFunctionCallsDetectorHandler(
   findingGenerator: FindingGenerator,
   functionSignature: Signature,
-  handlerOptions?: HandlerOptions 
+  handlerOptions?: HandlerOptions
 ): HandleTransaction {
   const filterTransferInfo: Filter = createFilter(functionSignature, handlerOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
@@ -75,7 +71,7 @@ export default function provideFunctionCallsDetectorHandler(
     let traces = txEvent.traces;
 
     return traces
-      .map(fromTraceActionToFunctionCallInfo)
+      .map((trace) => fromTraceActionToFunctionCallInfo(functionSignature, trace))
       .filter(filterTransferInfo)
       .map((functionCallInfo: FunctionCallInfo) => findingGenerator(functionCallInfo));
   };
