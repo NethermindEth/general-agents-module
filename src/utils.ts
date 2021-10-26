@@ -33,3 +33,10 @@ export const encodeFunctionCall = (functionAbi: AbiItem, values: string[]): stri
 
 export const encodeEventSignature = (functionAbi: string | AbiItem): string =>
   web3.eth.abi.encodeEventSignature(functionAbi);
+
+// TODO Improve for function with more complex types involving , (e.g. test(tuple(uint256, bool), bool))
+export const fromSignatureToArgumentTypes = (functionSignature: string): string[] => {
+  const startOfArguments = functionSignature.indexOf("("); 
+  const argumentsString = functionSignature.slice(startOfArguments + 1, functionSignature.length - 1);
+  return argumentsString.split(",");
+}
