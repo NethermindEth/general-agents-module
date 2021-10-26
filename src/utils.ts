@@ -18,6 +18,8 @@ export const decodeParameters = (types: any[], value: string): any => web3.eth.a
 
 export const stripFunctionSelector = (txData: string): string => stripHexPrefix(txData).slice(8);
 
+export const extractFunctionSelector = (txData: string): string => stripHexPrefix(txData).slice(0, 8);
+
 export const decodeFunctionCallParameters = (types: any[], txData: string): any => {
   const encodedParameters: string = stripFunctionSelector(txData);
   return decodeParameters(types, encodedParameters);
