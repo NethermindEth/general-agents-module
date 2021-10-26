@@ -106,6 +106,11 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
+  public setBlock(block: number): TestTransactionEvent {
+    this.block.number = block;
+    return this;
+  }
+
   public addEventLog(
     eventSignature: string | AbiItem,
     address: string = createAddress("0x0"),
@@ -151,14 +156,14 @@ export class TestTransactionEvent extends TransactionEvent {
 }
 
 export class TestBlockEvent extends BlockEvent {
-  constructor(blockNumber: number = 0, blockHash: string = createAddress("0x0")) {
+  constructor() {
     const block: Block = {
       transactions: [],
-      hash: blockHash,
-      number: blockNumber,
+      hash: createAddress("0x0"),
+      number: 0,
     } as any;
 
-    super(EventType.BLOCK, Network.MAINNET, blockHash, blockNumber, block);
+    super(EventType.BLOCK, Network.MAINNET, block);
   }
 
   public setNumber(blockNumber: number): TestBlockEvent {
@@ -168,6 +173,11 @@ export class TestBlockEvent extends BlockEvent {
 
   public setHash(blockHash: string): TestBlockEvent {
     this.block.hash = blockHash;
+    return this;
+  }
+
+  public setTimestamp(timestamp: number): TestBlockEvent{
+    this.block.timestamp = timestamp;
     return this;
   }
 
