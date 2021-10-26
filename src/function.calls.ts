@@ -2,7 +2,7 @@ import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent
 import { FindingGenerator, encodeFunctionSignature, decodeFunctionCallParameters } from "./utils";
 import { AbiItem } from "web3-utils";
 
-interface AgentOptions {
+interface HandlerOptions {
   from?: string;
   to?: string;
   filter?: (value: any) => boolean;
@@ -26,7 +26,7 @@ const fromTraceActionToFunctionCallInfo = (trace: Trace): FunctionCallInfo => {
   };
 };
 
-const createFilter = (functionSignature: Signature, options: AgentOptions | undefined): Filter => {
+const createFilter = (functionSignature: Signature, options: HandlerOptions | undefined): Filter => {
   if (options === undefined) {
     return (_) => true;
   }
@@ -53,9 +53,9 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
 export default function provideFunctionCallsDetectorHandler(
   findingGenerator: FindingGenerator,
   functionSignature: Signature,
-  agentOptions?: AgentOptions
+  handlerOptions?: HandlerOptions 
 ): HandleTransaction {
-  const filterTransferInfo: Filter = createFilter(functionSignature, agentOptions);
+  const filterTransferInfo: Filter = createFilter(functionSignature, handlerOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     if (!txEvent.traces) {
       return [];
