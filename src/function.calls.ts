@@ -9,16 +9,16 @@ interface AgentOptions {
   filterValues?: Array<any>;
 }
 
-interface TraceInfo {
+interface FunctionCallInfo {
   from: string;
   to: string;
   input: string;
 }
 
 type Signature = string | AbiItem;
-type Filter = (traceInfo: TraceInfo) => boolean;
+type Filter = (functionCallInfo: FunctionCallInfo) => boolean;
 
-const fromTraceActionToTraceInfo = (trace: Trace): TraceInfo => {
+const fromTraceActionToFunctionCallInfo = (trace: Trace): FunctionCallInfo => {
   return {
     to: trace.action.to,
     from: trace.action.from,
@@ -31,18 +31,18 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
     return (_) => true;
   }
 
-  return (traceInfo) => {
-    if (options.from !== undefined && options.from !== traceInfo.from) return false;
+  return (functionCallInfo) => {
+    if (options.from !== undefined && options.from !== functionCallInfo.from) return false;
 
-    if (options.to !== undefined && options.to !== traceInfo.to) return false;
+    if (options.to !== undefined && options.to !== functionCallInfo.to) return false;
 
     const expectedSelector: string = encodeFunctionSignature(functionSignature);
-    const functionSelector: string = traceInfo.input.slice(0, 10);
+    const functionSelector: string = functionCallInfo.input.slice(0, 10);
 
     let filtered = false;
 
     if (options.filter && options.filterValues) {
-      filtered = !options.filter(Object.values(decodeFunctionCallParameters(options.filterValues, traceInfo.input)));
+      filtered = !options.filter(Object.values(decodeFunctionCallParameters(options.filterValues, functionCallInfo.input)));
     }
     if (expectedSelector !== functionSelector || filtered) return false;
 
@@ -64,8 +64,8 @@ export default function provideFunctionCallsDetectorHandler(
     let traces = txEvent.traces;
 
     return traces
-      .map(fromTraceActionToTraceInfo)
+      .map(fromTraceActionToFunctionCallInfo)
       .filter(filterTransferInfo)
-      .map((traceInfo: TraceInfo) => findingGenerator(traceInfo));
+      .map((functionCallInfo: FunctionCallInfo) => findingGenerator(functionCallInfo));
   };
 }
