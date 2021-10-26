@@ -34,9 +34,31 @@ export const encodeFunctionCall = (functionAbi: AbiItem, values: string[]): stri
 export const encodeEventSignature = (functionAbi: string | AbiItem): string =>
   web3.eth.abi.encodeEventSignature(functionAbi);
 
+export const extractArgumentTypes = (functionDefinition: string | AbiItem): string[] => {
+  switch (typeof functionDefinition) {
+    case "string":
+      return extractTypesFromSignature(functionDefinition);
+
+    default:
+      return extractTypesFromAbiItem(functionDefinition);
+  }
+}
+
 // TODO Improve for function with more complex types involving , (e.g. test(tuple(uint256, bool), bool))
-export const fromSignatureToArgumentTypes = (functionSignature: string): string[] => {
+const extractTypesFromSignature = (functionSignature: string): string[]=> {
   const startOfArguments = functionSignature.indexOf("("); 
   const argumentsString = functionSignature.slice(startOfArguments + 1, functionSignature.length - 1);
+  if (argumentsString === "") {
+    return [];
+  }
   return argumentsString.split(",");
 }
+
+const extractTypesFromAbiItem = (functionDefinition: AbiItem): string[] => {
+  if (functionDefinition.inputs === undefined) {
+    return [];
+  }
+  return functionDefinition.inputs.map((arg) => arg.type);
+}
+
+
