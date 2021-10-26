@@ -1,8 +1,6 @@
-import { Finding, HandleTransaction, TransactionEvent, Trace, TraceAction } from "forta-agent";
-import { FindingGenerator } from "./utils";
+import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
+import { FindingGenerator, encodeFunctionSignature, decodeFunctionCallParameters } from "./utils";
 import { AbiItem } from "web3-utils";
-import { encodeFunctionSignature, encodeFunctionCall } from "./utils";
-import { decodeFunctionCallParameters } from ".";
 
 interface AgentOptions {
   from?: string;
