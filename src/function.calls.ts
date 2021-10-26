@@ -11,7 +11,7 @@ import { AbiItem } from "web3-utils";
 interface HandlerOptions {
   from?: string;
   to?: string;
-  filterOnInput?: (value: string[]) => boolean;
+  filterOnArguments?: (value: string[]) => boolean;
 }
 
 interface FunctionCallInfo {
@@ -51,7 +51,7 @@ const createFilter = (functionSignature: Signature, options: HandlerOptions | un
 
     if (expectedSelector !== functionCallInfo.functionSelector) return false;
 
-    if (options.filterOnInput !== undefined && !options.filterOnInput(functionCallInfo.arguments)) return false;
+    if (options.filterOnArguments !== undefined && !options.filterOnArguments(functionCallInfo.arguments)) return false;
 
     return true;
   };

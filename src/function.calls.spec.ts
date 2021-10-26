@@ -165,7 +165,7 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings[0]).toHaveProperty("metadata.arguments.1", "Hello!");
   });
 
-  it("should returns findings only if calls fits with filterOnInput condition", async () => {
+  it("should returns findings only if calls fits with filterOnArguments condition", async () => {
     const functionDefinition: AbiItem = {
       name: "myMethod",
       type: "function",
@@ -183,11 +183,11 @@ describe("Function calls detector Agent Tests", () => {
 
     const to: string = createAddress("0x1");
     const from: string = createAddress("0x2");
-    const filterOnInput = (args: string[]): boolean => {
+    const filterOnArguments = (args: string[]): boolean => {
       return args[1] === "Hello!";
     }
 
-    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition, { to, from, filterOnInput });
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition, { to, from, filterOnArguments });
 
     const input1: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input1 });
