@@ -11,14 +11,14 @@ import { AbiItem } from "web3-utils";
 interface HandlerOptions {
   from?: string;
   to?: string;
-  filterOnArguments?: (value: string[]) => boolean;
+  filterOnArguments?: (value: { [key: string]: any }) => boolean;
 }
 
 interface FunctionCallInfo {
   from: string;
   to: string;
   functionSelector: string;
-  arguments: string[];
+  arguments: { [key: string]: any};
 }
 
 type Signature = string | AbiItem;

@@ -34,7 +34,7 @@ export const encodeFunctionCall = (functionAbi: AbiItem, values: string[]): stri
 export const encodeEventSignature = (functionAbi: string | AbiItem): string =>
   web3.eth.abi.encodeEventSignature(functionAbi);
 
-export const extractArgumentTypes = (functionDefinition: string | AbiItem): string[] => {
+export const extractArgumentTypes = (functionDefinition: string | AbiItem): any[] => {
   switch (typeof functionDefinition) {
     case "string":
       return extractTypesFromSignature(functionDefinition);
@@ -48,17 +48,12 @@ export const extractArgumentTypes = (functionDefinition: string | AbiItem): stri
 const extractTypesFromSignature = (functionSignature: string): string[]=> {
   const startOfArguments = functionSignature.indexOf("("); 
   const argumentsString = functionSignature.slice(startOfArguments + 1, functionSignature.length - 1);
-  if (argumentsString === "") {
-    return [];
-  }
-  return argumentsString.split(",");
+
+  return (argumentsString === "") ? [] : argumentsString.split(",");
 }
 
-const extractTypesFromAbiItem = (functionDefinition: AbiItem): string[] => {
-  if (functionDefinition.inputs === undefined) {
-    return [];
-  }
-  return functionDefinition.inputs.map((arg) => arg.type);
+const extractTypesFromAbiItem = (functionDefinition: AbiItem): any[] => {
+  return (functionDefinition.inputs === undefined) ? [] : functionDefinition.inputs; 
 }
 
 
