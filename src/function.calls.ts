@@ -1,28 +1,39 @@
 import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
-import { FindingGenerator, encodeFunctionSignature, decodeFunctionCallParameters } from "./utils";
+import {
+  FindingGenerator,
+  encodeFunctionSignature,
+  decodeFunctionCallParameters,
+  extractFunctionSelector,
+  fromSignatureToArgumentTypes,
+} from "./utils";
 import { AbiItem } from "web3-utils";
 
 interface HandlerOptions {
   from?: string;
   to?: string;
   filter?: (value: any) => boolean;
-  filterValues?: Array<any>;
 }
 
 interface FunctionCallInfo {
   from: string;
   to: string;
-  input: string;
+  functionSelector: string;
+  arguments: string[];
 }
 
 type Signature = string | AbiItem;
 type Filter = (functionCallInfo: FunctionCallInfo) => boolean;
 
-const fromTraceActionToFunctionCallInfo = (trace: Trace): FunctionCallInfo => {
+const fromTraceActionToFunctionCallInfo = (functionSignature: string, trace: Trace): FunctionCallInfo => {
+  const functionSelector = extractFunctionSelector(trace.action.input);
+  const argumentTypes = fromSignatureToArgumentTypes(functionSignature);
+  const args = decodeFunctionCallParameters(argumentTypes, trace.action.input);
+
   return {
     to: trace.action.to,
     from: trace.action.from,
-    input: trace.action.input,
+    functionSelector,
+    arguments: args,
   };
 };
 
