@@ -11,7 +11,7 @@ import { AbiItem } from "web3-utils";
 interface HandlerOptions {
   from?: string;
   to?: string;
-  filterOnArguments?: (value: { [key: string]: any }) => boolean;
+  filterOnArguments?: (values: { [key: string]: any }) => boolean;
 }
 
 interface FunctionCallInfo {
