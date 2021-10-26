@@ -1,9 +1,8 @@
-import { Finding, FindingSeverity, FindingType, HandleTransaction, TraceAction, TransactionEvent } from "forta-agent";
+import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "./tests.utils";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import { AbiItem } from "web3-utils";
 import { encodeFunctionSignature, encodeFunctionCall } from "./utils";
-import { decodeFunctionCallParameters } from ".";
 
 describe("Function calls detector Agent Tests", () => {
   let handleTransaction: HandleTransaction;
@@ -29,6 +28,7 @@ describe("Function calls detector Agent Tests", () => {
     let findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([]);
   });
+
   it("Should returns a findings only if the function is called in the contract target `to`", async () => {
     const signature: string = "Func()";
     const selector: string = encodeFunctionSignature(signature);
@@ -40,6 +40,7 @@ describe("Function calls detector Agent Tests", () => {
       to: createAddress("0x1"),
       input: selector,
     });
+
     let findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
 
@@ -47,6 +48,7 @@ describe("Function calls detector Agent Tests", () => {
       to: createAddress("0x0"),
       input: selector,
     });
+
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
   });
@@ -125,11 +127,12 @@ describe("Function calls detector Agent Tests", () => {
         metadata: {
           from: metadata?.from,
           to: metadata?.to,
-          input: metadata?.input,
+          functionSelector: metadata?.functionSelector,
+          arguments: metadata?.arguments,
         },
       });
     };
-    const signature: AbiItem = {
+    const functionDefinition: AbiItem = {
       name: "myMethod",
       type: "function",
       inputs: [
@@ -143,65 +146,60 @@ describe("Function calls detector Agent Tests", () => {
         },
       ],
     } as AbiItem;
-    const input: string = encodeFunctionCall(signature, ["2345675643", "Hello!%"]);
 
+    const input: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
     const to: string = createAddress("0x1");
     const from: string = createAddress("0x2");
-    handleTransaction = provideFunctionCallsDetectorHandler(findingGenerator, signature, { to, from });
+
+
+    handleTransaction = provideFunctionCallsDetectorHandler(findingGenerator, functionDefinition, { to, from });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input });
 
     const findings: Finding[] = await handleTransaction(txEvent);
-    expect(findings).toStrictEqual([findingGenerator({ to, from, input })]);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toHaveProperty("metadata.from", from);
+    expect(findings[0]).toHaveProperty("metadata.to", to);
+    expect(findings[0]).toHaveProperty("metadata.functionSelector", encodeFunctionSignature(functionDefinition));
+    expect(findings[0]).toHaveProperty("metadata.arguments.0", "2345675643");
+    expect(findings[0]).toHaveProperty("metadata.arguments.1", "Hello!");
   });
 
-  it("Should be able to handle additional filter function passed inside functionCallGenerator", async () => {
-    const abiItem = {
+  it("should returns findings only if calls fits with filterOnInput condition", async () => {
+    const functionDefinition: AbiItem = {
       name: "myMethod",
       type: "function",
       inputs: [
         {
           type: "uint256",
-          name: "arg1",
+          name: "myNumber",
         },
         {
-          type: "uint256",
-          name: "arg2",
+          type: "string",
+          name: "myString",
         },
       ],
     } as AbiItem;
 
-    const filterFn = (arg: Array<any>): boolean => {
-      if (arg[0] === "1000" && arg[1] === "100") return false;
-      else return true; // if values are 1000 and 100, ignore this call since we need to know about calls which dont have these values
-    };
+    const to: string = createAddress("0x1");
+    const from: string = createAddress("0x2");
+    const filterOnInput = (args: string[]): boolean => {
+      return args[1] === "Hello!";
+    }
 
-    const input = encodeFunctionCall(abiItem, ["1000", "100"]);
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition, { to, from, filterOnInput });
 
-    const inputForFailingCase = encodeFunctionCall(abiItem, ["100", "100"]);
+    const input1: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input1 });
 
-    const functionCallDetector = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, abiItem, {
-      filter: filterFn,
-      filterValues: ["uint256", "uint256"],
-    });
+    const findings1: Finding[] = await handleTransaction(txEvent1);
+    expect(findings1).toStrictEqual([ generalTestFindingGenerator(txEvent1)]);
 
-    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
-      from: createAddress("0x0"),
-      to: createAddress("0x2"),
-      input: input,
-    });
+    const input2: string = encodeFunctionCall(functionDefinition, ["2345675643", "GoodBye!"]);
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input2 });
 
-    const agentcall1 = await functionCallDetector(txEvent1);
+    const findings2: Finding[] = await handleTransaction(txEvent2);
+    expect(findings2).toStrictEqual([]);
+  })
 
-    expect(agentcall1).toStrictEqual([]);
-
-    const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({
-      from: createAddress("0x0"),
-      to: createAddress("0x2"),
-      input: inputForFailingCase,
-    });
-
-    const agentCall2 = await functionCallDetector(txEvent2);
-    expect(agentCall2).toStrictEqual([generalTestFindingGenerator()]);
-  });
 });
