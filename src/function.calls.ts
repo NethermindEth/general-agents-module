@@ -1,44 +1,57 @@
 import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
-import { FindingGenerator } from "./utils";
+import {
+  FindingGenerator,
+  encodeFunctionSignature,
+  decodeFunctionCallParameters,
+  extractFunctionSelector,
+  extractArgumentTypes
+} from "./utils";
 import { AbiItem } from "web3-utils";
-import { encodeFunctionSignature } from "./utils";
 
-
-interface AgentOptions {
+interface HandlerOptions {
   from?: string;
   to?: string;
+  filterOnArguments?: (values: { [key: string]: any }) => boolean;
 }
 
-interface TraceInfo {
+interface FunctionCallInfo {
   from: string;
   to: string;
-  input: string;
+  functionSelector: string;
+  arguments: { [key: string]: any};
 }
 
 type Signature = string | AbiItem;
-type Filter = (traceInfo: TraceInfo) => boolean;
+type Filter = (functionCallInfo: FunctionCallInfo) => boolean;
 
-const fromTraceActionToTraceInfo = (trace: Trace): TraceInfo => {
+const fromTraceActionToFunctionCallInfo = (functionSignature: Signature, trace: Trace): FunctionCallInfo => {
+  const functionSelector = extractFunctionSelector(trace.action.input);
+  const argumentTypes = extractArgumentTypes(functionSignature);
+  const args = decodeFunctionCallParameters(argumentTypes, trace.action.input);
+
   return {
     to: trace.action.to,
     from: trace.action.from,
-    input: trace.action.input,
+    functionSelector,
+    arguments: args,
   };
 };
 
-const createFilter = (functionSignature: Signature, options: AgentOptions | undefined): Filter => {
+const createFilter = (functionSignature: Signature, options: HandlerOptions | undefined): Filter => {
   if (options === undefined) {
     return (_) => true;
   }
 
-  return (traceInfo) => {
-    if (options.from !== undefined && options.from !== traceInfo.from) return false;
+  const expectedSelector: string = encodeFunctionSignature(functionSignature);
 
-    if (options.to !== undefined && options.to !== traceInfo.to) return false;
+  return (functionCallInfo: FunctionCallInfo) => {
+    if (options.from !== undefined && options.from !== functionCallInfo.from) return false;
 
-    const expectedSelector: string = encodeFunctionSignature(functionSignature);
-    const functionSelector: string = traceInfo.input.slice(0, 10);
-    if (expectedSelector !== functionSelector) return false;
+    if (options.to !== undefined && options.to !== functionCallInfo.to) return false;
+
+    if (expectedSelector !== functionCallInfo.functionSelector) return false;
+
+    if (options.filterOnArguments !== undefined && !options.filterOnArguments(functionCallInfo.arguments)) return false;
 
     return true;
   };
@@ -47,16 +60,19 @@ const createFilter = (functionSignature: Signature, options: AgentOptions | unde
 export default function provideFunctionCallsDetectorHandler(
   findingGenerator: FindingGenerator,
   functionSignature: Signature,
-  agentOptions?: AgentOptions
+  handlerOptions?: HandlerOptions
 ): HandleTransaction {
-  const filterTransferInfo: Filter = createFilter(functionSignature, agentOptions);
+  const filterTransferInfo: Filter = createFilter(functionSignature, handlerOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     if (!txEvent.traces) {
       return [];
     }
-    return txEvent.traces
-      .map(fromTraceActionToTraceInfo)
+
+    let traces = txEvent.traces;
+
+    return traces
+      .map((trace) => fromTraceActionToFunctionCallInfo(functionSignature, trace))
       .filter(filterTransferInfo)
-      .map((traceInfo: TraceInfo) => findingGenerator(traceInfo));
+      .map((functionCallInfo: FunctionCallInfo) => findingGenerator(functionCallInfo));
   };
 }

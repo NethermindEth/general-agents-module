@@ -32,7 +32,7 @@ This approach detects method calls on Smart Contracts. You need to provide the s
 ```ts
 import { provideFunctionCallsDetectorHandler } from "forta-agent-tools";
 
-const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionSignature, agentOptions?);
+const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionSignature, handlerOptions?);
 ```
 
 #### Arguments
@@ -40,11 +40,13 @@ const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionS
 - `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
   - `from`: The account calling the method.
   - `to`: The Smart Contract called.
-  - `input`: The transaction data.
+  - `functionSelector`: The function selector of the transaction (The keccak256 hash of the signature of the function being called).
+  - `arguments`: The arguments used for calling the function.
 - `functionSignature`: The signature of the method you want to detect.
-- `agentOptions`: This is an optional argument, it contains extra information for adding extra filtering to your detections. It is a JS object with the following optional properties:
+- `handlerOptions`: This is an optional argument, it contains extra information for adding extra filtering to your detections. It is a JS object with the following optional properties:
   - `from`: If provided, the approach will only detect method calls from the specified account.
   - `to`: If provided, the approach will only detect method calls to the specified Smart Contract.
+  - `filterOnArguments`: This is a predicate receiving an array with the arguments used for calling the function. If provided, the approach will only detect method calls with arguments fitting with the passed predicate.
 
 
 ### - Event Checker Handler 
