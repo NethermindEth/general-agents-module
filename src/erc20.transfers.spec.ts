@@ -18,8 +18,8 @@ const createTransactionEventWithTransferLog = (
     "Transfer(address,address,uint256)",
     tokenAddress,
     data,
-    fromTopic, 
-    toTopic,
+    fromTopic,
+    toTopic
   );
 };
 

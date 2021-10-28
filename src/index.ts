@@ -3,26 +3,19 @@ import provideETHTransferHandler from "./eth.transfers";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import provideEventCheckerHandler from "./events.checker";
 import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
-import { 
-  FindingGenerator, 
-  encodeParameter, 
-  encodeParameters, 
-  encodeFunctionCall, 
-  decodeParameter, 
-  decodeParameters, 
+import {
+  FindingGenerator,
+  encodeParameter,
+  encodeParameters,
+  encodeFunctionCall,
+  decodeParameter,
+  decodeParameters,
   decodeFunctionCallParameters,
   encodeFunctionSignature,
   encodeEventSignature,
 } from "./utils";
-        
-import { 
-  TestTransactionEvent,
-  TestBlockEvent,
-  runBlock,
-  createAddress, 
-  Agent, 
-  TraceProps,
-} from "./tests.utils";
+
+import { TestTransactionEvent, TestBlockEvent, runBlock, createAddress, Agent, TraceProps } from "./tests.utils";
 
 export {
   provideERC20TransferHandler,
@@ -43,6 +36,6 @@ export {
   decodeFunctionCallParameters,
   encodeEventSignature,
   encodeFunctionSignature,
-  Agent, 
+  Agent,
   TraceProps,
 };

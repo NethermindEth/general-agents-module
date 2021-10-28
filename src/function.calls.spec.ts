@@ -151,7 +151,6 @@ describe("Function calls detector Agent Tests", () => {
     const to: string = createAddress("0x1");
     const from: string = createAddress("0x2");
 
-
     handleTransaction = provideFunctionCallsDetectorHandler(findingGenerator, functionDefinition, { to, from });
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input });
@@ -185,15 +184,19 @@ describe("Function calls detector Agent Tests", () => {
     const from: string = createAddress("0x2");
     const filterOnArguments = ({ myString }: { [key: string]: any }): boolean => {
       return myString === "Hello!";
-    }
+    };
 
-    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition, { to, from, filterOnArguments });
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition, {
+      to,
+      from,
+      filterOnArguments,
+    });
 
     const input1: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input1 });
 
     const findings1: Finding[] = await handleTransaction(txEvent1);
-    expect(findings1).toStrictEqual([ generalTestFindingGenerator(txEvent1)]);
+    expect(findings1).toStrictEqual([generalTestFindingGenerator(txEvent1)]);
 
     const input2: string = encodeFunctionCall(functionDefinition, ["2345675643", "Goodbye!"]);
     const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input2 });
@@ -222,15 +225,19 @@ describe("Function calls detector Agent Tests", () => {
     const from: string = createAddress("0x2");
     const filterOnArguments = (args: { [key: string]: any }): boolean => {
       return args[1] === "Hello!";
-    }
+    };
 
-    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, "myMethod(uint256,string)", { to, from, filterOnArguments });
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, "myMethod(uint256,string)", {
+      to,
+      from,
+      filterOnArguments,
+    });
 
     const input1: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input1 });
 
     const findings1: Finding[] = await handleTransaction(txEvent1);
-    expect(findings1).toStrictEqual([ generalTestFindingGenerator(txEvent1)]);
+    expect(findings1).toStrictEqual([generalTestFindingGenerator(txEvent1)]);
 
     const input2: string = encodeFunctionCall(functionDefinition, ["2345675643", "Goodbye!"]);
     const txEvent2: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input2 });
@@ -238,6 +245,4 @@ describe("Function calls detector Agent Tests", () => {
     const findings2: Finding[] = await handleTransaction(txEvent2);
     expect(findings2).toStrictEqual([]);
   });
-
-
 });

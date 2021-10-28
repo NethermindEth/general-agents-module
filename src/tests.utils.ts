@@ -176,7 +176,7 @@ export class TestBlockEvent extends BlockEvent {
     return this;
   }
 
-  public setTimestamp(timestamp: number): TestBlockEvent{
+  public setTimestamp(timestamp: number): TestBlockEvent {
     this.block.timestamp = timestamp;
     return this;
   }
