@@ -73,12 +73,12 @@ export class TestTransactionEvent extends TransactionEvent {
   }
 
   public setFrom(address: string): TestTransactionEvent {
-    this.transaction.from = address;
+    this.transaction.from = address.toLowerCase();
     return this;
   }
 
   public setTo(address: string): TestTransactionEvent {
-    this.transaction.to = address;
+    this.transaction.to = address.toLowerCase();
     return this;
   }
 
@@ -119,7 +119,7 @@ export class TestTransactionEvent extends TransactionEvent {
     ...topics: string[]
   ): TestTransactionEvent {
     this.receipt.logs.push({
-      address,
+      address: address.toLowerCase(),
       topics: [encodeEventSignature(eventSignature), ...topics],
       data,
     } as Log);
@@ -132,7 +132,7 @@ export class TestTransactionEvent extends TransactionEvent {
     ...topics: string[]
   ): TestTransactionEvent {
     this.receipt.logs.push({
-      address,
+      address: address.toLowerCase(),
       topics,
       data,
     } as Log);
@@ -147,7 +147,12 @@ export class TestTransactionEvent extends TransactionEvent {
   public addTraces(...traceProps: TraceProps[]): TestTransactionEvent {
     const toTrace = ({ to, from, input, output, value }: TraceProps) => {
       return {
-        action: { to, from, input, value },
+        action: { 
+          to: to?.toLowerCase(), 
+          from: from?.toLowerCase(), 
+          input, 
+          value,
+        },
         result: { output },
       } as Trace;
     };
