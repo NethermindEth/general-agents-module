@@ -9,7 +9,7 @@ export default function provideBlacklistedAddresessHandler(
     const findings: Finding[] = [];
 
     const blacklistedAddressesInvolved: string[] = blacklistedAddresses.filter(
-      (address: string) => txEvent.addresses[address]
+      (address: string) => txEvent.addresses[address.toLowerCase()]
     );
 
     if (blacklistedAddressesInvolved.length > 0) {
