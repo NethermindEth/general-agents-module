@@ -1,4 +1,4 @@
-import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
+import { Finding, HandleTransaction, Trace, TransactionEvent } from "forta-agent";
 import { FindingGenerator } from "./utils";
 import { toWei } from "web3-utils";
 
@@ -15,21 +15,19 @@ export default function provideETHTransferHandler(
   agentOptions?: agentOptions
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    const valueThreshold: bigint =
-      agentOptions?.valueThreshold !== undefined ? BigInt(agentOptions.valueThreshold) : BigInt(DEFAULT_THRESHOLD);
+    const findings: Finding[] = [];
 
-    if (agentOptions?.from !== undefined && agentOptions?.from !== txEvent.from) {
-      return [];
-    }
+    txEvent.traces.forEach((trace: Trace) => {
+      const valueThreshold: bigint =
+        agentOptions?.valueThreshold !== undefined ? BigInt(agentOptions.valueThreshold) : BigInt(DEFAULT_THRESHOLD);
 
-    if (agentOptions?.to !== undefined && agentOptions?.to !== txEvent.to) {
-      return [];
-    }
+      if (agentOptions?.from !== undefined && agentOptions?.from !== trace.action.from) return;
+      if (agentOptions?.to !== undefined && agentOptions?.to !== trace.action.to) return;
+      if (valueThreshold > BigInt(trace.action.value)) return;
 
-    if (valueThreshold > BigInt(txEvent.transaction.value)) {
-      return [];
-    }
+      findings.push(findingGenerator({ from: trace.action.from, to: trace.action.to, value: trace.action.value }));
+    });
 
-    return [findingGenerator({ from: txEvent.from, to: txEvent.to, value: txEvent.transaction.value })];
+    return findings;
   };
 }

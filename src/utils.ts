@@ -42,18 +42,16 @@ export const extractArgumentTypes = (functionDefinition: string | AbiItem): any[
     default:
       return extractTypesFromAbiItem(functionDefinition);
   }
-}
+};
 
 // TODO Improve for function with more complex types involving , (e.g. test(tuple(uint256, bool), bool))
-const extractTypesFromSignature = (functionSignature: string): string[]=> {
-  const startOfArguments = functionSignature.indexOf("("); 
+const extractTypesFromSignature = (functionSignature: string): string[] => {
+  const startOfArguments = functionSignature.indexOf("(");
   const argumentsString = functionSignature.slice(startOfArguments + 1, functionSignature.length - 1);
 
-  return (argumentsString === "") ? [] : argumentsString.split(",");
-}
+  return argumentsString === "" ? [] : argumentsString.split(",");
+};
 
 const extractTypesFromAbiItem = (functionDefinition: AbiItem): any[] => {
-  return (functionDefinition.inputs === undefined) ? [] : functionDefinition.inputs; 
-}
-
-
+  return functionDefinition.inputs === undefined ? [] : functionDefinition.inputs;
+};

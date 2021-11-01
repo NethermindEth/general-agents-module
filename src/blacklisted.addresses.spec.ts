@@ -31,11 +31,10 @@ describe("Blacklisted Addresses Handler Tests", () => {
   it("should returns a finding when multiple blacklisted addresses are involved", async () => {
     handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent()
-      .addInvolvedAddresses(
-        testBlacklistedAddresses[0],
-        testBlacklistedAddresses[1]
-      );
+    const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(
+      testBlacklistedAddresses[0],
+      testBlacklistedAddresses[1]
+    );
 
     const findings: Finding[] = await handleTrasaction(txEvent);
 
@@ -48,16 +47,17 @@ describe("Blacklisted Addresses Handler Tests", () => {
 
     handleTrasaction = provideBlacklistedAddresessHandler(mockFindingGenerator, testBlacklistedAddresses);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent()
-      .addInvolvedAddresses(
-        testBlacklistedAddresses[0],
-        testBlacklistedAddresses[1]
-      );
+    const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(
+      testBlacklistedAddresses[0],
+      testBlacklistedAddresses[1]
+    );
 
     const findings: Finding[] = await handleTrasaction(txEvent);
 
-    expect(findings).toStrictEqual([{
-      addresses: [testBlacklistedAddresses[0], testBlacklistedAddresses[1]]
-    }]);
+    expect(findings).toStrictEqual([
+      {
+        addresses: [testBlacklistedAddresses[0], testBlacklistedAddresses[1]],
+      },
+    ]);
   });
 });

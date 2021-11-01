@@ -142,25 +142,15 @@ describe("Event Checker Agent Tests", () => {
     const topics: string[] = ["0x10", "0x20", "0x30"];
     const data: string = "0x00000000000000000000000000000000000000000000000029a2241af62c0000"; // 3
 
-    transactionHandler = provideEventCheckerHandler(
-      findingGenerator,
-      EVENT_SIGNATURE,
-      address,
-      filterLog
-    );
+    transactionHandler = provideEventCheckerHandler(findingGenerator, EVENT_SIGNATURE, address, filterLog);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
-      EVENT_SIGNATURE,
-      address,
-      data,
-      ...topics,
-    );
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, address, data, ...topics);
     const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([
       findingGenerator({
-        topics: [keccak256(EVENT_SIGNATURE), ...topics], 
-        address: address, 
+        topics: [keccak256(EVENT_SIGNATURE), ...topics],
+        address: address,
         data: data,
       }),
     ]);
@@ -171,24 +161,15 @@ describe("Event Checker Agent Tests", () => {
     const topics: string[] = ["0xA", "0xB", "0xC"];
     const data: string = "0x00000000000000000000000000000000000000000000000029a2241af62c0000";
 
-    transactionHandler = provideEventCheckerHandler(
-      findingGenerator,
-      EVENT_SIGNATURE,
-      address,
-    );
+    transactionHandler = provideEventCheckerHandler(findingGenerator, EVENT_SIGNATURE, address);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
-      EVENT_SIGNATURE,
-      address,
-      data,
-      ...topics,
-    );
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, address, data, ...topics);
     const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([
       findingGenerator({
-        topics: [keccak256(EVENT_SIGNATURE), ...topics], 
-        address: address, 
+        topics: [keccak256(EVENT_SIGNATURE), ...topics],
+        address: address,
         data: data,
       }),
     ]);

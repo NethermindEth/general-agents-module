@@ -2,18 +2,18 @@ import { Finding, HandleTransaction, Log, TransactionEvent } from "forta-agent";
 import { FindingGenerator } from "./utils";
 
 interface EventData {
-  topics: string[],
-  data: string, 
-  address: string,
-};
+  topics: string[];
+  data: string;
+  address: string;
+}
 
 function eventData(log: Log): EventData {
   return {
-    topics:  log.topics,
-    data:    log.data,
+    topics: log.topics,
+    data: log.data,
     address: log.address,
   };
-};
+}
 
 export default function provideEventCheckerHandler(
   createFinding: FindingGenerator,
@@ -31,7 +31,8 @@ export default function provideEventCheckerHandler(
         .map(eventData)
         .map((data: EventData) => findings.push(createFinding(data)));
     } else {
-      txEvent.filterEvent(eventSignature, address)
+      txEvent
+        .filterEvent(eventSignature, address)
         .map(eventData)
         .map((data: EventData) => findings.push(createFinding(data)));
     }

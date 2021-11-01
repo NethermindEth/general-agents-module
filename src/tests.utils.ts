@@ -29,6 +29,7 @@ export interface TraceProps {
   from?: string;
   input?: string;
   output?: string;
+  value?: string;
 }
 
 export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
@@ -144,9 +145,9 @@ export class TestTransactionEvent extends TransactionEvent {
   }
 
   public addTraces(...traceProps: TraceProps[]): TestTransactionEvent {
-    const toTrace = ({ to, from, input, output }: TraceProps) => {
+    const toTrace = ({ to, from, input, output, value }: TraceProps) => {
       return {
-        action: { to, from, input },
+        action: { to, from, input, value },
         result: { output },
       } as Trace;
     };
@@ -176,7 +177,7 @@ export class TestBlockEvent extends BlockEvent {
     return this;
   }
 
-  public setTimestamp(timestamp: number): TestBlockEvent{
+  public setTimestamp(timestamp: number): TestBlockEvent {
     this.block.timestamp = timestamp;
     return this;
   }

@@ -4,7 +4,7 @@ import {
   encodeFunctionSignature,
   decodeFunctionCallParameters,
   extractFunctionSelector,
-  extractArgumentTypes
+  extractArgumentTypes,
 } from "./utils";
 import { AbiItem } from "web3-utils";
 
@@ -18,7 +18,7 @@ interface FunctionCallInfo {
   from: string;
   to: string;
   functionSelector: string;
-  arguments: { [key: string]: any};
+  arguments: { [key: string]: any };
 }
 
 type Signature = string | AbiItem;
