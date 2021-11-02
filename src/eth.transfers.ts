@@ -4,7 +4,7 @@ import { toWei } from "web3-utils";
 
 const DEFAULT_THRESHOLD = toWei("10");
 
-type agentOptions = {
+type HandlerOptions = {
   from?: string;
   to?: string;
   valueThreshold?: string;
@@ -12,17 +12,17 @@ type agentOptions = {
 
 export default function provideETHTransferHandler(
   findingGenerator: FindingGenerator,
-  agentOptions?: agentOptions
+  handlerOptions?: HandlerOptions
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     const findings: Finding[] = [];
 
     txEvent.traces.forEach((trace: Trace) => {
       const valueThreshold: bigint =
-        agentOptions?.valueThreshold !== undefined ? BigInt(agentOptions.valueThreshold) : BigInt(DEFAULT_THRESHOLD);
+      handlerOptions?.valueThreshold !== undefined ? BigInt(handlerOptions.valueThreshold) : BigInt(DEFAULT_THRESHOLD);
 
-      if (agentOptions?.from !== undefined && agentOptions?.from !== trace.action.from) return;
-      if (agentOptions?.to !== undefined && agentOptions?.to !== trace.action.to) return;
+      if (handlerOptions?.from !== undefined && handlerOptions?.from.toLowerCase() !== trace.action.from) return;
+      if (handlerOptions?.to !== undefined && handlerOptions?.to.toLowerCase() !== trace.action.to) return;
       if (valueThreshold > BigInt(trace.action.value)) return;
 
       findings.push(findingGenerator({ from: trace.action.from, to: trace.action.to, value: trace.action.value }));

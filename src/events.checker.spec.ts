@@ -169,7 +169,7 @@ describe("Event Checker Agent Tests", () => {
     expect(findings).toStrictEqual([
       findingGenerator({
         topics: [keccak256(EVENT_SIGNATURE), ...topics],
-        address: address,
+        address: address.toLowerCase(),
         data: data,
       }),
     ]);

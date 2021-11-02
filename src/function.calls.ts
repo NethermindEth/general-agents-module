@@ -45,9 +45,9 @@ const createFilter = (functionSignature: Signature, options: HandlerOptions | un
   const expectedSelector: string = encodeFunctionSignature(functionSignature);
 
   return (functionCallInfo: FunctionCallInfo) => {
-    if (options.from !== undefined && options.from !== functionCallInfo.from) return false;
+    if (options.from !== undefined && options.from.toLowerCase() !== functionCallInfo.from) return false;
 
-    if (options.to !== undefined && options.to !== functionCallInfo.to) return false;
+    if (options.to !== undefined && options.to.toLowerCase() !== functionCallInfo.to) return false;
 
     if (expectedSelector !== functionCallInfo.functionSelector) return false;
 
