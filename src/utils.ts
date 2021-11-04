@@ -21,8 +21,12 @@ export const stripFunctionSelector = (txData: string): string => stripHexPrefix(
 export const extractFunctionSelector = (txData: string): string => txData.slice(0, 10);
 
 export const decodeFunctionCallParameters = (types: any[], txData: string): any => {
-  const encodedParameters: string = stripFunctionSelector(txData);
-  return decodeParameters(types, encodedParameters);
+  try {
+    const encodedParameters: string = stripFunctionSelector(txData);
+    return decodeParameters(types, encodedParameters);
+  } catch {
+    return undefined;
+  }
 };
 
 export const encodeFunctionSignature = (functionsSignature: string | AbiItem): string =>
