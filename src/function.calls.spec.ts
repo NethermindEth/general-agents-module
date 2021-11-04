@@ -245,4 +245,30 @@ describe("Function calls detector Agent Tests", () => {
     const findings2: Finding[] = await handleTransaction(txEvent2);
     expect(findings2).toStrictEqual([]);
   });
+
+  it("should return empty finding if other function is called", async () => {
+    const functionDefinition: AbiItem = {
+      name: "otherMethod",
+      type: "function",
+      inputs: [],
+    } as AbiItem;
+
+    const to: string = createAddress("0x1");
+    const from: string = createAddress("0x2");
+    const filterOnArguments = (args: { [key: string]: any }): boolean => {
+      return args[1] === "Hello!";
+    };
+
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, "myMethod(uint256,string)", {
+      to,
+      from,
+      filterOnArguments,
+    });
+
+    const input: string = encodeFunctionCall(functionDefinition, []);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input});
+
+    const findings: Finding[] = await handleTransaction(txEvent);
+    expect(findings).toStrictEqual([]);
+  });
 });
