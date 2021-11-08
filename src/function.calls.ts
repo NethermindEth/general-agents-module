@@ -19,6 +19,7 @@ interface FunctionCallInfo {
   to: string;
   functionSelector: string;
   arguments: { [key: string]: any };
+  output: string,
 }
 
 type Signature = string | AbiItem;
@@ -34,6 +35,7 @@ const fromTraceActionToFunctionCallInfo = (functionSignature: Signature, trace: 
     from: trace.action.from,
     functionSelector,
     arguments: args,
+    output: trace.result.output,
   };
 };
 

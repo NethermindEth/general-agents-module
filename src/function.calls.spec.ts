@@ -2,7 +2,7 @@ import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEv
 import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "./tests.utils";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import { AbiItem } from "web3-utils";
-import { encodeFunctionSignature, encodeFunctionCall } from "./utils";
+import { encodeFunctionSignature, encodeFunctionCall, encodeParameters } from "./utils";
 
 describe("Function calls detector Agent Tests", () => {
   let handleTransaction: HandleTransaction;
@@ -129,6 +129,7 @@ describe("Function calls detector Agent Tests", () => {
           to: metadata?.to,
           functionSelector: metadata?.functionSelector,
           arguments: metadata?.arguments,
+          output: metadata?.output,
         },
       });
     };
@@ -150,10 +151,11 @@ describe("Function calls detector Agent Tests", () => {
     const input: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
     const to: string = createAddress("0x1");
     const from: string = createAddress("0x2");
+    const output: string = encodeParameters(['uint256', 'address'], [20, createAddress("0x1")]);
 
     handleTransaction = provideFunctionCallsDetectorHandler(findingGenerator, functionDefinition, { to, from });
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input });
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input, output });
 
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toHaveLength(1);
@@ -162,6 +164,7 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings[0]).toHaveProperty("metadata.functionSelector", encodeFunctionSignature(functionDefinition));
     expect(findings[0]).toHaveProperty("metadata.arguments.0", "2345675643");
     expect(findings[0]).toHaveProperty("metadata.arguments.1", "Hello!");
+    expect(findings[0]).toHaveProperty("metadata.output", output);
   });
 
   it("should returns findings only if calls fits with filterOnArguments condition", async () => {
