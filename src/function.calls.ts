@@ -27,9 +27,9 @@ type Signature = string | AbiItem;
 type Filter = (functionCallInfo: FunctionCallInfo) => boolean;
 
 const fromTraceActionToFunctionCallInfo = (functionSignature: Signature, trace: Trace): FunctionCallInfo => {
-  const functionSelector = extractFunctionSelector(trace.action.input);
   const argumentTypes = extractArgumentTypes(functionSignature);
-  const args = decodeFunctionCallParameters(argumentTypes, trace.action.input);
+  const functionSelector = trace.action.input !== undefined ? extractFunctionSelector(trace.action.input) : "";
+  const args = trace.action.input !== undefined ? decodeFunctionCallParameters(argumentTypes, trace.action.input) : {};
 
   return {
     to: trace.action.to,
