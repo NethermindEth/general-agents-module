@@ -147,10 +147,10 @@ export class TestTransactionEvent extends TransactionEvent {
   public addTraces(...traceProps: TraceProps[]): TestTransactionEvent {
     const toTrace = ({ to, from, input, output, value }: TraceProps) => {
       return {
-        action: { 
-          to: to?.toLowerCase(), 
-          from: from?.toLowerCase(), 
-          input, 
+        action: {
+          to: to?.toLowerCase(),
+          from: from?.toLowerCase(),
+          input,
           value,
         },
         result: { output },

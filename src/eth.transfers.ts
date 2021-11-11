@@ -19,7 +19,9 @@ export default function provideETHTransferHandler(
 
     txEvent.traces.forEach((trace: Trace) => {
       const valueThreshold: bigint =
-      handlerOptions?.valueThreshold !== undefined ? BigInt(handlerOptions.valueThreshold) : BigInt(DEFAULT_THRESHOLD);
+        handlerOptions?.valueThreshold !== undefined
+          ? BigInt(handlerOptions.valueThreshold)
+          : BigInt(DEFAULT_THRESHOLD);
 
       if (handlerOptions?.from !== undefined && handlerOptions?.from.toLowerCase() !== trace.action.from) return;
       if (handlerOptions?.to !== undefined && handlerOptions?.to.toLowerCase() !== trace.action.to) return;

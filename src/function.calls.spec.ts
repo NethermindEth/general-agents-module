@@ -2,7 +2,8 @@ import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEv
 import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "./tests.utils";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import { AbiItem } from "web3-utils";
-import { encodeFunctionSignature, encodeFunctionCall, encodeParameters } from "./utils";
+import { encodeFunctionSignature, encodeFunctionCall, encodeParameters, decodeParameter } from "./utils";
+import BigNumber from "bignumber.js";
 
 describe("Function calls detector Agent Tests", () => {
   let handleTransaction: HandleTransaction;
@@ -151,7 +152,7 @@ describe("Function calls detector Agent Tests", () => {
     const input: string = encodeFunctionCall(functionDefinition, ["2345675643", "Hello!"]);
     const to: string = createAddress("0x1");
     const from: string = createAddress("0x2");
-    const output: string = encodeParameters(['uint256', 'address'], [20, createAddress("0x1")]);
+    const output: string = encodeParameters(["uint256", "address"], [20, createAddress("0x1")]);
 
     handleTransaction = provideFunctionCallsDetectorHandler(findingGenerator, functionDefinition, { to, from });
 
@@ -269,9 +270,42 @@ describe("Function calls detector Agent Tests", () => {
     });
 
     const input: string = encodeFunctionCall(functionDefinition, []);
-    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input});
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ to, from, input: input });
 
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([]);
+  });
+
+  it("should returns findings only if calls fits with filterOnOutput condition", async () => {
+    const functionDefinition: AbiItem = {
+      name: "myMethodWithOutput",
+      type: "function",
+      inputs: [],
+      outputs: [
+        {
+          name: "value",
+          type: "uint256",
+        },
+      ],
+    };
+
+    const filterOnOutput = (output: string): boolean =>
+      new BigNumber(3).lte(new BigNumber(decodeParameter("uint256", output)));
+
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition, {
+      filterOnOutput,
+    });
+
+    const input: string = encodeFunctionCall(functionDefinition, []);
+    const encoder = (x: number) => encodeParameters(functionDefinition.outputs as any, [x]);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces(
+      { output: encoder(2), input },
+      { output: encoder(3), input },
+      { output: encoder(1), input },
+      { output: encoder(10), input }
+    );
+
+    const findings: Finding[] = await handleTransaction(txEvent);
+    expect(findings).toStrictEqual([generalTestFindingGenerator(), generalTestFindingGenerator()]);
   });
 });

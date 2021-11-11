@@ -12,6 +12,7 @@ interface HandlerOptions {
   from?: string;
   to?: string;
   filterOnArguments?: (values: { [key: string]: any }) => boolean;
+  filterOnOutput?: (output: string) => boolean;
 }
 
 interface FunctionCallInfo {
@@ -19,7 +20,7 @@ interface FunctionCallInfo {
   to: string;
   functionSelector: string;
   arguments: { [key: string]: any };
-  output: string,
+  output: string;
 }
 
 type Signature = string | AbiItem;
@@ -56,6 +57,13 @@ const createFilter = (functionSignature: Signature, options: HandlerOptions | un
     if (expectedSelector !== functionCallInfo.functionSelector) return false;
 
     if (options.filterOnArguments !== undefined && !options.filterOnArguments(functionCallInfo.arguments)) return false;
+
+    if (
+      options.filterOnOutput !== undefined &&
+      (functionCallInfo.output === undefined || !options.filterOnOutput(functionCallInfo.output))
+    ) {
+      return false;
+    }
 
     return true;
   };
