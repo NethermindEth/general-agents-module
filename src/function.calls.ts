@@ -29,7 +29,7 @@ type Filter = (functionCallInfo: FunctionCallInfo) => boolean;
 const fromTraceActionToFunctionCallInfo = (functionSignature: Signature, trace: Trace): FunctionCallInfo => {
   const argumentTypes = extractArgumentTypes(functionSignature);
   const functionSelector = trace.action.input !== undefined ? extractFunctionSelector(trace.action.input) : "";
-  const args = trace.action.input ? decodeFunctionCallParameters(argumentTypes, trace.action.input) : "";
+  const args = trace.action.input !== undefined ? decodeFunctionCallParameters(argumentTypes, trace.action.input) : {};
 
   return {
     to: trace.action.to,
