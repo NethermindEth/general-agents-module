@@ -308,4 +308,31 @@ describe("Function calls detector Agent Tests", () => {
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([generalTestFindingGenerator(), generalTestFindingGenerator()]);
   });
+
+  it("should filter only by selector if options are undefined", async () => {
+    const functionDefinition: AbiItem = {
+      name: "myMethodWithOutput",
+      type: "function",
+      inputs: [],
+      outputs: [
+        {
+          name: "value",
+          type: "uint256",
+        },
+      ],
+    };
+
+
+    handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition);
+
+    const input: string = encodeFunctionCall(functionDefinition, []);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
+      input: input
+    }).addTraces({
+      input: "wrongSelector"
+    });
+
+    const findings: Finding[] = await handleTransaction(txEvent);
+    expect(findings).toStrictEqual([generalTestFindingGenerator()]);
+  });
 });
