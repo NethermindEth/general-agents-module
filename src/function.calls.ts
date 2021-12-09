@@ -41,11 +41,11 @@ const fromTraceActionToFunctionCallInfo = (functionSignature: Signature, trace: 
 };
 
 const createFilter = (functionSignature: Signature, options: HandlerOptions | undefined): Filter => {
-  if (options === undefined) {
-    return (_) => true;
-  }
-
   const expectedSelector: string = encodeFunctionSignature(functionSignature);
+
+  if (options === undefined) {
+    return (functionCallInfo: FunctionCallInfo) => expectedSelector === functionCallInfo.functionSelector;
+  }
 
   return (functionCallInfo: FunctionCallInfo) => {
     if (functionCallInfo.arguments === undefined) return false;
