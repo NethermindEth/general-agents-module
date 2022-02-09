@@ -1,7 +1,7 @@
-import provideERC20TransferHandler from "./erc20.transfers";
+// import provideERC20TransferHandler from "./erc20.transfers";
 import provideETHTransferHandler from "./eth.transfers";
 import provideFunctionCallsDetectorHandler from "./function.calls";
-import provideEventCheckerHandler from "./events.checker";
+// import provideEventCheckerHandler from "./events.checker";
 import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
 import {
   FindingGenerator,
@@ -18,10 +18,10 @@ import {
 import { TestTransactionEvent, TestBlockEvent, runBlock, createAddress, Agent, TraceProps } from "./tests.utils";
 
 export {
-  provideERC20TransferHandler,
+  // provideERC20TransferHandler,
   provideETHTransferHandler,
   provideFunctionCallsDetectorHandler,
-  provideEventCheckerHandler,
+  // provideEventCheckerHandler,
   provideBlacklistedAddressesHandler,
   createAddress,
   FindingGenerator,

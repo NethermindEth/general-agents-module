@@ -15,6 +15,7 @@ function eventData(log: Log): EventData {
   };
 }
 
+// Deprecated because `filterEvent` is deprecated in Forta SDK
 export default function provideEventCheckerHandler(
   createFinding: FindingGenerator,
   eventSignature: string,
@@ -24,18 +25,18 @@ export default function provideEventCheckerHandler(
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     const findings: Finding[] = [];
 
-    if (filter) {
-      txEvent
-        .filterEvent(eventSignature, address)
-        .filter(filter)
-        .map(eventData)
-        .map((data: EventData) => findings.push(createFinding(data)));
-    } else {
-      txEvent
-        .filterEvent(eventSignature, address)
-        .map(eventData)
-        .map((data: EventData) => findings.push(createFinding(data)));
-    }
+    // if (filter) {
+    //   txEvent
+    //     .filterEvent(eventSignature, address)
+    //     .filter(filter)
+    //     .map(eventData)
+    //     .map((data: EventData) => findings.push(createFinding(data)));
+    // } else {
+    //   txEvent
+    //     .filterEvent(eventSignature, address)
+    //     .map(eventData)
+    //     .map((data: EventData) => findings.push(createFinding(data)));
+    // }
 
     return findings;
   };

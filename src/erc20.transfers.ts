@@ -45,6 +45,7 @@ const createFilter = (options: HandlerOptions | undefined): ((transferInfo: tran
   };
 };
 
+// Deprecated because `filterEvent` is deprecated in Forta SDK
 export default function provideERC20TransferHandler(
   findingGenerator: FindingGenerator,
   tokenAddress: string,
@@ -52,10 +53,11 @@ export default function provideERC20TransferHandler(
 ): HandleTransaction {
   const filterTransferInfo: (transferInfo: transferInfo) => boolean = createFilter(handlerOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    return txEvent
-      .filterEvent(EVENT_SIGNATURE, tokenAddress)
-      .map(fromLogToTransferInfo)
-      .filter(filterTransferInfo)
-      .map((transferInfo) => findingGenerator(transferInfo));
+    return [];
+    // return txEvent
+    //   .filterEvent(EVENT_SIGNATURE, tokenAddress)
+    //   .map(fromLogToTransferInfo)
+    //   .filter(filterTransferInfo)
+    //   .map((transferInfo) => findingGenerator(transferInfo));
   };
 }
