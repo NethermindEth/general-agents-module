@@ -241,6 +241,7 @@ This mock provides some methods to set up the values the provider should return:
   should return.
 - `addStorage(contract, slot, block, result)`. This method prepare the value stored in the specific `slot` of `contract` address
   in the given `block` to be `result`.
+- `addBlock(blockNumber, block)`. This method prepare the block with number `blockNumber` to be `block`.
 - `clear()`. This function clear all the mocked data.
 
 All the data you set in the provider will be used until the `clear` function is called.

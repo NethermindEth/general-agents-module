@@ -9,12 +9,14 @@ export interface CallParams {
 
 export class MockEthersProvider {
   public call: any;
+  public getBlock: any;
   public getStorageAt: any;
   public readonly _isProvider: boolean;
 
   constructor() { 
     this._isProvider = true;
     this.call = jest.fn(); 
+    this.getBlock = jest.fn(); 
     this.getStorageAt = jest.fn(); 
   }
 
@@ -32,6 +34,13 @@ export class MockEthersProvider {
     when(this.getStorageAt)
       .calledWith(contract, slot, block)
       .mockReturnValue(result);
+    return this;
+  }
+
+  public addBlock(blockNumber: number, block: any): MockEthersProvider {
+    when(this.getBlock)
+      .calledWith(blockNumber)
+      .mockReturnValue(block);
     return this;
   }
 
