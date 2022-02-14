@@ -14,6 +14,10 @@ import {
   encodeFunctionSignature,
   encodeEventSignature,
 } from "./utils";
+import {
+  CallParams,
+  MockEthersProvider,
+} from "./mock.utils";
 
 import { TestTransactionEvent, TestBlockEvent, runBlock, createAddress, Agent, TraceProps } from "./tests.utils";
 
@@ -38,4 +42,6 @@ export {
   encodeFunctionSignature,
   Agent,
   TraceProps,
+  CallParams,
+  MockEthersProvider,
 };

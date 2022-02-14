@@ -22,6 +22,8 @@ There are multiple types used across all the modules.
     > This type works as a store for every data that is passed to the `FindingGenerator`. It is a `dict` with `string` as keys and `any` type in its values.
 -  `FindingGenerator`
     > All the approaches receive a function with this type. This function will be in charge of creating the Findings when the agent's conditions are met. This function can receive a `metadataVault` as a parameter where finding relevant information will be pass, this information can be used for creating more informative findings. This type is an alias for `(metadata?: metadataVault) => Finding`. The information set in the `metadataVault` for every approach will be described in the approach documentation.
+- `CallParams`
+    > This is an object containing two properties an `inputs` array and a `outputs` array.
 
 ## Approaches
 
@@ -200,3 +202,45 @@ Parameter description:
 - `block`: It is the `BlockEvent` that the agent will handle.
 - `tx#`: These are the `TransactionEvent` objects asociated with the `BlockEvent` that the agent will handle.
 
+
+### MockEtherProvider
+
+This is helper class for mocking the `ethers.utils.Provider` class.
+
+Basic usage:
+```ts
+import { 
+  MockEthersProvider, 
+  encodeParameter, 
+  createAddress,
+} from "forta-agent-tools";
+import { utils, Contract } from "ethers";
+
+const iface: utils.Interface =  new utils.Interface([
+  "function myAwersomeFunction(uint256 param1, string param2) extenal view returns (unit8 id, uint256 val)"
+]);
+
+const address: string = createAddress("0xf00");
+const data: string = createAddress("0xda7a");
+
+const mockProvider: MockEthersProvider = new MockEthersProvider()
+  .addCallTo(
+    address, 20, iface,
+    "myAwersomeFunction",
+    { inputs:[10, "tests"], outputs:[1, 2000]},
+  )
+  .addStorage(address, 5, 15, encodeParameter("address", data));
+```
+
+#### How to use it
+
+This mock provides some methods to set up the values the provider should return:
+- `addCallTo(contract, block, iface, id, { inputs, outputs })`. This method prepare a call to the `contract` address
+  at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier 
+  of the function to call, `inputs` are the parameters passed in the call and `outputs` the values the call 
+  should return.
+- `addStorage(contract, slot, block, result)`. This method prepare the value stored in the specific `slot` of `contract` address
+  in the given `block` to be `result`.
+- `clear()`. This function clear all the mocked data.
+
+All the data you set in the provider will be used until the `clear` function is called.
