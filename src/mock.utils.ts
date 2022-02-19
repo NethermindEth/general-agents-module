@@ -11,6 +11,7 @@ export class MockEthersProvider {
   public call: any;
   public getBlock: any;
   public getStorageAt: any;
+  public getBlockNumber: any;
   public readonly _isProvider: boolean;
 
   constructor() { 
@@ -18,6 +19,7 @@ export class MockEthersProvider {
     this.call = jest.fn(); 
     this.getBlock = jest.fn(); 
     this.getStorageAt = jest.fn(); 
+    this.getBlockNumber = jest.fn(); 
   }
 
   public addCallTo(contract: string, block: number | string, iface: Interface, id: any, params: CallParams): MockEthersProvider {
@@ -40,6 +42,13 @@ export class MockEthersProvider {
   public addBlock(blockNumber: number, block: any): MockEthersProvider {
     when(this.getBlock)
       .calledWith(blockNumber)
+      .mockReturnValue(block);
+    return this;
+  }
+
+  public setLatestBlock(block: number) {
+    when(this.getBlockNumber)
+      .calledWith()
       .mockReturnValue(block);
     return this;
   }

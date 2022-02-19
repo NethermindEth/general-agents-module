@@ -8,7 +8,7 @@ describe("MockEthersProvider tests suite", () => {
 
   beforeEach(() => mockProvider.clear());
 
-  it("should return the correct storage", () => {
+  it("should return the correct storage", async () => {
     const CASES: [string, number, number, string][] = [
       ["0xdef10", 1, 0, "0xe0a0"],
       ["0xdef11", 21, 70, "0xe0a1"],
@@ -24,12 +24,12 @@ describe("MockEthersProvider tests suite", () => {
       mockProvider.addStorage(contract, slot, block, encodedSlot);
 
       // check the storage twice
-      expect(mockProvider.getStorageAt(contract, slot, block)).toStrictEqual(encodedSlot);
-      expect(mockProvider.getStorageAt(contract, slot, block)).toStrictEqual(encodedSlot);
+      expect(await mockProvider.getStorageAt(contract, slot, block)).toStrictEqual(encodedSlot);
+      expect(await mockProvider.getStorageAt(contract, slot, block)).toStrictEqual(encodedSlot);
     }
   });
 
-  it("should return the correct block", () => {
+  it("should return the correct block", async () => {
     const CASES: Record<string, any>[] = [
       { difficulty: 200, number: 25, timestamp: 31},
       { difficulty: 50, number: 212, timestamp: 3131},
@@ -41,8 +41,8 @@ describe("MockEthersProvider tests suite", () => {
       mockProvider.addBlock(block.number, block);
 
       // check the block twice
-      expect(mockProvider.getBlock(block.number)).toStrictEqual(block);
-      expect(mockProvider.getBlock(block.number)).toStrictEqual(block);
+      expect(await mockProvider.getBlock(block.number)).toStrictEqual(block);
+      expect(await mockProvider.getBlock(block.number)).toStrictEqual(block);
     }
   });
 
@@ -90,4 +90,16 @@ describe("MockEthersProvider tests suite", () => {
       else valueMatch(returnedValue, outputs);
     }
   });
+
+  it("should set the latest block", async () => {
+    const CASES: number[] = [1, 10, 20, 9, 0, 201209];
+
+    for(let block of CASES) {
+      mockProvider.setLatestBlock(block);
+
+      // check the block twice
+      expect(await mockProvider.getBlockNumber()).toStrictEqual(block);
+      expect(await mockProvider.getBlockNumber()).toStrictEqual(block);
+    }
+  })
 });
