@@ -17,6 +17,7 @@ import {
 import {
   CallParams,
   MockEthersProvider,
+  MockEthersSigner,
 } from "./mock.utils";
 
 import { TestTransactionEvent, TestBlockEvent, runBlock, createAddress, Agent, TraceProps } from "./tests.utils";
@@ -44,4 +45,5 @@ export {
   TraceProps,
   CallParams,
   MockEthersProvider,
+  MockEthersSigner,
 };
