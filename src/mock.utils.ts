@@ -48,14 +48,14 @@ export class MockEthersProvider {
     return this;
   }
 
-  public setLatestBlock(block: number) {
+  public setLatestBlock(block: number): MockEthersProvider {
     when(this.getBlockNumber)
       .calledWith()
       .mockReturnValue(block);
     return this;
   }
 
-  public addSigner(addr: string) {
+  public addSigner(addr: string): MockEthersProvider {
     when(this.getSigner)
       .calledWith(addr)
       .mockReturnValue(
@@ -83,7 +83,7 @@ export class MockEthersSigner extends MockEthersProvider {
     this.sendTransaction = jest.fn();
   }  
 
-  public bindProvider(provider: MockEthersProvider) {
+  public bindProvider(provider: MockEthersProvider): MockEthersSigner {
     this.call = provider.call;
     this.getBlock = provider.getBlock;
     this.getStorageAt = provider.getStorageAt;
@@ -91,7 +91,7 @@ export class MockEthersSigner extends MockEthersProvider {
     return this;
   }
 
-  public setAddress(addr: string) {
+  public setAddress(addr: string): MockEthersSigner {
     when(this.getAddress)
       .calledWith()
       .mockReturnValue(addr);
@@ -105,7 +105,7 @@ export class MockEthersSigner extends MockEthersProvider {
     id: string,
     values: any[],
     receipt: any, 
-  ) {
+  ): MockEthersSigner {
     when(this.sendTransaction)
       .calledWith({
         from,
@@ -130,7 +130,7 @@ export class MockEthersSigner extends MockEthersProvider {
     id: string,
     values: any[],
     message?: any,
-  ) {
+  ): MockEthersSigner {
     when(this.sendTransaction)
       .calledWith({
         from,
