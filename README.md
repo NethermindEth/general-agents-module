@@ -205,7 +205,7 @@ Parameter description:
 
 ### MockEtherProvider
 
-This is helper class for mocking the `ethers.utils.Provider` class.
+This is helper class for mocking the `ethers.providers.Provider` class.
 
 Basic usage:
 ```ts
@@ -243,6 +243,47 @@ This mock provides some methods to set up the values the provider should return:
   in the given `block` to be `result`.
 - `addBlock(blockNumber, block)`. This method prepare the block with number `blockNumber` to be `block`.
 - `setLatestBlock(block)`. This method allow you to set up what is the number of the latest block in the provider.
+- `addSigner(addr)`. This function prepare a valid signer for the given address that use the provider being used.
 - `clear()`. This function clear all the mocked data.
 
 All the data you set in the provider will be used until the `clear` function is called.
+
+
+### MockEtherSigner
+
+This is helper class for mocking the `ethers.providers.JsonRpcSigner` class. This class extends `MockEthersProvider`.
+
+Basic usage:
+```ts
+import { 
+  MockEthersSigner, 
+  encodeParameter, 
+  createAddress,
+} from "forta-agent-tools";
+import { utils, Contract } from "ethers";
+
+const iface: utils.Interface =  new utils.Interface([
+  "function myAwersomeFunction(uint256 param1, string param2)"
+]);
+
+const address: string = createAddress("0xf00");
+const contract: string = createAddress("0xda0");
+
+const mockSigner: MockEthersSigner = new MockEthersProvider()
+  .setAddress(from)
+  .allowTransaction(
+    address, contract, iface,
+    "myAwersomeFunction", [20, "twenty"]
+    { confirmations: 42 }, // receipt data
+  )
+```
+
+#### How to use it
+
+This mock provides some methods to set up the values the signer should return:
+- `setAddress(address)`. This method set the address that the signer can sign.
+- `allowTransaction(from, to, iface, id, inputs)`. This method prepare the a txn sent to `to` and signed from `from`. The transaction is ment to call the method `id` taken from the `iface` of the `to` contract passing the `inputs` as parameters. `receipt` will be the receipt returned by the transaction.
+- `denyTransaction(from, to, iface, id, inputs, msg)`. Same conditions of `allowTransaction` but in this case the transaction will be reverted with `msg` message.
+- `bindProvider(provider)`. This method is meant to syncronize the mocked data in the `provider` with the one in the signer.
+
+All the data you set in the signer will be used until the `clear` function is called.

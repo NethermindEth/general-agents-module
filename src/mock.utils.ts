@@ -10,6 +10,7 @@ export interface CallParams {
 export class MockEthersProvider {
   public call: any;
   public getBlock: any;
+  public getSigner: any;
   public getStorageAt: any;
   public getBlockNumber: any;
   public readonly _isProvider: boolean;
@@ -18,6 +19,7 @@ export class MockEthersProvider {
     this._isProvider = true;
     this.call = jest.fn(); 
     this.getBlock = jest.fn(); 
+    this.getSigner = jest.fn(); 
     this.getStorageAt = jest.fn(); 
     this.getBlockNumber = jest.fn(); 
   }
@@ -53,7 +55,90 @@ export class MockEthersProvider {
     return this;
   }
 
+  public addSigner(addr: string) {
+    when(this.getSigner)
+      .calledWith(addr)
+      .mockReturnValue(
+        new MockEthersSigner()
+          .bindProvider(this)
+          .setAddress(addr)
+      );
+    return this;
+  }
+
   public clear(): void {
     resetAllWhenMocks();
   }
 };
+
+export class MockEthersSigner extends MockEthersProvider {
+  public readonly _isSigner: boolean;
+  public getAddress: any;
+  public sendTransaction: any;
+
+  constructor() {
+    super();
+    this._isSigner = true;
+    this.getAddress = jest.fn();
+    this.sendTransaction = jest.fn();
+  }  
+
+  public bindProvider(provider: MockEthersProvider) {
+    this.call = provider.call;
+    this.getBlock = provider.getBlock;
+    this.getStorageAt = provider.getStorageAt;
+    this.getBlockNumber = provider.getBlockNumber;
+    return this;
+  }
+
+  public setAddress(addr: string) {
+    when(this.getAddress)
+      .calledWith()
+      .mockReturnValue(addr);
+    return this;
+  }
+
+  public allowTransaction(
+    from: string,
+    to: string,
+    iface: Interface,
+    id: string,
+    values: any[],
+    receipt: any, 
+  ) {
+    when(this.sendTransaction)
+      .calledWith({
+        from,
+        to: toChecksumAddress(to),
+        data: iface.encodeFunctionData(id, values),
+      })
+      .mockReturnValue({
+        async wait() {
+          return {
+            logs: [], // can't be undefined
+            ...receipt,
+          };
+        }
+      });
+    return this;
+  }
+
+  public denyTransaction(
+    from: string,
+    to: string,
+    iface: Interface,
+    id: string,
+    values: any[],
+    message?: any,
+  ) {
+    when(this.sendTransaction)
+      .calledWith({
+        from,
+        to: toChecksumAddress(to),
+        data: iface.encodeFunctionData(id, values),
+      })
+      //@ts-ignore
+      .mockRejectedValue(message);
+    return this;
+  }
+}
