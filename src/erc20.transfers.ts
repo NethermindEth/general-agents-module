@@ -1,7 +1,8 @@
-import { Finding, HandleTransaction, TransactionEvent, Log } from "forta-agent";
-import { FindingGenerator, decodeParameter } from "./utils";
+import { LogDescription } from "@ethersproject/abi";
+import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
+import { FindingGenerator } from "./utils";
 
-const EVENT_SIGNATURE = "Transfer(address,address,uint256)";
+const EVENT_SIGNATURE = "event Transfer(address indexed from, address indexed to, uint256 amount)";
 
 type HandlerOptions = {
   from?: string;
@@ -9,21 +10,21 @@ type HandlerOptions = {
   amountThreshold?: string;
 };
 
-type transferInfo = {
+type TransferInfo = {
   from: string;
   to: string;
-  amount: any;
+  amount: string;
 };
 
-const fromLogToTransferInfo = (log: Log): transferInfo => {
+const fromLogToTransferInfo = (log: LogDescription): TransferInfo => {
   return {
-    to: decodeParameter("address", log.topics[2]).toLowerCase(),
-    from: decodeParameter("address", log.topics[1]).toLowerCase(),
-    amount: decodeParameter("uint256", log.data),
+    to: log.args.to.toLowerCase(),
+    from: log.args.from.toLowerCase(),
+    amount: log.args.amount.toString(),
   };
 };
 
-const createFilter = (options: HandlerOptions | undefined): ((transferInfo: transferInfo) => boolean) => {
+const createFilter = (options: HandlerOptions | undefined): ((transferInfo: TransferInfo) => boolean) => {
   if (options === undefined) {
     return (_) => true;
   }
@@ -45,19 +46,17 @@ const createFilter = (options: HandlerOptions | undefined): ((transferInfo: tran
   };
 };
 
-// Deprecated because `filterEvent` is deprecated in Forta SDK
 export default function provideERC20TransferHandler(
   findingGenerator: FindingGenerator,
   tokenAddress: string,
   handlerOptions?: HandlerOptions
 ): HandleTransaction {
-  const filterTransferInfo: (transferInfo: transferInfo) => boolean = createFilter(handlerOptions);
+  const filterTransferInfo: (transferInfo: TransferInfo) => boolean = createFilter(handlerOptions);
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    return [];
-    // return txEvent
-    //   .filterEvent(EVENT_SIGNATURE, tokenAddress)
-    //   .map(fromLogToTransferInfo)
-    //   .filter(filterTransferInfo)
-    //   .map((transferInfo) => findingGenerator(transferInfo));
+    return txEvent
+      .filterLog(EVENT_SIGNATURE, tokenAddress)
+      .map(fromLogToTransferInfo)
+      .filter(filterTransferInfo)
+      .map((transferInfo) => findingGenerator(transferInfo));
   };
 }
