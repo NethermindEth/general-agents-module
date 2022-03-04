@@ -64,11 +64,15 @@ const handler = provideEventCheckerHandler(findingGenerator, eventSignature, add
 #### Arguments
 
 - `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
-  - `topics`: An array containing the event's topics.
-  - `data`: The event's data
-  - `address`: The address emitting the event.
+  - `eventFragment`: An ethers.js EventFragment object related to the specific event.
+  - `name`: The event name.
+  - `signature`: The event signature.
+  - `topic`: The topic hash.
+  - `args`: The event input parameter values (both index-based and key-based access based on parameter order and names).
+  - `address`: The log originating address.
+- `eventSignature`: The event signature to be detected.
 - `address`: If provided, the approach will only detect events emitted from the specified account.
-- `filter`: If provided, the approach will only detect events that are not discarded by the filter. This function has the type `(log: Log, index?: number, array?: Log[]) => boolean`, it will be used as argument for the common `filter` arrays function.
+- `filter`: If provided, the approach will only detect events that are not discarded by the filter. This function has the type `(log: LogDescription, index?: number, array?: LogDescription[]) => boolean`, it will be used as argument for the common `filter` arrays function.
 
 ### - Eth Transfer Handler
 
