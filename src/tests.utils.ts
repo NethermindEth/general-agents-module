@@ -115,7 +115,7 @@ export class TestTransactionEvent extends TransactionEvent {
   public addEventLog(
     eventSignature: string | AbiItem,
     address: string = createAddress("0x0"),
-    data: string = "",
+    data: string = "0x",
     ...topics: string[]
   ): TestTransactionEvent {
     this.receipt.logs.push({
@@ -128,7 +128,7 @@ export class TestTransactionEvent extends TransactionEvent {
 
   public addAnonymousEventLog(
     address: string = createAddress("0x0"),
-    data: string = "",
+    data: string = "0x",
     ...topics: string[]
   ): TestTransactionEvent {
     this.receipt.logs.push({
