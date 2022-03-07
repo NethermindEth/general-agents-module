@@ -53,6 +53,8 @@ export class TestTransactionEvent extends TransactionEvent {
       hash: "",
       from: createAddress("0x0"),
       to: createAddress("0x1"),
+      gas: "",
+      gasPrice: "",
       value: "0",
     } as any;
 
@@ -84,6 +86,16 @@ export class TestTransactionEvent extends TransactionEvent {
 
   public setValue(value: string): TestTransactionEvent {
     this.transaction.value = value;
+    return this;
+  }
+
+  public setGas(value: string): TestTransactionEvent {
+    this.transaction.gas = value;
+    return this;
+  }
+
+  public setGasPrice(value: string): TestTransactionEvent {
+    this.transaction.gasPrice = value;
     return this;
   }
 
