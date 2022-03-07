@@ -1,32 +1,37 @@
-import { HandleTransaction, Finding, TransactionEvent, Log, FindingSeverity, FindingType } from "forta-agent";
+import { BigNumber } from "ethers";
+
+import { HandleTransaction, Finding, TransactionEvent, FindingSeverity, FindingType, LogDescription } from "forta-agent";
 import { generalTestFindingGenerator, TestTransactionEvent } from "./tests.utils";
 import provideEventCheckerHandler from "./events.checker";
-import { FindingGenerator, metadataVault } from "./utils";
-import { keccak256 } from "forta-agent/dist/sdk/utils";
+import { encodeParameter, encodeParameters, FindingGenerator, metadataVault } from "./utils";
+import { createAddress } from "./tests.utils";
 
-const EVENT_SIGNATURE = "testSignature(bool,address)";
+const TEST_EVENT = "event Test(bool testBool, uint256 testUint256, address indexed testAddress)";
+const TEST_EVENT_SIGNATURE = "Test(bool,uint256,address)";
 
-const findingGenerator: FindingGenerator = (event?: metadataVault): Finding =>
-  Finding.fromObject({
+const findingGenerator: FindingGenerator = (event?: metadataVault): Finding => {
+  return Finding.fromObject({
     name: "Finding Test",
     description: "Finding for test",
     alertId: "TEST",
     severity: FindingSeverity.Low,
     type: FindingType.Info,
     metadata: {
-      topics: JSON.stringify(event?.topics),
-      data: event?.data,
-      address: event?.address,
+      args: JSON.stringify(event?.args).toLowerCase(),
+      address: event?.address.toLowerCase(),
     },
   });
+}
 
-// Skiping this test suite because template is outdated
-describe.skip("Event Checker Agent Tests", () => {
+describe("Event Checker Agent Tests", () => {
   let transactionHandler: HandleTransaction;
 
   it("should returns empty findings if expected event is not found", async () => {
-    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, EVENT_SIGNATURE);
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog("badSignature", "0x121212");
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
+      "badSignature",
+      "0x121212"
+    );
 
     const findings: Finding[] = await transactionHandler(txEvent);
 
@@ -34,8 +39,13 @@ describe.skip("Event Checker Agent Tests", () => {
   });
 
   it("should returns empty findings if the event wasn't emitted from the correct address", async () => {
-    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, EVENT_SIGNATURE, "0x131313");
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, "0x1212");
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT, "0x131313");
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      "0x1212",
+      encodeParameters(["bool", "uint256"], [true, "0xf00d"]),
+      encodeParameter("address", createAddress("0xbeef"))
+    );
 
     const findings: Finding[] = await transactionHandler(txEvent);
 
@@ -43,8 +53,13 @@ describe.skip("Event Checker Agent Tests", () => {
   });
 
   it("should returns a finding if expected event was emitted from the correct address", async () => {
-    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, EVENT_SIGNATURE, "0x121212");
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, "0x121212");
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT, "0x121212");
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      "0x121212",
+      encodeParameters(["bool", "uint256"], [true, "0xf00d"]),
+      encodeParameter("address", createAddress("0xbeef"))
+    );
 
     const findings: Finding[] = await transactionHandler(txEvent);
 
@@ -52,50 +67,73 @@ describe.skip("Event Checker Agent Tests", () => {
   });
 
   it("should returns findings every time the expected event is emitted from any address if no address was specified", async () => {
-    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, EVENT_SIGNATURE);
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT);
 
-    const txEvent1: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, "0x121212");
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      "0x121212",
+      encodeParameters(["bool", "uint256"], [true, "0xf00d"]),
+      encodeParameter("address", createAddress("0xbeef"))
+    );
+
     let findings: Finding[] = await transactionHandler(txEvent1);
 
-    const txEvent2: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, "0x131313");
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      "0x131313",
+      encodeParameters(["bool", "uint256"], [true, "0xf00d"]),
+      encodeParameter("address", createAddress("0xbeef"))
+    );
+
     findings = findings.concat(await transactionHandler(txEvent2));
 
-    expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent1), generalTestFindingGenerator(txEvent2)]);
+    expect(findings).toStrictEqual([
+      generalTestFindingGenerator(txEvent1),
+      generalTestFindingGenerator(txEvent2)
+    ]);
   });
 
   it("should returns findings only when then event is emitted from the correct address", async () => {
-    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, EVENT_SIGNATURE, "0x121212");
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT, "0x121212");
 
-    const txEvent1: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, "0x121212");
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      "0x121212",
+      encodeParameters(["bool", "uint256"], [true, "0xf00d"]),
+      encodeParameter("address", createAddress("0xbeef"))
+    );
+
     let findings: Finding[] = await transactionHandler(txEvent1);
 
-    const txEvent2: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, "0x131313");
+    const txEvent2: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      "0x131313",
+      encodeParameters(["bool", "uint256"], [true, "0xf00d"]),
+      encodeParameter("address", createAddress("0xbeef"))
+    );
+
     findings = findings.concat(await transactionHandler(txEvent2));
 
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent1)]);
   });
 
   it("should returns empty findings with filtered function", async () => {
-    const filterLog = (log: Log): boolean => {
-      const number = Number(BigInt(log.data)) / 10 ** 18;
-      if (number > 2) {
-        return true;
-      }
-
-      return false;
+    const filterLog = (log: LogDescription): boolean => {
+      return log.args.testUint256.div(BigNumber.from(10).pow(18)).gt(2);
     };
 
     transactionHandler = provideEventCheckerHandler(
       generalTestFindingGenerator,
-      EVENT_SIGNATURE,
+      TEST_EVENT,
       "0x121212",
       filterLog
     );
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
-      EVENT_SIGNATURE,
+      TEST_EVENT_SIGNATURE,
       "0x121212",
-      "0x000000000000000000000000000000000000000000000000000eebe0b40e8000" // 0.0042
+      encodeParameters(["bool", "uint256"], [true, "0xeebe0b40e8000"]), // 0.0042e+18
+      encodeParameter("address", createAddress("0xbeef"))
     );
     const findings: Finding[] = await transactionHandler(txEvent);
 
@@ -103,75 +141,91 @@ describe.skip("Event Checker Agent Tests", () => {
   });
 
   it("should returns findings with filtered function if condition met", async () => {
-    const filterLog = (log: Log): boolean => {
-      const number = Number(BigInt(log.data)) / 10 ** 18;
-      if (number > 2) {
-        return true;
-      }
-
-      return false;
+    const filterLog = (log: LogDescription): boolean => {
+      return log.args.testUint256.div(BigNumber.from(10).pow(18)).gt(2);
     };
 
     transactionHandler = provideEventCheckerHandler(
       generalTestFindingGenerator,
-      EVENT_SIGNATURE,
+      TEST_EVENT,
       "0x121212",
       filterLog
     );
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
-      EVENT_SIGNATURE,
+      TEST_EVENT_SIGNATURE,
       "0x121212",
-      "0x00000000000000000000000000000000000000000000000029a2241af62c0000" // 3
+      encodeParameters(["bool", "uint256"], [true, "0x29a2241af62c0000"]), // 3e+18
+      encodeParameter("address", createAddress("0xbeef"))
     );
+
     const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent)]);
   });
 
   it("should returns findings with metadata if condition met", async () => {
-    const filterLog = (log: Log): boolean => {
-      const number = Number(BigInt(log.data)) / 10 ** 18;
-      if (number > 2) {
-        return true;
-      }
-
-      return false;
+    const filterLog = (log: LogDescription): boolean => {
+      return log.args.testUint256.div(BigNumber.from(10).pow(18)).gt(2);
     };
 
     const address: string = "0x121212";
-    const topics: string[] = ["0x10", "0x20", "0x30"];
-    const data: string = "0x00000000000000000000000000000000000000000000000029a2241af62c0000"; // 3
+    const topics = [encodeParameter("address", createAddress("0xbeef"))];
+    const data: string = encodeParameters(
+      ["bool", "uint256"],
+      [false, "0x29a2241af62c0000"] // 3
+    );
 
-    transactionHandler = provideEventCheckerHandler(findingGenerator, EVENT_SIGNATURE, address, filterLog);
+    transactionHandler = provideEventCheckerHandler(findingGenerator, TEST_EVENT, address, filterLog);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, address, data, ...topics);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      address,
+      data,
+      ...topics
+    );
+
     const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([
       findingGenerator({
-        topics: [keccak256(EVENT_SIGNATURE), ...topics],
+        args: [
+          false,
+          BigNumber.from("0x29a2241af62c0000"),
+          createAddress("0xbeef")
+        ],
         address: address,
-        data: data,
       }),
     ]);
   });
 
   it("should returns findings with metadata if the event was emitted", async () => {
     const address: string = "0x121212A";
-    const topics: string[] = ["0xA", "0xB", "0xC"];
-    const data: string = "0x00000000000000000000000000000000000000000000000029a2241af62c0000";
+    const topics = [encodeParameter("address", createAddress("0xbeef"))];
+    const data: string = encodeParameters(
+      ["bool", "uint256"],
+      [false, "0x29a2241af62c0000"]
+    );
 
-    transactionHandler = provideEventCheckerHandler(findingGenerator, EVENT_SIGNATURE, address);
+    transactionHandler = provideEventCheckerHandler(findingGenerator, TEST_EVENT, address);
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(EVENT_SIGNATURE, address, data, ...topics);
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
+      TEST_EVENT_SIGNATURE,
+      address,
+      data,
+      ...topics
+    );
+
     const findings: Finding[] = await transactionHandler(txEvent);
 
     expect(findings).toStrictEqual([
       findingGenerator({
-        topics: [keccak256(EVENT_SIGNATURE), ...topics],
-        address: address.toLowerCase(),
-        data: data,
+        args: [
+          false,
+          BigNumber.from("0x29a2241af62c0000"),
+          createAddress("0xbeef"),
+        ],
+        address: address,
       }),
     ]);
   });
