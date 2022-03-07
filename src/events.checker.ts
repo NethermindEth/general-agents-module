@@ -1,42 +1,25 @@
-import { Finding, HandleTransaction, Log, TransactionEvent } from "forta-agent";
+import { Finding, HandleTransaction, LogDescription, TransactionEvent } from "forta-agent";
 import { FindingGenerator } from "./utils";
 
-interface EventData {
-  topics: string[];
-  data: string;
-  address: string;
-}
-
-function eventData(log: Log): EventData {
-  return {
-    topics: log.topics,
-    data: log.data,
-    address: log.address,
-  };
-}
-
-// Deprecated because `filterEvent` is deprecated in Forta SDK
 export default function provideEventCheckerHandler(
   createFinding: FindingGenerator,
   eventSignature: string,
   address?: string,
-  filter?: (log: Log, index?: number, array?: Log[]) => boolean
+  filter?: (log: LogDescription, index?: number, array?: LogDescription[]) => boolean,
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     const findings: Finding[] = [];
 
-    // if (filter) {
-    //   txEvent
-    //     .filterEvent(eventSignature, address)
-    //     .filter(filter)
-    //     .map(eventData)
-    //     .map((data: EventData) => findings.push(createFinding(data)));
-    // } else {
-    //   txEvent
-    //     .filterEvent(eventSignature, address)
-    //     .map(eventData)
-    //     .map((data: EventData) => findings.push(createFinding(data)));
-    // }
+    if (filter) {
+      txEvent
+        .filterLog(eventSignature, address)
+        .filter(filter)
+        .forEach((data: LogDescription) => findings.push(createFinding(data)));
+    } else {
+      txEvent
+        .filterLog(eventSignature, address)
+        .forEach((data: LogDescription) => findings.push(createFinding(data)));
+    }
 
     return findings;
   };
