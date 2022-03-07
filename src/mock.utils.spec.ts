@@ -19,7 +19,7 @@ describe("Ethers mocks tests", () => {
         ["0xdef14", 42, 1234, "0xe0a4"],
       ];
 
-      for(let [shortContract, slot, block, shortAddr] of CASES) {
+      for (let [shortContract, slot, block, shortAddr] of CASES) {
         const encodedSlot: string = encodeParameter("address", createAddress(shortAddr));
         const contract: string = createAddress(shortContract);
 
@@ -33,13 +33,13 @@ describe("Ethers mocks tests", () => {
 
     it("should return the correct block", async () => {
       const CASES: Record<string, any>[] = [
-        { difficulty: 200, number: 25, timestamp: 31},
-        { difficulty: 50, number: 212, timestamp: 3131},
-        { difficulty: 4020, number: 2, timestamp: 888},
-        { difficulty: 7, number: 1789, timestamp: 1},
+        { difficulty: 200, number: 25, timestamp: 31 },
+        { difficulty: 50, number: 212, timestamp: 3131 },
+        { difficulty: 4020, number: 2, timestamp: 888 },
+        { difficulty: 7, number: 1789, timestamp: 1 },
       ];
 
-      for(let block of CASES) {
+      for (let block of CASES) {
         mockProvider.addBlock(block.number, block);
 
         // check the block twice
@@ -53,11 +53,10 @@ describe("Ethers mocks tests", () => {
         "function foo(uint256 val, string a, string b) external view returns (uint256 id1, uint256 id2)",
         "function details(uint256 user_id) external view returns (string user_data)",
         "function something(bytes _bytes) external view returns (string _string, bytes _id)",
-      ])
+      ]);
 
       const listMatch = (listA: any[], listB: any[]) => {
-        for(let i = 0; i < listB.length; ++i)
-          expect(listA[i].toString()).toStrictEqual(listB[i].toString());
+        for (let i = 0; i < listB.length; ++i) expect(listA[i].toString()).toStrictEqual(listB[i].toString());
       };
 
       const valueMatch = (value: any[], dataList: any[]) => {
@@ -73,22 +72,19 @@ describe("Ethers mocks tests", () => {
         ["0xc0de5", "something", ["0xffffffff"], ["b", "0x20220214"], 333],
       ];
 
-      for(let [shortContract, id, inputs, outputs, block] of CASES) {
+      for (let [shortContract, id, inputs, outputs, block] of CASES) {
         const contract: string = createAddress(shortContract);
-        mockProvider.addCallTo(
-          contract, block, iface,
-          id, { inputs, outputs},
-        );
+        mockProvider.addCallTo(contract, block, iface, id, { inputs, outputs });
 
         const ethersContract: Contract = new Contract(contract, iface, mockProvider as any);
 
         // check the call twice
         let returnedValue: any = await ethersContract[id](...inputs, { blockTag: block });
-        if(outputs.length > 1) listMatch(returnedValue, outputs);
+        if (outputs.length > 1) listMatch(returnedValue, outputs);
         else valueMatch(returnedValue, outputs);
 
         returnedValue = await ethersContract[id](...inputs, { blockTag: block });
-        if(outputs.length > 1) listMatch(returnedValue, outputs);
+        if (outputs.length > 1) listMatch(returnedValue, outputs);
         else valueMatch(returnedValue, outputs);
       }
     });
@@ -96,7 +92,7 @@ describe("Ethers mocks tests", () => {
     it("should set the latest block", async () => {
       const CASES: number[] = [1, 10, 20, 9, 0, 201209];
 
-      for(let block of CASES) {
+      for (let block of CASES) {
         mockProvider.setLatestBlock(block);
 
         // check the block twice
@@ -106,17 +102,13 @@ describe("Ethers mocks tests", () => {
     });
 
     it("should return the same signer if requested multiples times", async () => {
-      const signers: string[] = [
-        createAddress("0x20"), 
-        createAddress("0xdead"), 
-        createAddress("0x5474"),
-      ];
-      for(let addr of signers) {
+      const signers: string[] = [createAddress("0x20"), createAddress("0xdead"), createAddress("0x5474")];
+      for (let addr of signers) {
         mockProvider.addSigner(addr);
         // set a value in one of the internal mocks of the signer
         mockProvider.getSigner(addr).sendTransaction.mockReturnValue(`old-call-from-${addr}`);
       }
-      for(let addr of signers) {
+      for (let addr of signers) {
         // check the value previously set
         expect(mockProvider.getSigner(addr).sendTransaction()).toStrictEqual(`old-call-from-${addr}`);
       }
@@ -136,7 +128,7 @@ describe("Ethers mocks tests", () => {
         createAddress("0xe0a"),
       ];
 
-      for(let addr of CASES) {
+      for (let addr of CASES) {
         mockSigner.setAddress(addr);
 
         // check the storage twice
@@ -146,25 +138,18 @@ describe("Ethers mocks tests", () => {
     });
 
     it("should return deny txns", async () => {
-      const iface: Interface = new Interface([
-        "function deposit(uint256 amount)",
-        "function withdraw(uint256 amount)",
-      ])
+      const iface: Interface = new Interface(["function deposit(uint256 amount)", "function withdraw(uint256 amount)"]);
 
       const CASES: [string, string, string, number, string][] = [
         [createAddress("0xbade0a0"), createAddress("0xdef13"), "withdraw", 213, "wtf!"],
-        [createAddress("0xbade0a1"), createAddress("0xdef12"), "deposit",  222, "ohhh"],
-        [createAddress("0xbade0a2"), createAddress("0xdef11"), "deposit",  231, "wao"],
+        [createAddress("0xbade0a1"), createAddress("0xdef12"), "deposit", 222, "ohhh"],
+        [createAddress("0xbade0a2"), createAddress("0xdef11"), "deposit", 231, "wao"],
         [createAddress("0xbade0a3"), createAddress("0xdef10"), "withdraw", 240, "rejected!"],
-      ]
+      ];
 
-      for(let [from, to, id, amount, msg] of CASES) {
-        mockSigner
-          .setAddress(from)
-          .denyTransaction(
-            from, to, iface, id, [amount], msg
-          );
-        
+      for (let [from, to, id, amount, msg] of CASES) {
+        mockSigner.setAddress(from).denyTransaction(from, to, iface, id, [amount], msg);
+
         const contract: Contract = new Contract(to, iface, mockSigner as any);
         // check the denial two times
         expect(contract[id](amount)).rejects.toMatch(msg);
@@ -176,33 +161,29 @@ describe("Ethers mocks tests", () => {
       const iface: Interface = new Interface([
         "function depositV2(string amount)",
         "function withdrawV2(string amount)",
-      ])
+      ]);
 
       const CASES: [string, string, string, string, any][] = [
         [createAddress("0xbade0a0"), createAddress("0xdef13"), "withdrawV2", "213", { confirmations: 20 }],
-        [createAddress("0xbade0a1"), createAddress("0xdef12"), "depositV2",  "222", { confirmations: 1 }],
-        [createAddress("0xbade0a2"), createAddress("0xdef11"), "depositV2",  "231", { confirmations: 200 }],
+        [createAddress("0xbade0a1"), createAddress("0xdef12"), "depositV2", "222", { confirmations: 1 }],
+        [createAddress("0xbade0a2"), createAddress("0xdef11"), "depositV2", "231", { confirmations: 200 }],
         [createAddress("0xbade0a3"), createAddress("0xdef10"), "withdrawV2", "240", { confirmations: 42 }],
-      ]
+      ];
 
-      for(let [from, to, id, amount, receipt] of CASES) {
-        mockSigner
-          .setAddress(from)
-          .allowTransaction(
-            from, to, iface, id, [amount], receipt
-          );
-        
+      for (let [from, to, id, amount, receipt] of CASES) {
+        mockSigner.setAddress(from).allowTransaction(from, to, iface, id, [amount], receipt);
+
         const contract: Contract = new Contract(to, iface, mockSigner as any);
         // check the denial two times
         expect((await contract[id](amount)).wait()).resolves.toStrictEqual({
           events: [],
           logs: [],
-          ...receipt
+          ...receipt,
         });
         expect((await contract[id](amount)).wait()).resolves.toStrictEqual({
           events: [],
           logs: [],
-          ...receipt
+          ...receipt,
         });
       }
     });

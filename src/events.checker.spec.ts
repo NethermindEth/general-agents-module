@@ -1,6 +1,13 @@
 import { BigNumber } from "ethers";
 
-import { HandleTransaction, Finding, TransactionEvent, FindingSeverity, FindingType, LogDescription } from "forta-agent";
+import {
+  HandleTransaction,
+  Finding,
+  TransactionEvent,
+  FindingSeverity,
+  FindingType,
+  LogDescription,
+} from "forta-agent";
 import { generalTestFindingGenerator, TestTransactionEvent } from "./tests.utils";
 import provideEventCheckerHandler from "./events.checker";
 import { encodeParameter, encodeParameters, FindingGenerator, metadataVault } from "./utils";
@@ -21,17 +28,14 @@ const findingGenerator: FindingGenerator = (event?: metadataVault): Finding => {
       address: event?.address.toLowerCase(),
     },
   });
-}
+};
 
 describe("Event Checker Agent Tests", () => {
   let transactionHandler: HandleTransaction;
 
   it("should returns empty findings if expected event is not found", async () => {
     transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT);
-    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
-      "badSignature",
-      "0x121212"
-    );
+    const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog("badSignature", "0x121212");
 
     const findings: Finding[] = await transactionHandler(txEvent);
 
@@ -87,10 +91,7 @@ describe("Event Checker Agent Tests", () => {
 
     findings = findings.concat(await transactionHandler(txEvent2));
 
-    expect(findings).toStrictEqual([
-      generalTestFindingGenerator(txEvent1),
-      generalTestFindingGenerator(txEvent2)
-    ]);
+    expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent1), generalTestFindingGenerator(txEvent2)]);
   });
 
   it("should returns findings only when then event is emitted from the correct address", async () => {
@@ -122,12 +123,7 @@ describe("Event Checker Agent Tests", () => {
       return log.args.testUint256.div(BigNumber.from(10).pow(18)).gt(2);
     };
 
-    transactionHandler = provideEventCheckerHandler(
-      generalTestFindingGenerator,
-      TEST_EVENT,
-      "0x121212",
-      filterLog
-    );
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT, "0x121212", filterLog);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
       TEST_EVENT_SIGNATURE,
@@ -145,12 +141,7 @@ describe("Event Checker Agent Tests", () => {
       return log.args.testUint256.div(BigNumber.from(10).pow(18)).gt(2);
     };
 
-    transactionHandler = provideEventCheckerHandler(
-      generalTestFindingGenerator,
-      TEST_EVENT,
-      "0x121212",
-      filterLog
-    );
+    transactionHandler = provideEventCheckerHandler(generalTestFindingGenerator, TEST_EVENT, "0x121212", filterLog);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog(
       TEST_EVENT_SIGNATURE,
@@ -189,11 +180,7 @@ describe("Event Checker Agent Tests", () => {
 
     expect(findings).toStrictEqual([
       findingGenerator({
-        args: [
-          false,
-          BigNumber.from("0x29a2241af62c0000"),
-          createAddress("0xbeef")
-        ],
+        args: [false, BigNumber.from("0x29a2241af62c0000"), createAddress("0xbeef")],
         address: address,
       }),
     ]);
@@ -202,10 +189,7 @@ describe("Event Checker Agent Tests", () => {
   it("should returns findings with metadata if the event was emitted", async () => {
     const address: string = "0x121212A";
     const topics = [encodeParameter("address", createAddress("0xbeef"))];
-    const data: string = encodeParameters(
-      ["bool", "uint256"],
-      [false, "0x29a2241af62c0000"]
-    );
+    const data: string = encodeParameters(["bool", "uint256"], [false, "0x29a2241af62c0000"]);
 
     transactionHandler = provideEventCheckerHandler(findingGenerator, TEST_EVENT, address);
 
@@ -220,11 +204,7 @@ describe("Event Checker Agent Tests", () => {
 
     expect(findings).toStrictEqual([
       findingGenerator({
-        args: [
-          false,
-          BigNumber.from("0x29a2241af62c0000"),
-          createAddress("0xbeef"),
-        ],
+        args: [false, BigNumber.from("0x29a2241af62c0000"), createAddress("0xbeef")],
         address: address,
       }),
     ]);

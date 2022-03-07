@@ -14,13 +14,6 @@ import {
   encodeFunctionSignature,
   encodeEventSignature,
 } from "./utils";
-import {
-  CallParams,
-  MockEthersProvider,
-  MockEthersSigner,
-} from "./mock.utils";
-
-import { TestTransactionEvent, TestBlockEvent, runBlock, createAddress, Agent, TraceProps } from "./tests.utils";
 
 export {
   provideERC20TransferHandler,
@@ -28,11 +21,6 @@ export {
   provideFunctionCallsDetectorHandler,
   provideEventCheckerHandler,
   provideBlacklistedAddressesHandler,
-  createAddress,
-  FindingGenerator,
-  TestTransactionEvent,
-  TestBlockEvent,
-  runBlock,
   encodeParameter,
   encodeParameters,
   encodeFunctionCall,
@@ -41,9 +29,21 @@ export {
   decodeFunctionCallParameters,
   encodeEventSignature,
   encodeFunctionSignature,
-  Agent,
-  TraceProps,
-  CallParams,
-  MockEthersProvider,
-  MockEthersSigner,
+  FindingGenerator,
+};
+
+export default {
+  provideERC20TransferHandler,
+  provideETHTransferHandler,
+  provideFunctionCallsDetectorHandler,
+  provideEventCheckerHandler,
+  provideBlacklistedAddressesHandler,
+  encodeParameter,
+  encodeParameters,
+  encodeFunctionCall,
+  decodeParameter,
+  decodeParameters,
+  decodeFunctionCallParameters,
+  encodeEventSignature,
+  encodeFunctionSignature,
 };

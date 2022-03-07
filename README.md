@@ -54,6 +54,7 @@ const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionS
 ### - Event Checker Handler 
 
 This approach detects events emitted. You need to provide the signature of the event you want to detect. You can also provide other arguments for specifying extra filters as "who did emit the event" or manually adding a specific filtering function.
+
 #### How to use it
 ```ts
 import { provideEventCheckerHandler } from "forta-agent-tools";
@@ -148,7 +149,7 @@ This is a helper class for creating `TransactionEvents` using the fluent interfa
 #### How to use it
 
 ```ts
-import { TestTransactionEvent } from "forta-agent-tools";
+import { TestTransactionEvent } from "forta-agent-tools/tests";
 
 const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
 ```
@@ -175,7 +176,7 @@ This is a helper class for creating `BlockEvents` using the fluent interface pat
 #### How to use it
 
 ```ts
-import { TestBlockEvent } from "forta-agent-tools";
+import { TestBlockEvent } from "forta-agent-tools/tests";
 
 const blockEvent: BlockEvent = new TestBlockEvent().setHash(blockHash).setNumber(blockNumber);
 ```
@@ -193,7 +194,7 @@ This is a helper function to simulate the execution of `run block` cli command w
 #### How to use it
 
 ```ts
-import { runBlock } from "forta-agent-tools";
+import { runBlock } from "forta-agent-tools/tests";
 
 async myFunction(params) => {
   ...
@@ -217,7 +218,7 @@ import {
   MockEthersProvider, 
   encodeParameter, 
   createAddress,
-} from "forta-agent-tools";
+} from "forta-agent-tools/tests";
 import { utils, Contract } from "ethers";
 
 const iface: utils.Interface =  new utils.Interface([
@@ -263,7 +264,7 @@ import {
   MockEthersSigner, 
   encodeParameter, 
   createAddress,
-} from "forta-agent-tools";
+} from "forta-agent-tools/tests";
 import { utils, Contract } from "ethers";
 
 const iface: utils.Interface =  new utils.Interface([

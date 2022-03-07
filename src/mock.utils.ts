@@ -1,10 +1,10 @@
 import { Interface } from "@ethersproject/abi";
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
 
 export interface CallParams {
-  inputs: any[],
-  outputs: any[],
+  inputs: any[];
+  outputs: any[];
 }
 
 export class MockEthersProvider {
@@ -15,61 +15,58 @@ export class MockEthersProvider {
   public getBlockNumber: any;
   public readonly _isProvider: boolean;
 
-  constructor() { 
+  constructor() {
     this._isProvider = true;
-    this.call = jest.fn(); 
-    this.getBlock = jest.fn(); 
-    this.getSigner = jest.fn(); 
-    this.getStorageAt = jest.fn(); 
-    this.getBlockNumber = jest.fn(); 
+    this.call = jest.fn();
+    this.getBlock = jest.fn();
+    this.getSigner = jest.fn();
+    this.getStorageAt = jest.fn();
+    this.getBlockNumber = jest.fn();
   }
 
-  public addCallTo(contract: string, block: number | string, iface: Interface, id: any, params: CallParams): MockEthersProvider {
+  public addCallTo(
+    contract: string,
+    block: number | string,
+    iface: Interface,
+    id: any,
+    params: CallParams
+  ): MockEthersProvider {
     when(this.call)
-      .calledWith({
-        data: iface.encodeFunctionData(id, params.inputs),
-        to: toChecksumAddress(contract),
-      }, block)
+      .calledWith(
+        {
+          data: iface.encodeFunctionData(id, params.inputs),
+          to: toChecksumAddress(contract),
+        },
+        block
+      )
       .mockReturnValue(iface.encodeFunctionResult(id, params.outputs));
     return this;
   }
 
   public addStorage(contract: string, slot: number, block: number, result: string): MockEthersProvider {
-    when(this.getStorageAt)
-      .calledWith(contract, slot, block)
-      .mockReturnValue(result);
+    when(this.getStorageAt).calledWith(contract, slot, block).mockReturnValue(result);
     return this;
   }
 
   public addBlock(blockNumber: number, block: any): MockEthersProvider {
-    when(this.getBlock)
-      .calledWith(blockNumber)
-      .mockReturnValue(block);
+    when(this.getBlock).calledWith(blockNumber).mockReturnValue(block);
     return this;
   }
 
   public setLatestBlock(block: number): MockEthersProvider {
-    when(this.getBlockNumber)
-      .calledWith()
-      .mockReturnValue(block);
+    when(this.getBlockNumber).calledWith().mockReturnValue(block);
     return this;
   }
 
   public addSigner(addr: string): MockEthersProvider {
-    when(this.getSigner)
-      .calledWith(addr)
-      .mockReturnValue(
-        new MockEthersSigner()
-          .bindProvider(this)
-          .setAddress(addr)
-      );
+    when(this.getSigner).calledWith(addr).mockReturnValue(new MockEthersSigner().bindProvider(this).setAddress(addr));
     return this;
   }
 
   public clear(): void {
     resetAllWhenMocks();
   }
-};
+}
 
 export class MockEthersSigner extends MockEthersProvider {
   public readonly _isSigner: boolean;
@@ -81,7 +78,7 @@ export class MockEthersSigner extends MockEthersProvider {
     this._isSigner = true;
     this.getAddress = jest.fn();
     this.sendTransaction = jest.fn();
-  }  
+  }
 
   public bindProvider(provider: MockEthersProvider): MockEthersSigner {
     this.call = provider.call;
@@ -92,9 +89,7 @@ export class MockEthersSigner extends MockEthersProvider {
   }
 
   public setAddress(addr: string): MockEthersSigner {
-    when(this.getAddress)
-      .calledWith()
-      .mockReturnValue(addr);
+    when(this.getAddress).calledWith().mockReturnValue(addr);
     return this;
   }
 
@@ -104,7 +99,7 @@ export class MockEthersSigner extends MockEthersProvider {
     iface: Interface,
     id: string,
     values: any[],
-    receipt: any, 
+    receipt: any
   ): MockEthersSigner {
     when(this.sendTransaction)
       .calledWith({
@@ -118,7 +113,7 @@ export class MockEthersSigner extends MockEthersProvider {
             logs: [], // can't be undefined
             ...receipt,
           };
-        }
+        },
       });
     return this;
   }
@@ -129,7 +124,7 @@ export class MockEthersSigner extends MockEthersProvider {
     iface: Interface,
     id: string,
     values: any[],
-    message?: any,
+    message?: any
   ): MockEthersSigner {
     when(this.sendTransaction)
       .calledWith({
