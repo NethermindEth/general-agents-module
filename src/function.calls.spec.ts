@@ -322,15 +322,16 @@ describe("Function calls detector Agent Tests", () => {
       ],
     };
 
-
     handleTransaction = provideFunctionCallsDetectorHandler(generalTestFindingGenerator, functionDefinition);
 
     const input: string = encodeFunctionCall(functionDefinition, []);
-    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
-      input: input
-    }).addTraces({
-      input: "wrongSelector"
-    });
+    const txEvent: TransactionEvent = new TestTransactionEvent()
+      .addTraces({
+        input: input,
+      })
+      .addTraces({
+        input: "wrongSelector",
+      });
 
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([generalTestFindingGenerator()]);

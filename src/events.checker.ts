@@ -5,7 +5,7 @@ export default function provideEventCheckerHandler(
   createFinding: FindingGenerator,
   eventSignature: string,
   address?: string,
-  filter?: (log: LogDescription, index?: number, array?: LogDescription[]) => boolean,
+  filter?: (log: LogDescription, index?: number, array?: LogDescription[]) => boolean
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     const findings: Finding[] = [];
@@ -16,9 +16,7 @@ export default function provideEventCheckerHandler(
         .filter(filter)
         .forEach((data: LogDescription) => findings.push(createFinding(data)));
     } else {
-      txEvent
-        .filterLog(eventSignature, address)
-        .forEach((data: LogDescription) => findings.push(createFinding(data)));
+      txEvent.filterLog(eventSignature, address).forEach((data: LogDescription) => findings.push(createFinding(data)));
     }
 
     return findings;
