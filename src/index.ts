@@ -3,6 +3,17 @@ import provideETHTransferHandler from "./eth.transfers";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import provideEventCheckerHandler from "./events.checker";
 import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
+import {
+  FindingGenerator,
+  encodeParameter,
+  encodeParameters,
+  encodeFunctionCall,
+  decodeParameter,
+  decodeParameters,
+  decodeFunctionCallParameters,
+  encodeFunctionSignature,
+  encodeEventSignature,
+} from "./utils";
 
 export {
   provideERC20TransferHandler,
@@ -10,6 +21,15 @@ export {
   provideFunctionCallsDetectorHandler,
   provideEventCheckerHandler,
   provideBlacklistedAddressesHandler,
+  encodeParameter,
+  encodeParameters,
+  encodeFunctionCall,
+  decodeParameter,
+  decodeParameters,
+  decodeFunctionCallParameters,
+  encodeEventSignature,
+  encodeFunctionSignature,
+  FindingGenerator,
 };
 
 export default {
@@ -18,4 +38,12 @@ export default {
   provideFunctionCallsDetectorHandler,
   provideEventCheckerHandler,
   provideBlacklistedAddressesHandler,
+  encodeParameter,
+  encodeParameters,
+  encodeFunctionCall,
+  decodeParameter,
+  decodeParameters,
+  decodeFunctionCallParameters,
+  encodeEventSignature,
+  encodeFunctionSignature,
 };
