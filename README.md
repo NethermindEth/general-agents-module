@@ -246,6 +246,8 @@ This mock provides some methods to set up the values the provider should return:
   at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier 
   of the function to call, `inputs` are the parameters passed in the call and `outputs` the values the call 
   should return.
+- `addCallFrom(contract, from, block, iface, id, { inputs, outputs })`. Similar to `addCallTo` but the only `from` will be able to call
+  the function.
 - `addStorage(contract, slot, block, result)`. This method prepare the value stored in the specific `slot` of `contract` address
   in the given `block` to be `result`.
 - `addBlock(blockNumber, block)`. This method prepare the block with number `blockNumber` to be `block`.
@@ -263,6 +265,7 @@ This is helper class for mocking the `ethers.providers.JsonRpcSigner` class. Thi
 Basic usage:
 ```ts
 import { 
+  MockEthersProvider,
   MockEthersSigner, 
   encodeParameter, 
   createAddress,
@@ -276,7 +279,8 @@ const iface: utils.Interface =  new utils.Interface([
 const address: string = createAddress("0xf00");
 const contract: string = createAddress("0xda0");
 
-const mockSigner: MockEthersSigner = new MockEthersProvider()
+const mockProvider: MockEthersProvider = new MockEthersProvider();
+const mockSigner: MockEthersSigner = new MockEthersProvider(mockProvider)
   .setAddress(from)
   .allowTransaction(
     address, contract, iface,
@@ -291,6 +295,5 @@ This mock provides some methods to set up the values the signer should return:
 - `setAddress(address)`. This method set the address that the signer can sign.
 - `allowTransaction(from, to, iface, id, inputs)`. This method prepare the a txn sent to `to` and signed from `from`. The transaction is ment to call the method `id` taken from the `iface` of the `to` contract passing the `inputs` as parameters. `receipt` will be the receipt returned by the transaction.
 - `denyTransaction(from, to, iface, id, inputs, msg)`. Same conditions of `allowTransaction` but in this case the transaction will be reverted with `msg` message.
-- `bindProvider(provider)`. This method is meant to syncronize the mocked data in the `provider` with the one in the signer.
 
 All the data you set in the signer will be used until the `clear` function is called.
