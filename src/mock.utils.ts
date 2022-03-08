@@ -68,25 +68,41 @@ export class MockEthersProvider {
   }
 }
 
-export class MockEthersSigner extends MockEthersProvider {
+export class MockEthersSigner {
   public readonly _isSigner: boolean;
+  public readonly provider: MockEthersProvider;
   public getAddress: any;
   public sendTransaction: any;
 
-  constructor() {
-    super();
+  constructor(provider: MockEthersProvider) {
     this._isSigner = true;
+    this.provider = provider;
     this.getAddress = jest.fn();
     this.sendTransaction = jest.fn();
   }
 
-  public bindProvider(provider: MockEthersProvider): MockEthersSigner {
-    this.call = provider.call;
-    this.getBlock = provider.getBlock;
-    this.getStorageAt = provider.getStorageAt;
-    this.getBlockNumber = provider.getBlockNumber;
-    return this;
+  // Provider functions ------------------------
+  // All this calls are redirected to the provider
+  public call(txData: any, block: number | string): any {
+    return this.provider.call(txData, block);
   }
+
+  public getBlock(num: number): any {
+    return this.provider.getBlock(num);
+  };
+
+  public getSigner(signer: string): any {
+    this.provider.getSigner(signer);
+  }
+
+  public getStorageAt(contract: string, slot: number, block: number): any {
+    this.provider.getStorageAt(contract, slot, block);
+  }
+  
+  public getBlockNumber(): any {
+    this.provider.getBlockNumber();
+  }
+  // -------------------------------------------
 
   public setAddress(addr: string): MockEthersSigner {
     when(this.getAddress).calledWith().mockReturnValue(addr);
