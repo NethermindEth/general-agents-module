@@ -173,4 +173,8 @@ export class MockEthersSigner {
       .mockRejectedValue(message);
     return this;
   }
+
+  public clear() {
+    resetAllWhenMocks();
+  }
 }

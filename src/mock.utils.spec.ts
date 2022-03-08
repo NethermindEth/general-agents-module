@@ -1,7 +1,7 @@
 import { MockEthersProvider, MockEthersSigner } from "./mock.utils";
 import { createAddress } from "./tests.utils";
 import { encodeParameter } from "./utils";
-import { utils, Contract } from "ethers";
+import { utils, Contract, BigNumber } from "ethers";
 import { Interface } from "@ethersproject/abi";
 
 describe("Ethers mocks tests", () => {
@@ -116,9 +116,13 @@ describe("Ethers mocks tests", () => {
   });
 
   describe("MockEthersSigner tests suite", () => {
-    const mockSigner: MockEthersSigner = new MockEthersSigner();
+    const mockProvider: MockEthersProvider = new MockEthersProvider();
+    const mockSigner: MockEthersSigner = new MockEthersSigner(mockProvider);
 
-    beforeEach(() => mockSigner.clear());
+    beforeEach(() => {
+      mockSigner.clear();
+      mockProvider.clear();
+    });
 
     it("should return the correct address", async () => {
       const CASES: string[] = [
@@ -188,22 +192,24 @@ describe("Ethers mocks tests", () => {
       }
     });
 
-    it("should bind a provider correctly", async () => {
-      const mockProvider: MockEthersProvider = new MockEthersProvider();
+    it("should use the provider correctly", async () => {
+      const iface: utils.Interface = new utils.Interface([
+        "function foo(uint256 val, string a, string b) external view returns (string id1, string id2)",
+      ]);
+      const signer: string = createAddress("0xe0a");
+      const contractAddress: string = createAddress("0xbade0a");
+      mockProvider.addCallFrom(
+        contractAddress,
+        signer,
+        42, iface, "foo",
+        { inputs: [1, "a", "b"], outputs:["20", "10"] }
+      );
+      mockSigner.setAddress(signer);
 
-      mockSigner.bindProvider(mockProvider);
+      const contract: Contract = new Contract(contractAddress, iface, mockSigner as any);
 
-      // manual calls to the provider internal mocks for easy testing
-      mockProvider.call("call-1");
-      mockProvider.getBlock("call-2");
-      mockProvider.getStorageAt("call-3");
-      mockProvider.getBlockNumber("call-4");
-
-      // signers calls should be called
-      expect(mockSigner.call).lastCalledWith("call-1");
-      expect(mockSigner.getBlock).lastCalledWith("call-2");
-      expect(mockSigner.getStorageAt).lastCalledWith("call-3");
-      expect(mockSigner.getBlockNumber).lastCalledWith("call-4");
+      const { id1, id2 } = await contract.foo(1, "a", "b", { blockTag: 42 });
+      expect([id1, id2]).toStrictEqual(["20", "10"]);
     });
   });
 });
