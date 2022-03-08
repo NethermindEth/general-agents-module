@@ -157,6 +157,8 @@ const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).s
 There are multiple methods you can use for creating the exact `TransactionEvent` you want:
 - `setFrom(address)` This method sets the `transaction.from` field in the event.
 - `setTo(address)` This method sets the `transaction.to` field in the event.
+- `setGas(value)` This method sets the `transaction.gas` field in the event.
+- `setGasPrice(value)` This method sets the `transaction.gasPrice` field in the event.
 - `setValue(value)` This method sets the `transaction.value` field in the event.
 - `setData(data)` This method sets the `transaction.data` field in the event.
 - `setGasUsed(value)` This method sets the `receipt.gasUsed` field in the event.
