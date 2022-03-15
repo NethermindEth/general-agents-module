@@ -145,8 +145,8 @@ export class TestTransactionEvent extends TransactionEvent {
     inputs: { [key: string]: any } = {},
     validateInputs: boolean = true,
   ): TestTransactionEvent {
-    // creating the interface internally allows for a call with only 3
-    // parameters, which makes testing code cleaner
+    // creating the interface locally allows receiving one less parameter,
+    // which makes testing code cleaner
     const iface = new ethers.utils.Interface([event]);
 
     if (validateInputs) {
