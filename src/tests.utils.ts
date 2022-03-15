@@ -1,4 +1,4 @@
-import Web3 from "web3";
+import ethers from "ethers";
 import { leftPad } from "web3-utils";
 import {
   TransactionEvent,
@@ -121,6 +121,49 @@ export class TestTransactionEvent extends TransactionEvent {
 
   public setBlock(block: number): TestTransactionEvent {
     this.block.number = block;
+    return this;
+  }
+
+  private validateEventInput(
+    param: ethers.utils.ParamType,
+    value: any,
+    objectPath: string = "",
+  ): void {
+    if (value === undefined) {
+      throw new Error(`Missing parameter: ${objectPath}${param.name}`);
+    }
+    if (param.baseType === "tuple") {
+      for (const component of param.components) {
+        this.validateEventInput(component, value[component.name], `${objectPath}${param.name}.`);
+      }
+    }
+  }
+
+  public addInterfaceEventLog(
+    event: ethers.utils.EventFragment,
+    address: string,
+    inputs: { [key: string]: any } = {},
+    validateInputs: boolean = true,
+  ): TestTransactionEvent {
+    // creating the interface internally allows for a call with only 3
+    // parameters, which makes testing code cleaner
+    const iface = new ethers.utils.Interface([event]);
+
+    if (validateInputs) {
+      for (const input of event.inputs) {
+        this.validateEventInput(input, inputs[input.name]);
+      }
+    }
+
+    const inputsArray = event.inputs.map(el => inputs[el.name]);
+    const log = iface.encodeEventLog(event, inputsArray) as Log;
+
+    this.receipt.logs.push({
+      address: address.toLowerCase(),
+      data: log.data,
+      topics: log.topics,
+    } as Log);
+
     return this;
   }
 
