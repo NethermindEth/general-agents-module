@@ -1,4 +1,3 @@
-import ethers from "ethers";
 import { leftPad } from "web3-utils";
 import {
   TransactionEvent,
@@ -15,6 +14,7 @@ import {
   HandleTransaction,
   HandleBlock,
   Log,
+  ethers,
 } from "forta-agent";
 import { FindingGenerator, encodeEventSignature } from "./utils";
 import { AbiItem } from "web3-utils";
@@ -124,44 +124,21 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
-  private validateEventInput(
-    param: ethers.utils.ParamType,
-    value: any,
-    objectPath: string = "",
-  ): void {
-    if (value === undefined) {
-      throw new Error(`Missing parameter: ${objectPath}${param.name}`);
-    }
-    if (param.baseType === "tuple") {
-      for (const component of param.components) {
-        this.validateEventInput(component, value[component.name], `${objectPath}${param.name}.`);
-      }
-    }
-  }
-
   public addInterfaceEventLog(
     event: ethers.utils.EventFragment,
     address: string,
-    inputs: { [key: string]: any } = {},
-    validateInputs: boolean = true,
+    inputs: ReadonlyArray<any>,
   ): TestTransactionEvent {
     // creating the interface locally allows receiving one less parameter,
     // which makes testing code cleaner
     const iface = new ethers.utils.Interface([event]);
 
-    if (validateInputs) {
-      for (const input of event.inputs) {
-        this.validateEventInput(input, inputs[input.name]);
-      }
-    }
-
-    const inputsArray = event.inputs.map(el => inputs[el.name]);
-    const log = iface.encodeEventLog(event, inputsArray) as Log;
+    const log = iface.encodeEventLog(event, inputs) as Log;
 
     this.receipt.logs.push({
       address: address.toLowerCase(),
-      data: log.data,
       topics: log.topics,
+      data: log.data,
     } as Log);
 
     return this;
