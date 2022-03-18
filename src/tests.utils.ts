@@ -133,7 +133,7 @@ export class TestTransactionEvent extends TransactionEvent {
     // which makes testing code cleaner
     const iface = new ethers.utils.Interface([event]);
 
-    const log = iface.encodeEventLog(event, inputs) as Log;
+    const log = iface.encodeEventLog(event, inputs);
 
     this.receipt.logs.push({
       address: address.toLowerCase(),
