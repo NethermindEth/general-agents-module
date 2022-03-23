@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import { leftPad } from "web3-utils";
 import {
   TransactionEvent,
@@ -15,6 +14,7 @@ import {
   HandleTransaction,
   HandleBlock,
   Log,
+  ethers,
 } from "forta-agent";
 import { FindingGenerator, encodeEventSignature } from "./utils";
 import { AbiItem } from "web3-utils";
@@ -121,6 +121,26 @@ export class TestTransactionEvent extends TransactionEvent {
 
   public setBlock(block: number): TestTransactionEvent {
     this.block.number = block;
+    return this;
+  }
+
+  public addInterfaceEventLog(
+    event: ethers.utils.EventFragment,
+    address: string = createAddress("0x0"),
+    inputs: ReadonlyArray<any> = [],
+  ): TestTransactionEvent {
+    // creating the interface locally allows receiving one less parameter,
+    // which makes testing code cleaner
+    const iface = new ethers.utils.Interface([event]);
+
+    const log = iface.encodeEventLog(event, inputs);
+
+    this.receipt.logs.push({
+      address: address.toLowerCase(),
+      topics: log.topics,
+      data: log.data,
+    } as Log);
+
     return this;
   }
 
