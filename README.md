@@ -164,6 +164,7 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `setGasUsed(value)` This method sets the `receipt.gasUsed` field in the event.
 - `setStatus(status)` This method sets the `receipt.status` field in the event.
 - `setTimestamp(timestamp)` This method sets the `block.timestamp` field in the event.
+- `setBlock(block)` This method sets the `block.number` field in the event.
 - `addEventLog(eventSignature, address, data, topics)` This method add a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is an spread list with the indexed event arguments, and `data` is the empty string by default.
   > The `keccak256` hash of the signature is added at the beggining of the `topics` list automatically.
 - `addAnonymousEventLog(address, data, topics)` This method add a log to the `receipt.logs` field. `address` argument is the zero address by default, `topics` is an spread list with the indexed event arguments, and `data` is the empty string by default.
