@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import { leftPad } from "web3-utils";
 import {
   TransactionEvent,
@@ -15,6 +14,7 @@ import {
   HandleTransaction,
   HandleBlock,
   Log,
+  ethers,
 } from "forta-agent";
 import { FindingGenerator, encodeEventSignature } from "./utils";
 import { AbiItem } from "web3-utils";
@@ -49,24 +49,22 @@ export const createAddress = (suffix: string): string => {
 export class TestTransactionEvent extends TransactionEvent {
   constructor() {
     const transaction: Transaction = {
-      data: "",
-      hash: "",
+      hash: "0x",
       from: createAddress("0x0"),
       to: createAddress("0x1"),
-      gas: "",
-      gasPrice: "",
+      nonce: 0,
+      gas: "0",
+      gasPrice: "0",
       value: "0",
-    } as any;
-
-    const receipt: Receipt = {
-      gasUsed: "1000000",
-      logs: [],
-      status: true,
-    } as any;
+      data: "0x",
+      r: "",
+      s: "",
+      v: "",
+    };
 
     const block: Block = {} as any;
 
-    super(EventType.BLOCK, Network.MAINNET, transaction, receipt, [], {}, block);
+    super(EventType.BLOCK, Network.MAINNET, transaction, [], {}, block, [], null);
   }
 
   public setHash(hash: string): TestTransactionEvent {
@@ -105,12 +103,7 @@ export class TestTransactionEvent extends TransactionEvent {
   }
 
   public setGasUsed(value: string): TestTransactionEvent {
-    this.receipt.gasUsed = value;
-    return this;
-  }
-
-  public setStatus(status: boolean): TestTransactionEvent {
-    this.receipt.status = status;
+    this.transaction.gas = value;
     return this;
   }
 
@@ -124,13 +117,33 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
+  public addInterfaceEventLog(
+    event: ethers.utils.EventFragment,
+    address: string = createAddress("0x0"),
+    inputs: ReadonlyArray<any> = [],
+  ): TestTransactionEvent {
+    // creating the interface locally allows receiving one less parameter,
+    // which makes testing code cleaner
+    const iface = new ethers.utils.Interface([event]);
+
+    const log = iface.encodeEventLog(event, inputs);
+
+    this.logs.push({
+      address: address.toLowerCase(),
+      topics: log.topics,
+      data: log.data,
+    } as Log);
+
+    return this;
+  }
+
   public addEventLog(
     eventSignature: string | AbiItem,
     address: string = createAddress("0x0"),
     data: string = "0x",
     ...topics: string[]
   ): TestTransactionEvent {
-    this.receipt.logs.push({
+    this.logs.push({
       address: address.toLowerCase(),
       topics: [encodeEventSignature(eventSignature), ...topics],
       data,
@@ -143,7 +156,7 @@ export class TestTransactionEvent extends TransactionEvent {
     data: string = "0x",
     ...topics: string[]
   ): TestTransactionEvent {
-    this.receipt.logs.push({
+    this.logs.push({
       address: address.toLowerCase(),
       topics,
       data,

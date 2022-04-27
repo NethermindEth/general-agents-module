@@ -167,6 +167,7 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `addEventLog(eventSignature, address, data, topics)` This method adds a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is a spread list with the indexed event arguments, and `data` is the empty string by default.
   > The `keccak256` hash of the signature is added at the beginning of the `topics` list automatically.
 - `addAnonymousEventLog(address, data, topics)` This method adds a log to the `receipt.logs` field. `address` argument is the zero address by default, `topics` is a spread list with the indexed event arguments, and `data` is the empty string by default.
+- `addInterfaceEventLog(event, address, inputs)` This method adds a log to the `receipt.logs` field. `event` is an `ethers.utils.EventFragment` instance, `address` argument is the zero address by default, `inputs` argument is an array of event parameter values and is an empty array by default.
 - `addInvolvedAddresses(addresses)` This method adds a spread list of addresses to `addresses` field.
 - `addTrace(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
   > `TraceProps` is a TS object with the following optional fields `{ to, from, input, output }`.
