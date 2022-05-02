@@ -1,14 +1,14 @@
 
-import provideERC20TransferHandler from "./erc20.transfers";
-import provideETHTransferHandler from "./eth.transfers";
-import provideFunctionCallsDetectorHandler from "./function.calls";
-import provideEventCheckerHandler from "./events.checker";
-import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
+import erc20Transfer from "./erc20.transfers";
+import ethTransfer from "./eth.transfers";
+import functionCalls from "./function.calls";
+import eventEmissions from "./events.checker";
+import blacklistedAddresses from "./blacklisted.addresses";
 
 export {
-    provideERC20TransferHandler,
-    provideETHTransferHandler,
-    provideFunctionCallsDetectorHandler,
-    provideEventCheckerHandler,
-    provideBlacklistedAddressesHandler,
+    erc20Transfer,
+    ethTransfer,
+    functionCalls,
+    eventEmissions,
+    blacklistedAddresses,
 };
