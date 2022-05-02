@@ -8,10 +8,10 @@ import {
   FindingType,
   LogDescription,
 } from "forta-agent";
-import { generalTestFindingGenerator, TestTransactionEvent } from "./tests.utils";
+import { generalTestFindingGenerator, TestTransactionEvent } from "../test/tests.utils";
 import provideEventCheckerHandler from "./events.checker";
-import { encodeParameter, encodeParameters, FindingGenerator, metadataVault } from "./utils";
-import { createAddress } from "./tests.utils";
+import { encodeParameter, encodeParameters, FindingGenerator, metadataVault } from "../utils";
+import { createAddress } from "../test/tests.utils";
 
 const TEST_EVENT = "event Test(bool testBool, uint256 testUint256, address indexed testAddress)";
 const TEST_EVENT_SIGNATURE = "Test(bool,uint256,address)";

@@ -1,8 +1,8 @@
-import provideERC20TransferHandler from "./erc20.transfers";
-import provideETHTransferHandler from "./eth.transfers";
-import provideFunctionCallsDetectorHandler from "./function.calls";
-import provideEventCheckerHandler from "./events.checker";
-import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
+import provideERC20TransferHandler from "./handler/erc20.transfers";
+import provideETHTransferHandler from "./handler/eth.transfers";
+import provideFunctionCallsDetectorHandler from "./handler/function.calls";
+import provideEventCheckerHandler from "./handler/events.checker";
+import provideBlacklistedAddressesHandler from "./handler/blacklisted.addresses";
 import {
   FindingGenerator,
   encodeParameter,

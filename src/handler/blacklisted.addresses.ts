@@ -1,4 +1,4 @@
-import { FindingGenerator } from "./utils";
+import { FindingGenerator } from "../utils";
 import { HandleTransaction, TransactionEvent, Finding } from "forta-agent";
 
 export default function provideBlacklistedAddresessHandler(

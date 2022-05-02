@@ -1,5 +1,5 @@
 import { Finding, HandleTransaction, Trace, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "./utils";
+import { FindingGenerator } from "../utils";
 import { toWei } from "web3-utils";
 
 const DEFAULT_THRESHOLD = toWei("10");

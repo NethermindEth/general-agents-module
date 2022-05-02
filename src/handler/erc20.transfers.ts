@@ -1,6 +1,6 @@
 import { LogDescription } from "@ethersproject/abi";
 import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "./utils";
+import { FindingGenerator } from "../utils";
 
 const EVENT_SIGNATURE = "event Transfer(address indexed from, address indexed to, uint256 amount)";
 

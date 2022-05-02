@@ -16,7 +16,7 @@ import {
   Log,
   ethers,
 } from "forta-agent";
-import { FindingGenerator, encodeEventSignature } from "./utils";
+import { FindingGenerator, encodeEventSignature } from "../utils";
 import { AbiItem } from "web3-utils";
 
 export interface Agent {

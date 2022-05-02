@@ -1,6 +1,6 @@
 import { HandleTransaction, TransactionEvent, Finding } from "forta-agent";
-import { createAddress, generalTestFindingGenerator, TestTransactionEvent } from "./tests.utils";
-import { FindingGenerator } from "./utils";
+import { createAddress, generalTestFindingGenerator, TestTransactionEvent } from "../test/tests.utils";
+import { FindingGenerator } from "../utils";
 import provideBlacklistedAddresessHandler from "./blacklisted.addresses";
 
 const testBlacklistedAddresses = [createAddress("0x0"), createAddress("0x1"), createAddress("0x2")];

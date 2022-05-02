@@ -1,5 +1,5 @@
 import { Finding, HandleTransaction, LogDescription, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "./utils";
+import { FindingGenerator } from "../utils";
 
 export default function provideEventCheckerHandler(
   createFinding: FindingGenerator,

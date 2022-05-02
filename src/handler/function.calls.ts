@@ -5,7 +5,7 @@ import {
   decodeFunctionCallParameters,
   extractFunctionSelector,
   extractArgumentTypes,
-} from "./utils";
+} from "../utils";
 import { AbiItem } from "web3-utils";
 
 interface HandlerOptions {

@@ -1,6 +1,6 @@
 import { MockEthersProvider, MockEthersSigner } from "./mock.utils";
 import { createAddress } from "./tests.utils";
-import { encodeParameter } from "./utils";
+import { encodeParameter } from "../utils";
 import { utils, Contract, BigNumber } from "ethers";
 import { Interface } from "@ethersproject/abi";
 

@@ -1,7 +1,7 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
-import { generalTestFindingGenerator, createAddress, TestTransactionEvent } from "./tests.utils";
+import { generalTestFindingGenerator, createAddress, TestTransactionEvent } from "../test/tests.utils";
 import provideERC20TransferHandler from "./erc20.transfers";
-import { encodeParameter } from "./utils";
+import { encodeParameter } from "../utils";
 
 const TOKEN_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
