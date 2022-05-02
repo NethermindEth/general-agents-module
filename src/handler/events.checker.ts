@@ -1,24 +1,17 @@
 import { Finding, HandleTransaction, LogDescription, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "../utils";
+import { FindingGenerator } from "./types";
 
 export default function provideEventCheckerHandler(
-  createFinding: FindingGenerator,
+  findingGenerator: FindingGenerator<LogDescription>,
   eventSignature: string,
   address?: string,
   filter?: (log: LogDescription, index?: number, array?: LogDescription[]) => boolean
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    const findings: Finding[] = [];
+    let logDescriptions = txEvent.filterLog(eventSignature, address);
 
-    if (filter) {
-      txEvent
-        .filterLog(eventSignature, address)
-        .filter(filter)
-        .forEach((data: LogDescription) => findings.push(createFinding(data)));
-    } else {
-      txEvent.filterLog(eventSignature, address).forEach((data: LogDescription) => findings.push(createFinding(data)));
-    }
+    if (filter) logDescriptions = logDescriptions.filter(filter);
 
-    return findings;
+    return logDescriptions.map((logDescription) => findingGenerator(logDescription));
   };
 }

@@ -1,12 +1,11 @@
 import Web3 from "web3";
-import { Finding } from "forta-agent";
-import { AbiItem, stripHexPrefix } from "web3-utils";
+import { AbiItem, stripHexPrefix, leftPad } from "web3-utils";
 
 const web3: Web3 = new Web3();
 
-export type metadataVault = { [key: string]: any };
-
-export type FindingGenerator = (metadata?: metadataVault) => Finding;
+export const createAddress = (suffix: string): string => {
+  return leftPad(suffix, 40);
+};
 
 export const encodeParameter = (type: any, value: any): string => web3.eth.abi.encodeParameter(type, value);
 

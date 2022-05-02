@@ -1,4 +1,3 @@
-
 import * as handlers from "./handler";
 
 import {
@@ -13,7 +12,7 @@ import {
   encodeEventSignature,
 } from "./utils";
 
-export {
+export default {
   handlers,
   encodeParameter,
   encodeParameters,
@@ -23,5 +22,4 @@ export {
   decodeFunctionCallParameters,
   encodeEventSignature,
   encodeFunctionSignature,
-  FindingGenerator,
 };

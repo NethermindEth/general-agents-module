@@ -1,6 +1,7 @@
 import { HandleTransaction, TransactionEvent, Finding } from "forta-agent";
-import { createAddress, generalTestFindingGenerator, TestTransactionEvent } from "../test/tests.utils";
-import { FindingGenerator } from "../utils";
+import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
+import { createAddress } from "../utils";
+import { FindingGenerator } from "./types";
 import provideBlacklistedAddresessHandler from "./blacklisted.addresses";
 
 const testBlacklistedAddresses = [createAddress("0x0"), createAddress("0x1"), createAddress("0x2")];
@@ -42,8 +43,7 @@ describe("Blacklisted Addresses Handler Tests", () => {
   });
 
   it("should return pass the correct information to the finding", async () => {
-    const mockFindingGenerator: FindingGenerator = (metadata: { [key: string]: any } | undefined): Finding =>
-      metadata as Finding;
+    const mockFindingGenerator: FindingGenerator<Record<string, any>> = (metadata) => metadata as Finding;
 
     handleTrasaction = provideBlacklistedAddresessHandler(mockFindingGenerator, testBlacklistedAddresses);
 

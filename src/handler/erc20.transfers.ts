@@ -1,6 +1,6 @@
 import { LogDescription } from "@ethersproject/abi";
 import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "../utils";
+import { FindingGenerator } from "./types";
 
 const EVENT_SIGNATURE = "event Transfer(address indexed from, address indexed to, uint256 amount)";
 
@@ -47,7 +47,7 @@ const createFilter = (options: HandlerOptions | undefined): ((transferInfo: Tran
 };
 
 export default function provideERC20TransferHandler(
-  findingGenerator: FindingGenerator,
+  findingGenerator: FindingGenerator<TransferInfo>,
   tokenAddress: string,
   handlerOptions?: HandlerOptions
 ): HandleTransaction {

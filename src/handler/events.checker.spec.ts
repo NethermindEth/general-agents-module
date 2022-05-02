@@ -8,15 +8,16 @@ import {
   FindingType,
   LogDescription,
 } from "forta-agent";
-import { generalTestFindingGenerator, TestTransactionEvent } from "../test/tests.utils";
+import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
+import { createAddress } from "../utils";
 import provideEventCheckerHandler from "./events.checker";
-import { encodeParameter, encodeParameters, FindingGenerator, metadataVault } from "../utils";
-import { createAddress } from "../test/tests.utils";
+import { encodeParameter, encodeParameters } from "../utils";
+import { FindingGenerator } from "./types";
 
 const TEST_EVENT = "event Test(bool testBool, uint256 testUint256, address indexed testAddress)";
 const TEST_EVENT_SIGNATURE = "Test(bool,uint256,address)";
 
-const findingGenerator: FindingGenerator = (event?: metadataVault): Finding => {
+const findingGenerator: FindingGenerator<Record<string, any>> = (event) => {
   return Finding.fromObject({
     name: "Finding Test",
     description: "Finding for test",

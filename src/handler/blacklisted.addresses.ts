@@ -1,21 +1,19 @@
-import { FindingGenerator } from "../utils";
 import { HandleTransaction, TransactionEvent, Finding } from "forta-agent";
+import { FindingGenerator } from "./types";
 
 export default function provideBlacklistedAddresessHandler(
-  findingGenerator: FindingGenerator,
+  findingGenerator: FindingGenerator<{ addresses: string[] }>,
   blacklistedAddresses: string[]
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    const findings: Finding[] = [];
-
     const blacklistedAddressesInvolved: string[] = blacklistedAddresses.filter(
       (address: string) => txEvent.addresses[address.toLowerCase()]
     );
 
     if (blacklistedAddressesInvolved.length > 0) {
-      findings.push(findingGenerator({ addresses: blacklistedAddressesInvolved }));
+      return [findingGenerator({ addresses: blacklistedAddressesInvolved })];
+    } else {
+      return [];
     }
-
-    return findings;
   };
 }

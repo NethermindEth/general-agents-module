@@ -1,7 +1,6 @@
 import { MockEthersProvider, MockEthersSigner } from "./mock.utils";
-import { createAddress } from "./tests.utils";
-import { encodeParameter } from "../utils";
-import { utils, Contract, BigNumber } from "ethers";
+import { encodeParameter, createAddress } from "../utils";
+import { utils, Contract } from "ethers";
 import { Interface } from "@ethersproject/abi";
 
 describe("Ethers mocks tests", () => {
@@ -198,12 +197,10 @@ describe("Ethers mocks tests", () => {
       ]);
       const signer: string = createAddress("0xe0a");
       const contractAddress: string = createAddress("0xbade0a");
-      mockProvider.addCallFrom(
-        contractAddress,
-        signer,
-        42, iface, "foo",
-        { inputs: [1, "a", "b"], outputs:["20", "10"] }
-      );
+      mockProvider.addCallFrom(contractAddress, signer, 42, iface, "foo", {
+        inputs: [1, "a", "b"],
+        outputs: ["20", "10"],
+      });
       mockSigner.setAddress(signer);
 
       const contract: Contract = new Contract(contractAddress, iface, mockSigner as any);

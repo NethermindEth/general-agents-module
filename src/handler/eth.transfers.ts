@@ -1,5 +1,5 @@
 import { Finding, HandleTransaction, Trace, TransactionEvent } from "forta-agent";
-import { FindingGenerator } from "../utils";
+import { FindingGenerator } from "./types";
 import { toWei } from "web3-utils";
 
 const DEFAULT_THRESHOLD = toWei("10");
@@ -11,13 +11,13 @@ type HandlerOptions = {
 };
 
 export default function provideETHTransferHandler(
-  findingGenerator: FindingGenerator,
+  findingGenerator: FindingGenerator<{ from: string; to: string; value: string }>,
   handlerOptions?: HandlerOptions
 ): HandleTransaction {
   return async (txEvent: TransactionEvent): Promise<Finding[]> => {
     const findings: Finding[] = [];
 
-    txEvent.traces.forEach((trace: Trace) => {
+    txEvent.traces.forEach((trace) => {
       const valueThreshold: bigint =
         handlerOptions?.valueThreshold !== undefined
           ? BigInt(handlerOptions.valueThreshold)

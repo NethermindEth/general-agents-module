@@ -1,50 +1,14 @@
-import { leftPad } from "web3-utils";
-import {
-  TransactionEvent,
-  Network,
-  EventType,
-  Finding,
-  FindingSeverity,
-  FindingType,
-  Receipt,
-  Transaction,
-  Block,
-  Trace,
-  BlockEvent,
-  HandleTransaction,
-  HandleBlock,
-  Log,
-  ethers,
-} from "forta-agent";
-import { FindingGenerator, encodeEventSignature } from "../utils";
+import { TransactionEvent, Network, EventType, Transaction, Block, Trace, Log, ethers } from "forta-agent";
+import { encodeEventSignature, createAddress } from "../utils";
 import { AbiItem } from "web3-utils";
 
-export interface Agent {
-  handleTransaction: HandleTransaction;
-  handleBlock: HandleBlock;
-}
-
-export interface TraceProps {
+interface TraceProps {
   to?: string;
   from?: string;
   input?: string;
   output?: string;
   value?: string;
 }
-
-export const generalTestFindingGenerator: FindingGenerator = (): Finding => {
-  return Finding.fromObject({
-    name: "Finding Test",
-    description: "Finding for test",
-    alertId: "TEST",
-    severity: FindingSeverity.Low,
-    type: FindingType.Info,
-  });
-};
-
-export const createAddress = (suffix: string): string => {
-  return leftPad(suffix, 40);
-};
 
 export class TestTransactionEvent extends TransactionEvent {
   constructor() {
@@ -120,7 +84,7 @@ export class TestTransactionEvent extends TransactionEvent {
   public addInterfaceEventLog(
     event: ethers.utils.EventFragment,
     address: string = createAddress("0x0"),
-    inputs: ReadonlyArray<any> = [],
+    inputs: ReadonlyArray<any> = []
   ): TestTransactionEvent {
     // creating the interface locally allows receiving one less parameter,
     // which makes testing code cleaner
@@ -184,50 +148,4 @@ export class TestTransactionEvent extends TransactionEvent {
     this.traces.push(...traceProps.map(toTrace));
     return this;
   }
-}
-
-export class TestBlockEvent extends BlockEvent {
-  constructor() {
-    const block: Block = {
-      transactions: [],
-      hash: createAddress("0x0"),
-      number: 0,
-    } as any;
-
-    super(EventType.BLOCK, Network.MAINNET, block);
-  }
-
-  public setNumber(blockNumber: number): TestBlockEvent {
-    this.block.number = blockNumber;
-    return this;
-  }
-
-  public setHash(blockHash: string): TestBlockEvent {
-    this.block.hash = blockHash;
-    return this;
-  }
-
-  public setTimestamp(timestamp: number): TestBlockEvent {
-    this.block.timestamp = timestamp;
-    return this;
-  }
-
-  public addTransactions(...txns: TransactionEvent[]): TestBlockEvent {
-    this.block.transactions.push(...txns.map((tx) => tx.hash));
-    return this;
-  }
-
-  public addTransactionsHashes(...hashes: string[]): TestBlockEvent {
-    this.block.transactions.push(...hashes);
-    return this;
-  }
-}
-
-export async function runBlock(agent: Agent, block: BlockEvent, ...txns: TransactionEvent[]): Promise<Finding[]> {
-  let findings: Finding[] = [];
-
-  findings.push(...(await agent.handleBlock(block)));
-  for (let tx of txns) findings.push(...(await agent.handleTransaction(tx)));
-
-  return findings;
 }

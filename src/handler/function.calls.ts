@@ -1,11 +1,11 @@
 import { Finding, HandleTransaction, TransactionEvent, Trace } from "forta-agent";
 import {
-  FindingGenerator,
   encodeFunctionSignature,
   decodeFunctionCallParameters,
   extractFunctionSelector,
   extractArgumentTypes,
 } from "../utils";
+import { FindingGenerator } from "./types";
 import { AbiItem } from "web3-utils";
 
 interface HandlerOptions {
@@ -70,7 +70,7 @@ const createFilter = (functionSignature: Signature, options: HandlerOptions | un
 };
 
 export default function provideFunctionCallsDetectorHandler(
-  findingGenerator: FindingGenerator,
+  findingGenerator: FindingGenerator<FunctionCallInfo>,
   functionSignature: Signature,
   handlerOptions?: HandlerOptions
 ): HandleTransaction {

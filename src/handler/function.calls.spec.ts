@@ -1,5 +1,6 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
-import { TestTransactionEvent, createAddress, generalTestFindingGenerator } from "../test/tests.utils";
+import { TestTransactionEvent, generalTestFindingGenerator } from "../test";
+import { createAddress } from "../utils";
 import provideFunctionCallsDetectorHandler from "./function.calls";
 import { AbiItem } from "web3-utils";
 import { encodeFunctionSignature, encodeFunctionCall, encodeParameters, decodeParameter } from "../utils";

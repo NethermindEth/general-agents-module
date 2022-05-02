@@ -1,6 +1,7 @@
 import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
 import provideETHTransferHandler from "./eth.transfers";
-import { createAddress, generalTestFindingGenerator, TestTransactionEvent } from "../test/tests.utils";
+import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
+import { createAddress } from "../utils";
 import { toWei } from "web3-utils";
 
 describe("ETH Transfer Agent Tests", () => {

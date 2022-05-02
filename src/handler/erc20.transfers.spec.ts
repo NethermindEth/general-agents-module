@@ -1,7 +1,9 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
-import { generalTestFindingGenerator, createAddress, TestTransactionEvent } from "../test/tests.utils";
+import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
+import { createAddress } from "../utils";
 import provideERC20TransferHandler from "./erc20.transfers";
 import { encodeParameter } from "../utils";
+import { FindingGenerator } from "./types";
 
 const TOKEN_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
@@ -204,7 +206,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should pass correct metadata to findingGenerator", async () => {
-    const findingGenerator = (metadata: { [key: string]: any } | undefined): Finding => {
+    const findingGenerator: FindingGenerator<Record<string, any>> = (metadata) => {
       return Finding.fromObject({
         name: "testName",
         description: "testDescription",

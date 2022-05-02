@@ -29,7 +29,7 @@ export class MockEthersProvider {
     block: number | string,
     iface: Interface,
     id: any,
-    params: CallParams, 
+    params: CallParams
   ): MockEthersProvider {
     when(this.call)
       .calledWith(
@@ -45,11 +45,11 @@ export class MockEthersProvider {
 
   public addCallFrom(
     contract: string,
-    from: string, 
+    from: string,
     block: number | string,
     iface: Interface,
     id: any,
-    params: CallParams, 
+    params: CallParams
   ): MockEthersProvider {
     when(this.call)
       .calledWith(
@@ -58,7 +58,7 @@ export class MockEthersProvider {
           to: toChecksumAddress(contract),
           from,
         },
-        block,
+        block
       )
       .mockReturnValue(iface.encodeFunctionResult(id, params.outputs));
     return this;
@@ -110,7 +110,7 @@ export class MockEthersSigner {
 
   public getBlock(num: number): any {
     return this.provider.getBlock(num);
-  };
+  }
 
   public getSigner(signer: string): any {
     this.provider.getSigner(signer);
@@ -119,7 +119,7 @@ export class MockEthersSigner {
   public getStorageAt(contract: string, slot: number, block: number): any {
     this.provider.getStorageAt(contract, slot, block);
   }
-  
+
   public getBlockNumber(): any {
     this.provider.getBlockNumber();
   }
