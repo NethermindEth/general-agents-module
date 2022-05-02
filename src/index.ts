@@ -1,8 +1,6 @@
-import provideERC20TransferHandler from "./handler/erc20.transfers";
-import provideETHTransferHandler from "./handler/eth.transfers";
-import provideFunctionCallsDetectorHandler from "./handler/function.calls";
-import provideEventCheckerHandler from "./handler/events.checker";
-import provideBlacklistedAddressesHandler from "./handler/blacklisted.addresses";
+
+import * as handlers from "./handler";
+
 import {
   FindingGenerator,
   encodeParameter,
@@ -16,11 +14,7 @@ import {
 } from "./utils";
 
 export {
-  provideERC20TransferHandler,
-  provideETHTransferHandler,
-  provideFunctionCallsDetectorHandler,
-  provideEventCheckerHandler,
-  provideBlacklistedAddressesHandler,
+  handlers,
   encodeParameter,
   encodeParameters,
   encodeFunctionCall,
@@ -30,20 +24,4 @@ export {
   encodeEventSignature,
   encodeFunctionSignature,
   FindingGenerator,
-};
-
-export default {
-  provideERC20TransferHandler,
-  provideETHTransferHandler,
-  provideFunctionCallsDetectorHandler,
-  provideEventCheckerHandler,
-  provideBlacklistedAddressesHandler,
-  encodeParameter,
-  encodeParameters,
-  encodeFunctionCall,
-  decodeParameter,
-  decodeParameters,
-  decodeFunctionCallParameters,
-  encodeEventSignature,
-  encodeFunctionSignature,
 };
