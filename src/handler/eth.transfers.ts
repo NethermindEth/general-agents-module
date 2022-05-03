@@ -1,4 +1,4 @@
-import { Finding, HandleTransaction, Trace, TransactionEvent } from "forta-agent";
+import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
 import { FindingGenerator } from "./types";
 import { toWei } from "web3-utils";
 

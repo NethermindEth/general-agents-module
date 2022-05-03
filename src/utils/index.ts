@@ -1,5 +1,4 @@
-import { leftPad } from "web3-utils";
 
-export const createAddress = (suffix: string): string => {
-  return leftPad(suffix, 40);
-};
+import { ethers } from "forta-agent";
+
+export const createAddress = (addr: string) => ethers.utils.hexZeroPad(addr, 20);

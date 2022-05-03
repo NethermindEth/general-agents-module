@@ -2,7 +2,6 @@ import { MockEthersProvider, MockEthersSigner } from "./mock.utils";
 import { createAddress } from "../utils";
 import { utils, Contract } from "ethers";
 import { Interface } from "@ethersproject/abi";
-import { leftPad } from "web3-utils";
 
 describe("Ethers mocks tests", () => {
   describe("MockEthersProvider tests suite", () => {
@@ -20,7 +19,7 @@ describe("Ethers mocks tests", () => {
       ];
 
       for (let [shortContract, slot, block, shortAddr] of CASES) {
-        const encodedSlot: string = leftPad(shortAddr, 64);
+        const encodedSlot: string = utils.hexZeroPad(shortAddr, 32);
         const contract: string = createAddress(shortContract);
 
         mockProvider.addStorage(contract, slot, block, encodedSlot);
