@@ -1,12 +1,12 @@
 import { TransactionEvent, Network, EventType, Transaction, Block, Trace, Log, ethers } from "forta-agent";
-import { encodeEventSignature, createAddress } from "../utils";
-import { AbiItem } from "web3-utils";
+import { createAddress } from "../utils";
 
 interface TraceProps {
+  function?: ethers.utils.FunctionFragment | string;
   to?: string;
   from?: string;
-  input?: string;
-  output?: string;
+  arguments?: any[];
+  output?: any[];
   value?: string;
 }
 
@@ -81,16 +81,15 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
-  public addInterfaceEventLog(
-    event: ethers.utils.EventFragment,
+  public addEventLog(
+    event: ethers.utils.EventFragment | string,
     address: string = createAddress("0x0"),
     inputs: ReadonlyArray<any> = []
   ): TestTransactionEvent {
-    // creating the interface locally allows receiving one less parameter,
-    // which makes testing code cleaner
     const iface = new ethers.utils.Interface([event]);
+    const eventFragment = ethers.utils.EventFragment.from(ethers.utils.Fragment.from(event));
 
-    const log = iface.encodeEventLog(event, inputs);
+    const log = iface.encodeEventLog(eventFragment, inputs);
 
     this.logs.push({
       address: address.toLowerCase(),
@@ -101,51 +100,40 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
-  public addEventLog(
-    eventSignature: string | AbiItem,
-    address: string = createAddress("0x0"),
-    data: string = "0x",
-    ...topics: string[]
-  ): TestTransactionEvent {
-    this.logs.push({
-      address: address.toLowerCase(),
-      topics: [encodeEventSignature(eventSignature), ...topics],
-      data,
-    } as Log);
-    return this;
-  }
-
-  public addAnonymousEventLog(
-    address: string = createAddress("0x0"),
-    data: string = "0x",
-    ...topics: string[]
-  ): TestTransactionEvent {
-    this.logs.push({
-      address: address.toLowerCase(),
-      topics,
-      data,
-    } as Log);
-    return this;
-  }
-
   public addInvolvedAddresses(...addresses: string[]): TestTransactionEvent {
     for (let address of addresses) this.addresses[address.toLowerCase()] = true;
     return this;
   }
 
   public addTraces(...traceProps: TraceProps[]): TestTransactionEvent {
-    const toTrace = ({ to, from, input, output, value }: TraceProps) => {
+    const toTrace = (props: TraceProps) => {
+      if (!props.function) {
+        return {
+          action: {
+            to: props.to?.toLowerCase(),
+            from: props.from?.toLowerCase(),
+            value: props.value,
+          },
+        } as Trace;
+      }
+
+      const functionFragment = ethers.utils.FunctionFragment.from(ethers.utils.Fragment.from(props.function));
+      const iface = new ethers.utils.Interface([functionFragment]);
       return {
         action: {
-          to: to?.toLowerCase(),
-          from: from?.toLowerCase(),
-          input,
-          value,
+          to: props.to?.toLowerCase(),
+          from: props.from?.toLowerCase(),
+          input: iface.encodeFunctionData(functionFragment, props.arguments),
+          value: props.value,
         },
-        result: { output },
+        result: {
+          output: iface.encodeFunctionResult(functionFragment, props.output),
+        },
       } as Trace;
     };
+
     this.traces.push(...traceProps.map(toTrace));
+
     return this;
   }
 }
