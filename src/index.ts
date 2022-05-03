@@ -1,7 +1,6 @@
 import * as handlers from "./handler";
 
 import {
-  FindingGenerator,
   encodeParameter,
   encodeParameters,
   encodeFunctionCall,
