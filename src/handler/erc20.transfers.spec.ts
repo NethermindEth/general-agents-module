@@ -1,7 +1,7 @@
 import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
 import { createAddress } from "../utils";
-import provideERC20TransferHandler from "./erc20.transfers";
+import Erc20Transfer from "./erc20.transfers";
 import { FindingGenerator } from "./types";
 
 const TOKEN_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
@@ -23,7 +23,12 @@ describe("ERC20 Transfer Agent Tests", () => {
   let handleTransaction: HandleTransaction;
 
   it("should return empty findings if the expected event wasn't emitted", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS);
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
+      onFinding: generalTestFindingGenerator,
+    });
+  
+    handleTransaction = handler.getHandleTransaction();
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog("event BadSignature()", TOKEN_ADDRESS);
 
     const findings: Finding[] = await handleTransaction(txEvent);
@@ -32,7 +37,12 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return empty findings if the expected event wasn't emitted from the correct token", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS);
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
+      onFinding: generalTestFindingGenerator,
+    });
+  
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
       "0x0",
@@ -46,7 +56,12 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the expected event was emitted from the correct token", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS);
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
+      onFinding: generalTestFindingGenerator,
+    });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -60,9 +75,13 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the event has in the field `to` the correct address", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
       to: createAddress("0x12"),
+      onFinding: generalTestFindingGenerator,
     });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent1: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -79,14 +98,19 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x12"),
       "0"
     );
+
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
   });
 
   it("should return a finding only if the event has in the field `from` the correct address", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
       from: createAddress("0x12"),
+      onFinding: generalTestFindingGenerator,
     });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent1: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -103,14 +127,19 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "0"
     );
+
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
   });
 
   it("should return a finding only if the event has in the field `value` a value greater than the specified threshold", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
       amountThreshold: "350",
+      onFinding: generalTestFindingGenerator,
     });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent1: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -118,6 +147,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "300"
     );
+
     let findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
 
@@ -127,6 +157,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "350"
     );
+
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
 
@@ -136,14 +167,19 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "360"
     );
+
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2), generalTestFindingGenerator(txEvent3)]);
   });
 
   it("should not compare thresholds using lexicographic order", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
+      onFinding: generalTestFindingGenerator,
       amountThreshold: "10",
     });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent1: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -151,16 +187,21 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "2"
     );
+
     const findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
   });
 
   it("should return a finding only if all the conditions are met", async () => {
-    handleTransaction = provideERC20TransferHandler(generalTestFindingGenerator, TOKEN_ADDRESS, {
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
       from: createAddress("0x1"),
       to: createAddress("0x2"),
       amountThreshold: "350",
+      onFinding: generalTestFindingGenerator,
     });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent1: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
@@ -168,6 +209,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x2"),
       "300"
     );
+
     let findings: Finding[] = await handleTransaction(txEvent1);
     expect(findings).toStrictEqual([]);
 
@@ -177,6 +219,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x0"),
       "350"
     );
+
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([]);
 
@@ -186,6 +229,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x2"),
       "360"
     );
+
     findings = findings.concat(await handleTransaction(txEvent3));
     expect(findings).toStrictEqual([]);
 
@@ -195,6 +239,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       createAddress("0x2"),
       "360"
     );
+
     findings = findings.concat(await handleTransaction(txEvent4));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent4)]);
   });
@@ -210,11 +255,17 @@ describe("ERC20 Transfer Agent Tests", () => {
         metadata: {
           from: metadata?.from,
           to: metadata?.to,
-          amount: metadata?.amount,
+          amount: metadata?.amount.toString(),
         },
       });
     };
-    handleTransaction = provideERC20TransferHandler(findingGenerator, TOKEN_ADDRESS);
+
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
+      onFinding: findingGenerator,
+    });
+
+    handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
       TOKEN_ADDRESS,
