@@ -27,7 +27,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       emitter: TOKEN_ADDRESS,
       onFinding: generalTestFindingGenerator,
     });
-  
+
     handleTransaction = handler.getHandleTransaction();
     const txEvent: TransactionEvent = new TestTransactionEvent().addEventLog("event BadSignature()", TOKEN_ADDRESS);
 
@@ -41,7 +41,7 @@ describe("ERC20 Transfer Agent Tests", () => {
       emitter: TOKEN_ADDRESS,
       onFinding: generalTestFindingGenerator,
     });
-  
+
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = createTransactionEventWithTransferLog(
