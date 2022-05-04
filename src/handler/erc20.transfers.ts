@@ -8,7 +8,7 @@ interface Options {
   emitter?: string;
   from?: string;
   to?: string;
-  amountThreshold?: ethers.BigNumberish;
+  amountThreshold?: ethers.BigNumberish|((amount: ethers.BigNumber) => boolean);
 }
 
 interface Metadata {
@@ -29,7 +29,6 @@ export default class Erc20Transfer extends Handler<Options, Metadata> {
     if (this.options.emitter) this.options.emitter = this.options.emitter.toLowerCase();
     if (this.options.from) this.options.from = this.options.from.toLowerCase();
     if (this.options.to) this.options.to = this.options.to.toLowerCase();
-    if (this.options.amountThreshold) this.options.amountThreshold = ethers.BigNumber.from(this.options.amountThreshold);
   }
 
   private _createFilter(): (log: LogDescription) => boolean {  
@@ -46,8 +45,13 @@ export default class Erc20Transfer extends Handler<Options, Metadata> {
         return false;
       }
   
-      if (this.options.amountThreshold !== undefined && log.args.amount.lt(this.options.amountThreshold)) {
-        return false;
+      if (this.options.amountThreshold !== undefined) {
+        if (typeof this.options.amountThreshold === "function" && !this.options.amountThreshold(log.args.amount)) {
+          return false;
+        }
+        else if (typeof this.options.amountThreshold !== "function" && log.args.amount.lt(this.options.amountThreshold)) {
+          return false;
+        }
       }
   
       return true;

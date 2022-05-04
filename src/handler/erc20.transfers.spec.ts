@@ -132,7 +132,7 @@ describe("ERC20 Transfer Agent Tests", () => {
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
   });
 
-  it("should return a finding only if the event has in the field `value` a value greater than the specified threshold", async () => {
+  it("should return a finding only if the event has in the field `amount` an amount greater than the specified threshold", async () => {
     const handler = new Erc20Transfer({
       emitter: TOKEN_ADDRESS,
       amountThreshold: "350",
@@ -170,6 +170,48 @@ describe("ERC20 Transfer Agent Tests", () => {
 
     findings = findings.concat(await handleTransaction(txEvent2));
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2), generalTestFindingGenerator(txEvent3)]);
+  });
+
+  it("should return a finding only if the event has the field `amount` satisfies the specified threshold callback", async () => {
+    const handler = new Erc20Transfer({
+      emitter: TOKEN_ADDRESS,
+      amountThreshold(amount) {
+        return amount.gt("10") && amount.lt("100");
+      },
+      onFinding: generalTestFindingGenerator,
+    });
+
+    handleTransaction = handler.getHandleTransaction();
+
+    const txEvent1: TransactionEvent = createTransactionEventWithTransferLog(
+      TOKEN_ADDRESS,
+      createAddress("0x0"),
+      createAddress("0x0"),
+      "10"
+    );
+
+    const findings1: Finding[] = await handleTransaction(txEvent1);
+    expect(findings1).toStrictEqual([]);
+
+    const txEvent2: TransactionEvent = createTransactionEventWithTransferLog(
+      TOKEN_ADDRESS,
+      createAddress("0x0"),
+      createAddress("0x0"),
+      "50"
+    );
+
+    const findings2: Finding[] = await handleTransaction(txEvent2);
+    expect(findings2).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
+
+    const txEvent3: TransactionEvent = createTransactionEventWithTransferLog(
+      TOKEN_ADDRESS,
+      createAddress("0x12"),
+      createAddress("0x0"),
+      "101"
+    );
+
+    const findings3: Finding[] = await handleTransaction(txEvent3);
+    expect(findings3).toStrictEqual([]);
   });
 
   it("should not compare thresholds using lexicographic order", async () => {
