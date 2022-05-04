@@ -1,19 +1,38 @@
-import { HandleTransaction, TransactionEvent, Finding } from "forta-agent";
-import { FindingGenerator } from "./types";
+import { TransactionEvent, Finding, BlockEvent } from "forta-agent";
+import { Handler, HandlerOptions } from "./handler";
+import type { FindingGenerator } from "./types";
 
-export default function provideBlacklistedAddresessHandler(
-  findingGenerator: FindingGenerator<{ addresses: string[] }>,
-  blacklistedAddresses: string[]
-): HandleTransaction {
-  return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    const blacklistedAddressesInvolved: string[] = blacklistedAddresses.filter(
-      (address: string) => txEvent.addresses[address.toLowerCase()]
-    );
+interface Options {
+  addresses: string[];
+}
 
-    if (blacklistedAddressesInvolved.length > 0) {
-      return [findingGenerator({ addresses: blacklistedAddressesInvolved })];
+interface Metadata {
+  addresses: string[];
+}
+
+export default class BlacklistedAddresses extends Handler<Options, Metadata> {
+  constructor(options: HandlerOptions<Options, Metadata>) {
+    super(options);
+
+    this.options.addresses = this.options.addresses.map((el) => el.toLowerCase());
+  }
+
+  protected async _handle(
+    event: TransactionEvent | BlockEvent,
+    onFinding: FindingGenerator<Metadata>
+  ): Promise<Finding[]> {
+    const data = await this.metadata(event);
+
+    return data ? data.map(onFinding) : [];
+  }
+
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
+    if (event instanceof BlockEvent) {
+      return null;
     } else {
-      return [];
+      const addresses = this.options.addresses.filter((el) => event.addresses[el]);
+
+      return addresses.length ? [{ addresses }] : null;
     }
-  };
+  }
 }
