@@ -1,7 +1,7 @@
 import { Interface } from "@ethersproject/abi";
 import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
-import { Log } from "@ethersproject/abstract-provider";
+import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
 
 export interface CallParams {
   inputs: any[];
@@ -87,8 +87,16 @@ export class MockEthersProvider {
     return this;
   }
 
-  public addFilteredLogs(filter: any, logs: Log[]): MockEthersProvider {
-    when(this.getLogs).calledWith(filter).mockReturnValue(logs);
+  public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
+    const matcher = {
+      ...filter,
+      topics: (filter.topics)
+        ? expect.arrayContaining(filter.topics.map(el => (Array.isArray(el))? expect.arrayContaining(el) : el))
+        : undefined,
+    };
+
+    when(this.getLogs).calledWith(expect.objectContaining(matcher)).mockReturnValue(logs);
+
     return this;
   }
 
