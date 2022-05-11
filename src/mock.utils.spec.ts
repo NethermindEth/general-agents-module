@@ -107,38 +107,45 @@ describe("Ethers mocks tests", () => {
       const event2SigHash: string = keccak256("Event2()");
 
       // filters are not being used in the mock in anyway
-      // they are just added here in a realistic way to ensure 
+      // they are just added here in a realistic way to ensure
       // it works correctly
-      const CASES: any[] = [[{
-          address: createAddress("0xa1"),
-          fromBlock : 10,
-          toBlock : 12,
-          topics : [
-            event1SigHash, 
-            event2SigHash, 
-          ]}, [{
+      const CASES: any[] = [
+        [
+          {
+            address: createAddress("0xa1"),
+            fromBlock: 10,
+            toBlock: 12,
+            topics: [event1SigHash, event2SigHash],
+          },
+          [
+            {
               address: createAddress("0x1"),
               topics: [event1SigHash],
-            }, {
+            },
+            {
               address: createAddress("0x2"),
               topics: [event2SigHash],
-            }, 
-          ]
-        ], [{
-          address: createAddress("0xabc"),
-          fromBlock : 1000,
-          toBlock : 10001,
-          topics : [
-            event2SigHash, 
-          ]}, [{
+            },
+          ],
+        ],
+        [
+          {
+            address: createAddress("0xabc"),
+            fromBlock: 1000,
+            toBlock: 10001,
+            topics: [event2SigHash],
+          },
+          [
+            {
               address: createAddress("0xf1"),
               topics: [event2SigHash],
-            }, {
+            },
+            {
               address: createAddress("0xd31"),
               topics: [event2SigHash],
-            }, 
-          ]
-        ]
+            },
+          ],
+        ],
       ];
 
       for (let [filter, logs] of CASES) {
@@ -247,12 +254,10 @@ describe("Ethers mocks tests", () => {
       ]);
       const signer: string = createAddress("0xe0a");
       const contractAddress: string = createAddress("0xbade0a");
-      mockProvider.addCallFrom(
-        contractAddress,
-        signer,
-        42, iface, "foo",
-        { inputs: [1, "a", "b"], outputs:["20", "10"] }
-      );
+      mockProvider.addCallFrom(contractAddress, signer, 42, iface, "foo", {
+        inputs: [1, "a", "b"],
+        outputs: ["20", "10"],
+      });
       mockSigner.setAddress(signer);
 
       const contract: Contract = new Contract(contractAddress, iface, mockSigner as any);
