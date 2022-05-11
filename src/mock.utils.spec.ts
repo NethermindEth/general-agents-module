@@ -3,6 +3,7 @@ import { createAddress } from "./tests.utils";
 import { encodeParameter } from "./utils";
 import { utils, Contract, BigNumber } from "ethers";
 import { Interface } from "@ethersproject/abi";
+import { keccak256 } from "forta-agent";
 
 describe("Ethers mocks tests", () => {
   describe("MockEthersProvider tests suite", () => {
@@ -98,6 +99,54 @@ describe("Ethers mocks tests", () => {
         // check the block twice
         expect(await mockProvider.getBlockNumber()).toStrictEqual(block);
         expect(await mockProvider.getBlockNumber()).toStrictEqual(block);
+      }
+    });
+
+    it("should return the corresponding logs", async () => {
+      const event1SigHash: string = keccak256("Event1()");
+      const event2SigHash: string = keccak256("Event2()");
+
+      // filters are not being used in the mock in anyway
+      // they are just added here in a realistic way to ensure 
+      // it works correctly
+      const CASES: any[] = [[{
+          address: createAddress("0xa1"),
+          fromBlock : 10,
+          toBlock : 12,
+          topics : [
+            event1SigHash, 
+            event2SigHash, 
+          ]}, [{
+              address: createAddress("0x1"),
+              topics: [event1SigHash],
+            }, {
+              address: createAddress("0x2"),
+              topics: [event2SigHash],
+            }, 
+          ]
+        ], [{
+          address: createAddress("0xabc"),
+          fromBlock : 1000,
+          toBlock : 10001,
+          topics : [
+            event2SigHash, 
+          ]}, [{
+              address: createAddress("0xf1"),
+              topics: [event2SigHash],
+            }, {
+              address: createAddress("0xd31"),
+              topics: [event2SigHash],
+            }, 
+          ]
+        ]
+      ];
+
+      for (let [filter, logs] of CASES) {
+        mockProvider.addFilteredLogs(filter, logs);
+
+        // check the Logs twice
+        expect(await mockProvider.getLogs(filter)).toStrictEqual(logs);
+        expect(await mockProvider.getLogs(filter)).toStrictEqual(logs);
       }
     });
 
