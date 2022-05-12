@@ -1,17 +1,37 @@
-import { Finding, HandleTransaction, LogDescription, TransactionEvent } from "forta-agent";
+import { Finding, LogDescription, TransactionEvent, BlockEvent } from "forta-agent";
+import { Handler, HandlerOptions } from "./handler";
 import { FindingGenerator } from "./types";
 
-export default function provideEventCheckerHandler(
-  findingGenerator: FindingGenerator<LogDescription>,
-  eventSignature: string,
-  address?: string,
-  filter?: (log: LogDescription, index?: number, array?: LogDescription[]) => boolean
-): HandleTransaction {
-  return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    let logDescriptions = txEvent.filterLog(eventSignature, address);
+interface Options {
+  emitter?: string;
+  signature: string;
+  filter?: (log: LogDescription, index?: number, array?: LogDescription[]) => boolean;
+}
 
-    if (filter) logDescriptions = logDescriptions.filter(filter);
+interface Metadata extends LogDescription {}
 
-    return logDescriptions.map((logDescription) => findingGenerator(logDescription));
-  };
+export default class EventEmission extends Handler<Options, Metadata> {
+  constructor(options: HandlerOptions<Options, Metadata>) {
+    super(options);
+
+    if (this.options.emitter) this.options.emitter = this.options.emitter.toLowerCase();
+  }
+
+  protected async _handle(
+    event: TransactionEvent | BlockEvent,
+    onFinding: FindingGenerator<Metadata>
+  ): Promise<Finding[]> {
+    const data = await this.metadata(event);
+
+    return data ? data.map(onFinding) : [];
+  }
+
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
+    if (event instanceof BlockEvent) {
+      return null;
+    } else {
+      const logs = event.filterLog(this.options.signature, this.options.emitter);
+      return this.options.filter ? logs.filter(this.options.filter) : logs;
+    }
+  }
 }
