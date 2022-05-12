@@ -1,35 +1,67 @@
-import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
+import { Finding, TransactionEvent, ethers, BlockEvent } from "forta-agent";
 import { FindingGenerator } from "./types";
-import { toWei } from "web3-utils";
+import { Handler, HandlerOptions } from "./handler";
 
-const DEFAULT_THRESHOLD = toWei("10");
-
-type HandlerOptions = {
+interface Options {
   from?: string;
   to?: string;
-  valueThreshold?: string;
-};
+  valueThreshold?: ethers.BigNumberish | ((amount: ethers.BigNumber) => boolean);
+}
 
-export default function provideETHTransferHandler(
-  findingGenerator: FindingGenerator<{ from: string; to: string; value: string }>,
-  handlerOptions?: HandlerOptions
-): HandleTransaction {
-  return async (txEvent: TransactionEvent): Promise<Finding[]> => {
-    const findings: Finding[] = [];
+interface Metadata {
+  from: string;
+  to: string;
+  value: ethers.BigNumber;
+}
 
-    txEvent.traces.forEach((trace) => {
-      const valueThreshold: bigint =
-        handlerOptions?.valueThreshold !== undefined
-          ? BigInt(handlerOptions.valueThreshold)
-          : BigInt(DEFAULT_THRESHOLD);
+export default class EthTransfer extends Handler<Options, Metadata> {
+  isLarge: (value: ethers.BigNumber) => boolean = () => true;
 
-      if (handlerOptions?.from !== undefined && handlerOptions?.from.toLowerCase() !== trace.action.from) return;
-      if (handlerOptions?.to !== undefined && handlerOptions?.to.toLowerCase() !== trace.action.to) return;
-      if (valueThreshold > BigInt(trace.action.value)) return;
+  constructor(options: HandlerOptions<Options, Metadata>) {
+    super(options);
 
-      findings.push(findingGenerator({ from: trace.action.from, to: trace.action.to, value: trace.action.value }));
-    });
+    if (this.options.from) this.options.from = this.options.from.toLowerCase();
+    if (this.options.to) this.options.to = this.options.to.toLowerCase();
+    if (this.options.valueThreshold) {
+      if (typeof this.options.valueThreshold === "function") {
+        this.isLarge = this.options.valueThreshold;
+      } else {
+        const bnThreshold = ethers.BigNumber.from(this.options.valueThreshold);
+        this.isLarge = (value) => value.gte(bnThreshold);
+      }
+    }
+  }
 
-    return findings;
-  };
+  protected async _handle(
+    event: TransactionEvent | BlockEvent,
+    onFinding: FindingGenerator<Metadata>
+  ): Promise<Finding[]> {
+    const data = await this.metadata(event);
+
+    return data ? data.map(onFinding) : [];
+  }
+
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
+    if (event instanceof BlockEvent) {
+      return null;
+    } else {
+      const data: Metadata[] = [];
+
+      event.traces.forEach((trace) => {
+        if (trace.action.from !== this.options.from) return;
+        if (trace.action.to !== this.options.to) return;
+
+        const bnValue = ethers.BigNumber.from(trace.action.value);
+        if (!this.isLarge(bnValue)) return;
+
+        data.push({
+          from: trace.action.from,
+          to: trace.action.to,
+          value: bnValue,
+        });
+      });
+
+      return data;
+    }
+  }
 }
