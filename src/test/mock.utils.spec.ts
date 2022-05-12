@@ -155,7 +155,7 @@ describe("Ethers mocks tests", () => {
         expect(await mockProvider.getLogs(filter)).toStrictEqual(logs);
 
         // check that the expected parameter is based on the filter object content, not reference
-        expect(await mockProvider.getLogs({...filter})).toStrictEqual(logs);
+        expect(await mockProvider.getLogs({ ...filter })).toStrictEqual(logs);
       }
     });
 

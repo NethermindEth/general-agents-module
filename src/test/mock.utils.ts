@@ -90,8 +90,8 @@ export class MockEthersProvider {
   public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
     const matcher = {
       ...filter,
-      topics: (filter.topics)
-        ? expect.arrayContaining(filter.topics.map(el => (Array.isArray(el))? expect.arrayContaining(el) : el))
+      topics: filter.topics
+        ? expect.arrayContaining(filter.topics.map((el) => (Array.isArray(el) ? expect.arrayContaining(el) : el)))
         : undefined,
     };
 
