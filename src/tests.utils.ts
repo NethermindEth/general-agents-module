@@ -120,7 +120,7 @@ export class TestTransactionEvent extends TransactionEvent {
   public addInterfaceEventLog(
     event: ethers.utils.EventFragment,
     address: string = createAddress("0x0"),
-    inputs: ReadonlyArray<any> = [],
+    inputs: ReadonlyArray<any> = []
   ): TestTransactionEvent {
     // creating the interface locally allows receiving one less parameter,
     // which makes testing code cleaner
