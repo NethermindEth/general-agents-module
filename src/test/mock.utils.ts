@@ -1,6 +1,7 @@
 import { Interface } from "@ethersproject/abi";
 import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
+import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
 
 export interface CallParams {
   inputs: any[];
@@ -9,6 +10,7 @@ export interface CallParams {
 
 export class MockEthersProvider {
   public call: any;
+  public getLogs: any;
   public getBlock: any;
   public getSigner: any;
   public getStorageAt: any;
@@ -18,6 +20,7 @@ export class MockEthersProvider {
   constructor() {
     this._isProvider = true;
     this.call = jest.fn();
+    this.getLogs = jest.fn();
     this.getBlock = jest.fn();
     this.getSigner = jest.fn();
     this.getStorageAt = jest.fn();
@@ -81,6 +84,19 @@ export class MockEthersProvider {
 
   public addSigner(addr: string): MockEthersProvider {
     when(this.getSigner).calledWith(addr).mockReturnValue(new MockEthersSigner(this).setAddress(addr));
+    return this;
+  }
+
+  public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
+    const matcher = {
+      ...filter,
+      topics: (filter.topics)
+        ? expect.arrayContaining(filter.topics.map(el => (Array.isArray(el))? expect.arrayContaining(el) : el))
+        : undefined,
+    };
+
+    when(this.getLogs).calledWith(expect.objectContaining(matcher)).mockReturnValue(logs);
+
     return this;
   }
 
