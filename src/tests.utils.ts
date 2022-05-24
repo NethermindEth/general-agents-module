@@ -187,14 +187,14 @@ export class TestTransactionEvent extends TransactionEvent {
 }
 
 export class TestBlockEvent extends BlockEvent {
-  constructor() {
+  constructor(network: Network = Network.MAINNET) {
     const block: Block = {
       transactions: [],
       hash: createAddress("0x0"),
       number: 0,
     } as any;
 
-    super(EventType.BLOCK, Network.MAINNET, block);
+    super(EventType.BLOCK, network, block);
   }
 
   public setNumber(blockNumber: number): TestBlockEvent {

@@ -1,6 +1,6 @@
 {
   "name": "forta-agent-tools",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "Forta Agents for common approaches",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
