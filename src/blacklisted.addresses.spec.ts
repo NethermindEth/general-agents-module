@@ -6,37 +6,37 @@ import provideBlacklistedAddresessHandler from "./blacklisted.addresses";
 const testBlacklistedAddresses = [createAddress("0x0"), createAddress("0x1"), createAddress("0x2")];
 
 describe("Blacklisted Addresses Handler Tests", () => {
-  let handleTrasaction: HandleTransaction;
+  let handleTransaction: HandleTransaction;
 
   it("should returns empty findings if not blacklisted address is involved", async () => {
-    handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
+    handleTransaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(createAddress("0x5"));
 
-    const findings: Finding[] = await handleTrasaction(txEvent);
+    const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([]);
   });
 
   it("should returns a finding when a blacklisted address is involved", async () => {
-    handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
+    handleTransaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(testBlacklistedAddresses[0]);
 
-    const findings: Finding[] = await handleTrasaction(txEvent);
+    const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([generalTestFindingGenerator()]);
   });
 
   it("should returns a finding when multiple blacklisted addresses are involved", async () => {
-    handleTrasaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
+    handleTransaction = provideBlacklistedAddresessHandler(generalTestFindingGenerator, testBlacklistedAddresses);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(
       testBlacklistedAddresses[0],
       testBlacklistedAddresses[1]
     );
 
-    const findings: Finding[] = await handleTrasaction(txEvent);
+    const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([generalTestFindingGenerator()]);
   });
@@ -45,14 +45,14 @@ describe("Blacklisted Addresses Handler Tests", () => {
     const mockFindingGenerator: FindingGenerator = (metadata: { [key: string]: any } | undefined): Finding =>
       metadata as Finding;
 
-    handleTrasaction = provideBlacklistedAddresessHandler(mockFindingGenerator, testBlacklistedAddresses);
+    handleTransaction = provideBlacklistedAddresessHandler(mockFindingGenerator, testBlacklistedAddresses);
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addInvolvedAddresses(
       testBlacklistedAddresses[0],
       testBlacklistedAddresses[1]
     );
 
-    const findings: Finding[] = await handleTrasaction(txEvent);
+    const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([
       {
