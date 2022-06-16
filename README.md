@@ -300,3 +300,45 @@ This mock provides some methods to set up the values that the signer should retu
 - `denyTransaction(from, to, iface, id, inputs, msg)`. Same conditions of `allowTransaction` but in this case the transaction will be reverted with `msg` message.
 
 All the data you set in the signer will be used until the `clear` function is called.
+
+### NetworkManager
+
+This is a tool to help with storing data relative to the network the bot will be running at.
+
+Basic usage:
+```ts
+import { NetworkManager } from "forta-agent-tools";
+
+interface NetworkData {
+  address: string;
+  num: number;
+}
+
+const data: Record<number, NetworkData> = {
+  // ChainID 1
+  1: {
+    address: "address1",
+    num: 1,
+  },
+  42: {
+    address: "address42",
+    num: 2,
+  },
+};
+
+const provider = getEthersProvider();
+const networkManager = new NetworkManager(data);
+
+await networkManager.init(provider);
+
+networkManager.get("address"); // "address1" if the ChainID is 1, "address42" if the ChainID is 42
+```
+
+#### How to use it
+
+- `NetworkManager(networkData, chainId?)`: Sets the network data and creates a `NetworkManager` instance. If `chainId` is specified, it won't need `NetworkManager.init()` to be initialized. Throws an error if there is no entry for `chainId` in `networkData`.
+- `getNetworkMap()`: Gets the network map passed as argument in the constructor as read-only.
+- `getNetwork()`: Gets the instance's active ChainID.
+- `setNetwork(chainId)`: Sets the instance's active ChainID. Throws an error if there is no entry for `chainId` in `networkData`.
+- `init(provider)`: Retrieves network data from the provider and sets the active ChainID. Throws an error if there is no entry for that ChainID in `networkData`.
+- `get(key)`: Gets the value of the field `key` in the active network's data record. Throws an error if `NetworkManager` was not yet initialized, i.e. the ChainID was not specified in the constructor and `NetworkManager.init()` or `NetworkManager.setNetwork()` were not called.
