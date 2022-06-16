@@ -327,9 +327,9 @@ const data: Record<number, NetworkData> = {
 };
 
 const provider = getEthersProvider();
-const networkManager = new NetworkManager(data, provider);
+const networkManager = new NetworkManager(data);
 
-await networkManager.init();
+await networkManager.init(provider);
 
 networkManager.get("address"); // "address1" if the ChainID is 1, "address42" if the ChainID is 42
 ```
