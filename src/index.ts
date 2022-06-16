@@ -14,6 +14,7 @@ import {
   encodeFunctionSignature,
   encodeEventSignature,
 } from "./utils";
+import NetworkManager from "./network.manager";
 
 export {
   provideERC20TransferHandler,
@@ -30,6 +31,7 @@ export {
   encodeEventSignature,
   encodeFunctionSignature,
   FindingGenerator,
+  NetworkManager,
 };
 
 export default {
