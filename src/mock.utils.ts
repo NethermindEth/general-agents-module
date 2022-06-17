@@ -2,6 +2,7 @@ import { Interface } from "@ethersproject/abi";
 import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
 import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
+import { ethers } from "forta-agent";
 
 export interface CallParams {
   inputs: any[];
@@ -17,14 +18,18 @@ export class MockEthersProvider {
   public getBlockNumber: any;
   public readonly _isProvider: boolean;
 
+  private logs: Array<ethers.providers.Log>;
+
   constructor() {
     this._isProvider = true;
     this.call = jest.fn();
-    this.getLogs = jest.fn();
+    this.getLogs = jest.fn().mockImplementation(this._getLogs.bind(this));
     this.getBlock = jest.fn();
     this.getSigner = jest.fn();
     this.getStorageAt = jest.fn();
     this.getBlockNumber = jest.fn();
+
+    this.logs = [];
   }
 
   public addCallTo(
@@ -87,21 +92,73 @@ export class MockEthersProvider {
     return this;
   }
 
+  public addLogs(logs: Log[]): MockEthersProvider {
+    this.logs.push(...logs);
+    return this;
+  }
+
+  private _getLogs(filter: Filter | FilterByBlockHash): Log[] {
+    let logs = this.logs;
+
+    if (filter.address) {
+      logs = logs.filter((log) => log.address.toLowerCase() === filter.address!.toLowerCase());
+    }
+
+    if (filter.topics) {
+      const filterTopics = filter.topics!;
+
+      logs = logs.filter((log) => {
+        if (filterTopics.length !== log.topics.length) {
+          return false;
+        }
+
+        for (let i = 0; i < filterTopics.length; i++) {
+          const logTopic = log.topics[i];
+          const filterTopic = filterTopics[i];
+
+          if (filterTopic === null) continue;
+          if (!logTopic) return false;
+
+          if (Array.isArray(filterTopic)) {
+            if (!filterTopic.includes(logTopic)) {
+              return false;
+            }
+          } else if (logTopic !== filterTopic) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    }
+
+    if ("fromBlock" in filter && filter.fromBlock !== undefined) {
+      logs = logs.filter((log) => log.blockNumber >= filter.fromBlock!);
+    }
+
+    if ("toBlock" in filter && filter.toBlock !== undefined) {
+      logs = logs.filter((log) => log.blockNumber <= filter.toBlock!);
+    }
+
+    if ("blockHash" in filter && filter.blockHash !== undefined) {
+      logs = logs.filter((log) => log.blockHash <= filter.blockHash!);
+    }
+
+    return logs;
+  }
+
+  /**
+   * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
+   */
   public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
-    const matcher = {
-      ...filter,
-      topics: (filter.topics)
-        ? expect.arrayContaining(filter.topics.map(el => (Array.isArray(el))? expect.arrayContaining(el) : el))
-        : undefined,
-    };
-
-    when(this.getLogs).calledWith(expect.objectContaining(matcher)).mockReturnValue(logs);
-
+    when(this.getLogs).calledWith(filter).mockReturnValue(logs);
     return this;
   }
 
   public clear(): void {
     resetAllWhenMocks();
+
+    this.logs = [];
   }
 }
 
