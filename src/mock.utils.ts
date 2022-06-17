@@ -147,6 +147,9 @@ export class MockEthersProvider {
     return logs;
   }
 
+  /**
+   * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
+   */
   public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
     when(this.getLogs).calledWith(filter).mockReturnValue(logs);
     return this;
