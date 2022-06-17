@@ -100,7 +100,9 @@ export class MockEthersProvider {
   private _getLogs(filter: Filter | FilterByBlockHash): Log[] {
     let logs = this.logs;
 
-    if (filter.address) logs = logs.filter((log) => log.address === filter.address);
+    if (filter.address) {
+      logs = logs.filter((log) => log.address.toLowerCase() === filter.address!.toLowerCase());
+    }
 
     if (filter.topics) {
       const filterTopics = filter.topics!;
