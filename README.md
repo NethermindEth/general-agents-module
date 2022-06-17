@@ -256,7 +256,7 @@ This mock provides some methods to set up the values that the provider should re
 - `setLatestBlock(block)`. This method allows you to set up what the number of the latest block in the provider is.
 - `addSigner(addr)`. This function prepares a valid signer for the given address that uses the provider being used.
 - `addFilteredLogs(filter, logs)`. This method allows you to set up the `logs` returned by the provider given a `filter`. This method will not actually filter the logs as it would be if the logs were added through `addLogs`, it will simply return `logs` when `getLogs(filter)` is called.
-- `addLogs(logs)`. This method allows you to set up the `logs` record that will be filtered in `getLogs` if the filter specified wasn't yet added in `addFilteredLogs`.
+- `addLogs(...logs)`. This method allows you to set up the `logs` record that will be filtered in `getLogs` if the filter specified wasn't yet added in `addFilteredLogs`.
 - `clear()`. This function clears all the mocked data.
 
 All the data you set in the provider will be used until the `clear` function is called.
