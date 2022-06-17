@@ -92,7 +92,7 @@ export class MockEthersProvider {
     return this;
   }
 
-  public addLogs(...logs: Log[]): MockEthersProvider {
+  public addLogs(logs: Log[]): MockEthersProvider {
     this.logs.push(...logs);
     return this;
   }
