@@ -108,7 +108,7 @@ export class MockEthersProvider {
       const filterTopics = filter.topics!;
 
       logs = logs.filter((log) => {
-        if (filterTopics.length !== log.topics.length) {
+        if (filterTopics.length > log.topics.length) {
           return false;
         }
 
