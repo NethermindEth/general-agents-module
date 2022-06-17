@@ -132,15 +132,15 @@ export class MockEthersProvider {
       });
     }
 
-    if ("fromBlock" in filter && filter.fromBlock) {
+    if ("fromBlock" in filter && filter.fromBlock !== undefined) {
       logs = logs.filter((log) => log.blockNumber >= filter.fromBlock!);
     }
 
-    if ("toBlock" in filter && filter.toBlock) {
+    if ("toBlock" in filter && filter.toBlock !== undefined) {
       logs = logs.filter((log) => log.blockNumber <= filter.toBlock!);
     }
 
-    if ("blockHash" in filter && filter.blockHash) {
+    if ("blockHash" in filter && filter.blockHash !== undefined) {
       logs = logs.filter((log) => log.blockHash <= filter.blockHash!);
     }
 
