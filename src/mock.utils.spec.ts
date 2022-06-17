@@ -175,7 +175,7 @@ describe("Ethers mocks tests", () => {
         expected: [{ blockHash: "0x1" }, { blockHash: "0x1" }],
       },
     ])("should return the corresponding logs (case $#)", async ({ filter, logs, expected }) => {
-      mockProvider.addLog(...(logs as any));
+      mockProvider.addLogs(...(logs as any));
 
       // check the logs twice
       expect(await mockProvider.getLogs(filter)).toStrictEqual(expected);
