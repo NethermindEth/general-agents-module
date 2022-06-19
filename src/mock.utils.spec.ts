@@ -136,7 +136,11 @@ describe("Ethers mocks tests", () => {
           { topics: [EVENT_1_SIGHASH] },
           { topics: [EVENT_2_SIGHASH] },
         ],
-        expected: [{ topics: [EVENT_1_SIGHASH] }, { topics: [EVENT_2_SIGHASH] }],
+        expected: [
+          { topics: [EVENT_1_SIGHASH, EVENT_2_SIGHASH] },
+          { topics: [EVENT_1_SIGHASH] },
+          { topics: [EVENT_2_SIGHASH] },
+        ],
       },
       {
         filter: {
