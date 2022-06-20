@@ -207,6 +207,11 @@ export class TestBlockEvent extends BlockEvent {
     return this;
   }
 
+  public setParentHash(blockHash: string): TestBlockEvent {
+    this.block.parentHash = blockHash;
+    return this;
+  }
+
   public setTimestamp(timestamp: number): TestBlockEvent {
     this.block.timestamp = timestamp;
     return this;
