@@ -143,7 +143,6 @@ class MulticallProvider extends Provider {
         }
       }
     } catch (e) {
-      console.log(e);
       // One or more of the calls failed.
       success = false;
       results = [];
