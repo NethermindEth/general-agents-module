@@ -15,16 +15,16 @@ const MULTICALL2_ADDRESSES: Record<number, string> = {
   5: "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696", // Görli
   42: "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696", // Kovan
   56: "0x012Cd050ACF174E41872Fd20B696ebaBdA117e9D", // Binance smart chain
-  66: "",
-  97: "",
-  100: "",
-  128: "",
-  137: "",
-  250: "",
-  1337: "",
-  42161: "",
+  66: "", // OKXChain Mainnet
+  97: "0xf08eD5944312c1a0A364e1655D2738765111e61B", // Binance Smart Chain Testnet
+  100: "0xFAa296891cA6CECAF2D86eF5F7590316d0A17dA0", // Gnosis
+  128: "0xc9A1571bDE3498dd2e5a38f23d2EB1B7a0BbBB61", // Huobi ECO Chain Mainnet
+  137: "0x1FE0Fed17D31c9d7e5E46424F17F56A26Bd3f41E", // Polygon Mainnet
+  250: "0xed386Fe855C1EFf2f843B910923Dd8846E45C5A4", // Fantom Opera
+  1337: "", //CENNZnet old
+  42161: "0xed386Fe855C1EFf2f843B910923Dd8846E45C5A4", // Arbitrum One
   43114: "0xed386Fe855C1EFf2f843B910923Dd8846E45C5A4", // Avalanche
-  80001: "",
+  80001: "0x9966772766e676aef1971a32C8f551f44F5cEd1E", // Mumbai
 };
 // default value used for a batch size.
 const DEFAULT_BATCH_SIZE = 50;
@@ -65,6 +65,7 @@ class MulticallProvider extends Provider {
     if (!this._provider) {
       throw new Error("Provider should be initialized before use.");
     }
+
     // @ts-ignore
     return this._tryAll<T>(calls, this._multicallAddress, this._provider, blockTag);
   }
@@ -75,8 +76,8 @@ class MulticallProvider extends Provider {
     if (!this._provider) {
       throw new Error("Provider should be initialized before use.");
     }
-    // @ts-ignore
 
+    // @ts-ignore
     const res = await this._all<T>(calls.flat(), this._multicallAddress, this._provider, blockTag);
     const success = res[0];
     if (success) {
