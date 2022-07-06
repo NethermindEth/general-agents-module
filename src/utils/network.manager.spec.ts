@@ -40,14 +40,11 @@ describe("NetworkManager test suite", () => {
 
   describe("init", () => {
     let provider: ethers.providers.Provider;
-    let chainId: number;
+    let mockProvider: MockEthersProvider;
 
     beforeAll(() => {
-      chainId = Network.ETHEREUM_MAINNET;
-
-      const mockProvider = new MockEthersProvider();
-      // @ts-expect-error
-      mockProvider.getNetwork = jest.fn().mockImplementation(() => ({ chainId }));
+      mockProvider = new MockEthersProvider();
+      mockProvider.setNetwork(Network.ETHEREUM_MAINNET);
 
       provider = mockProvider as unknown as ethers.providers.Provider;
     });
@@ -64,10 +61,10 @@ describe("NetworkManager test suite", () => {
       await expect(networkManager.init(provider)).resolves.toBeUndefined();
       expect(networkManager.getNetwork()).toStrictEqual(Network.ETHEREUM_MAINNET);
 
-      chainId = Network.POLYGON;
+      mockProvider.setNetwork(Network.POLYGON);
 
       await expect(networkManager.init(provider)).rejects.toThrowError(
-        `The network with ID ${chainId} is not supported`
+        `The network with ID ${Network.POLYGON} is not supported`
       );
     });
   });
