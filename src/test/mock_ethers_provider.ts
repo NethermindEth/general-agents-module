@@ -4,6 +4,7 @@ import { when, resetAllWhenMocks } from "jest-when";
 import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
 import { ethers } from "forta-agent";
 import MockEthersSigner from "./mock_ethers_signer";
+import { createAddress } from "../utils";
 
 interface CallParams {
   inputs: any[];
@@ -17,6 +18,7 @@ export default class MockEthersProvider {
   public getSigner: any;
   public getStorageAt: any;
   public getBlockNumber: any;
+  public getNetwork: any;
   public readonly _isProvider: boolean;
 
   private logs: Array<ethers.providers.Log>;
@@ -29,6 +31,7 @@ export default class MockEthersProvider {
     this.getSigner = jest.fn();
     this.getStorageAt = jest.fn();
     this.getBlockNumber = jest.fn();
+    this.getNetwork = jest.fn();
 
     this.logs = [];
   }
@@ -154,6 +157,10 @@ export default class MockEthersProvider {
   public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
     when(this.getLogs).calledWith(filter).mockReturnValue(logs);
     return this;
+  }
+
+  public setNetwork(chainId: number, ensAddress: string = createAddress("0x0"), name: string = "") {
+    when(this.getNetwork).calledWith().mockReturnValue({ chainId, ensAddress, name });
   }
 
   public clear(): void {
