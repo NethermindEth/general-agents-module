@@ -1,5 +1,5 @@
 import { ethers } from "forta-agent";
-import { MockEthersProvider } from "./test";
+import { MockEthersProvider } from "../test";
 import NetworkManager from "./network.manager";
 
 enum Network {

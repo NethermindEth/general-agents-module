@@ -1,7 +1,5 @@
-import * as handlers from "./handler";
-import { createAddress } from "./utils";
+export * as handlers from "./handler";
 
-export default {
-  handlers,
-  createAddress,
-};
+import { createAddress, NetworkManager } from "./utils";
+
+export { createAddress, NetworkManager };
