@@ -1,5 +1,5 @@
 import { utils, Contract } from "ethers";
-import { keccak256 } from "forta-agent";
+import { ethers, keccak256 } from "forta-agent";
 import { createAddress } from "../utils";
 import MockEthersProvider from "./mock_ethers_provider";
 
@@ -184,6 +184,18 @@ describe("MockEthersProvider tests suite", () => {
 
     // check that the expected parameter is based on the filter object content, not reference
     expect(await mockProvider.getLogs({ ...filter })).toStrictEqual(expected);
+  });
+
+  it("should return the mocked network information", async () => {
+    const networkInfo: ethers.providers.Network = {
+      chainId: 1,
+      ensAddress: createAddress("0x1"),
+      name: "network",
+    };
+
+    mockProvider.setNetwork(networkInfo.chainId, networkInfo.ensAddress, networkInfo.name);
+
+    expect(await mockProvider.getNetwork()).toStrictEqual(networkInfo);
   });
 
   it("should return the same signer if requested multiples times", async () => {
