@@ -22,10 +22,14 @@ export abstract class Handler<Options, Metadata> {
     return this._handle(event, onFinding || this.options.onFinding);
   }
 
-  protected abstract _handle(
+  protected async _handle(
     event: TransactionEvent | BlockEvent,
     onFinding: FindingGenerator<Metadata>
-  ): Promise<Finding[]>;
+  ): Promise<Finding[]> {
+    const data = await this.metadata(event);
+
+    return data ? data.map(onFinding) : [];
+  }
 
   public abstract metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null>;
 

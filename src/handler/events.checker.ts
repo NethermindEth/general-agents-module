@@ -1,6 +1,5 @@
-import { Finding, LogDescription, TransactionEvent, BlockEvent } from "forta-agent";
+import { LogDescription, TransactionEvent, BlockEvent } from "forta-agent";
 import { Handler, HandlerOptions } from "./handler";
-import { FindingGenerator } from "./types";
 
 interface Options {
   emitter?: string;
@@ -15,15 +14,6 @@ export default class EventEmission extends Handler<Options, Metadata> {
     super(options);
 
     if (this.options.emitter) this.options.emitter = this.options.emitter.toLowerCase();
-  }
-
-  protected async _handle(
-    event: TransactionEvent | BlockEvent,
-    onFinding: FindingGenerator<Metadata>
-  ): Promise<Finding[]> {
-    const data = await this.metadata(event);
-
-    return data ? data.map(onFinding) : [];
   }
 
   public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {

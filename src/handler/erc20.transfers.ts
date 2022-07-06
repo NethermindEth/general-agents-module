@@ -1,6 +1,5 @@
-import { Finding, LogDescription, TransactionEvent, ethers, BlockEvent } from "forta-agent";
+import { LogDescription, TransactionEvent, ethers, BlockEvent } from "forta-agent";
 import { Handler, HandlerOptions } from "./handler";
-import type { FindingGenerator } from "./types";
 
 const EVENT_SIGNATURE = "event Transfer(address indexed from, address indexed to, uint256 amount)";
 
@@ -57,15 +56,6 @@ export default class Erc20Transfer extends Handler<Options, Metadata> {
 
       return true;
     };
-  }
-
-  protected async _handle(
-    event: TransactionEvent | BlockEvent,
-    onFinding: FindingGenerator<Metadata>
-  ): Promise<Finding[]> {
-    const data = await this.metadata(event);
-
-    return data ? data.map(onFinding) : [];
   }
 
   public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
