@@ -1,12 +1,28 @@
 import { ethers } from "forta-agent";
 import { CachedProvider } from "./cached_provider";
 
-export class CachedContract {
-  public static from(contract: ethers.Contract, cacheByBlockTag: boolean = true) {
-    return new ethers.Contract(
+export class CachedContract extends ethers.Contract {
+  constructor(
+    addressOrName: string,
+    contractInterface: ethers.ContractInterface,
+    signerOrProvider?: ethers.Signer | ethers.providers.Provider,
+    cacheByBlockTag: boolean = true
+  ) {
+    super(
+      addressOrName,
+      contractInterface,
+      signerOrProvider instanceof ethers.providers.Provider
+        ? CachedProvider.from(signerOrProvider, cacheByBlockTag)
+        : signerOrProvider
+    );
+  }
+
+  public static from(contract: ethers.Contract, cacheByBlockTag: boolean = true): ethers.Contract {
+    return new CachedContract(
       contract.address,
       contract.interface,
-      CachedProvider.from(contract.provider, cacheByBlockTag)
+      contract.signer || contract.provider,
+      cacheByBlockTag
     );
   }
 
