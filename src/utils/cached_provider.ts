@@ -5,8 +5,8 @@ import { BlockTag, TransactionRequest } from "@ethersproject/abstract-provider";
 import { Deferrable } from "@ethersproject/properties";
 
 export class CachedProvider {
-  static cache = new LRU<string, Promise<string>>({ max: 1000 });
-  static mutex = new Mutex();
+  private static cache = new LRU<string, Promise<string>>({ max: 1000 });
+  private static mutex = new Mutex();
 
   public static from(provider: ethers.providers.Provider, cacheByBlockTag: boolean = true): ethers.providers.Provider {
     return new Proxy(provider, {
