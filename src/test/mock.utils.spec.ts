@@ -4,6 +4,9 @@ import { utils, Contract } from "ethers";
 import { Interface } from "@ethersproject/abi";
 import { keccak256 } from "forta-agent";
 
+const EVENT_1_SIGHASH: string = keccak256("Event1()");
+const EVENT_2_SIGHASH: string = keccak256("Event2()");
+
 describe("Ethers mocks tests", () => {
   describe("MockEthersProvider tests suite", () => {
     const mockProvider: MockEthersProvider = new MockEthersProvider();
@@ -101,62 +104,88 @@ describe("Ethers mocks tests", () => {
       }
     });
 
-    it("should return the corresponding logs", async () => {
-      const event1SigHash: string = keccak256("Event1()");
-      const event2SigHash: string = keccak256("Event2()");
-
-      // filters are not being used in the mock in anyway
-      // they are just added here in a realistic way to ensure
-      // it works correctly
-      const CASES: any[] = [
-        [
-          {
-            address: createAddress("0xa1"),
-            fromBlock: 10,
-            toBlock: 12,
-            topics: [event1SigHash, event2SigHash],
-          },
-          [
-            {
-              address: createAddress("0x1"),
-              topics: [event1SigHash],
-            },
-            {
-              address: createAddress("0x2"),
-              topics: [event2SigHash],
-            },
-          ],
+    it.each([
+      {
+        filter: {
+          topics: [EVENT_1_SIGHASH],
+        },
+        logs: [{ topics: [EVENT_1_SIGHASH] }, { topics: [EVENT_2_SIGHASH] }],
+        expected: [{ topics: [EVENT_1_SIGHASH] }],
+      },
+      {
+        filter: {
+          topics: [[EVENT_1_SIGHASH]],
+        },
+        logs: [{ topics: [EVENT_1_SIGHASH] }, { topics: [EVENT_2_SIGHASH] }],
+        expected: [{ topics: [EVENT_1_SIGHASH] }],
+      },
+      {
+        filter: {
+          topics: [[EVENT_1_SIGHASH, EVENT_2_SIGHASH]],
+        },
+        logs: [{ topics: [EVENT_1_SIGHASH] }, { topics: [EVENT_2_SIGHASH] }],
+        expected: [{ topics: [EVENT_1_SIGHASH] }, { topics: [EVENT_2_SIGHASH] }],
+      },
+      {
+        filter: {
+          topics: [null],
+        },
+        logs: [
+          { topics: [EVENT_1_SIGHASH, EVENT_2_SIGHASH] },
+          { topics: [EVENT_1_SIGHASH] },
+          { topics: [EVENT_2_SIGHASH] },
         ],
-        [
-          {
-            address: createAddress("0xabc"),
-            fromBlock: 1000,
-            toBlock: 10001,
-            topics: [event2SigHash],
-          },
-          [
-            {
-              address: createAddress("0xf1"),
-              topics: [event2SigHash],
-            },
-            {
-              address: createAddress("0xd31"),
-              topics: [event2SigHash],
-            },
-          ],
+        expected: [
+          { topics: [EVENT_1_SIGHASH, EVENT_2_SIGHASH] },
+          { topics: [EVENT_1_SIGHASH] },
+          { topics: [EVENT_2_SIGHASH] },
         ],
-      ];
+      },
+      {
+        filter: {
+          address: createAddress("0x1"),
+        },
+        logs: [{ address: createAddress("0x1") }, { address: createAddress("0x2") }],
+        expected: [{ address: createAddress("0x1") }],
+      },
+      {
+        filter: {
+          fromBlock: 2,
+        },
+        logs: [{ blockNumber: 1 }, { blockNumber: 2 }, { blockNumber: 3 }],
+        expected: [{ blockNumber: 2 }, { blockNumber: 3 }],
+      },
+      {
+        filter: {
+          toBlock: 2,
+        },
+        logs: [{ blockNumber: 1 }, { blockNumber: 2 }, { blockNumber: 3 }],
+        expected: [{ blockNumber: 1 }, { blockNumber: 2 }],
+      },
+      {
+        filter: {
+          fromBlock: 1,
+          toBlock: 1,
+        },
+        logs: [{ blockNumber: 1 }, { blockNumber: 2 }, { blockNumber: 3 }],
+        expected: [{ blockNumber: 1 }],
+      },
+      {
+        filter: {
+          blockHash: "0x1",
+        },
+        logs: [{ blockHash: "0x1" }, { blockHash: "0x1" }, { blockHash: "0x2" }],
+        expected: [{ blockHash: "0x1" }, { blockHash: "0x1" }],
+      },
+    ])("should return the corresponding logs (case $#)", async ({ filter, logs, expected }) => {
+      mockProvider.addLogs(logs as any);
 
-      for (let [filter, logs] of CASES) {
-        mockProvider.addFilteredLogs(filter, logs);
+      // check the logs twice
+      expect(await mockProvider.getLogs(filter)).toStrictEqual(expected);
+      expect(await mockProvider.getLogs(filter)).toStrictEqual(expected);
 
-        // check the Logs twice
-        expect(await mockProvider.getLogs(filter)).toStrictEqual(logs);
-        expect(await mockProvider.getLogs(filter)).toStrictEqual(logs);
-
-        // check that the expected parameter is based on the filter object content, not reference
-        expect(await mockProvider.getLogs({ ...filter })).toStrictEqual(logs);
-      }
+      // check that the expected parameter is based on the filter object content, not reference
+      expect(await mockProvider.getLogs({ ...filter })).toStrictEqual(expected);
     });
 
     it("should return the same signer if requested multiples times", async () => {
