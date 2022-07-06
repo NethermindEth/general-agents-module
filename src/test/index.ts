@@ -1,6 +1,8 @@
 import { TestTransactionEvent } from "./test_transaction_event";
 import { TestBlockEvent } from "./test_block_event";
-import { MockEthersProvider, MockEthersSigner } from "./mock.utils";
+import MockEthersProvider from "./mock_ethers_provider";
+import MockEthersSigner from "./mock_ethers_signer";
+
 import { Finding, FindingType, FindingSeverity } from "forta-agent";
 
 export const generalTestFindingGenerator = (..._: any[]): Finding => {
