@@ -15,8 +15,6 @@ export class CachedProvider {
 
     return new Proxy(provider, {
       get(target: ethers.providers.Provider, prop: keyof ethers.providers.Provider) {
-        if (!(prop in target)) throw new Error(`Unknown provider property: ${prop}`);
-
         if (prop === "call") {
           return (transaction: Deferrable<TransactionRequest>, blockTag?: BlockTag | Promise<BlockTag>) => {
             return CachedProvider.call(target, transaction, blockTag, cacheByBlockTag);
