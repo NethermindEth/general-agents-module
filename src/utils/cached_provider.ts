@@ -4,13 +4,30 @@ import LRU from "lru-cache";
 import { BlockTag, TransactionRequest } from "@ethersproject/abstract-provider";
 import { Deferrable } from "@ethersproject/properties";
 
+export interface CachedProviderOptions {
+  blockDataCacheSize: number;
+  immutableDataCacheSize: number;
+}
+
 export class CachedProvider {
-  private static cache: LRU<string, Promise<string>>;
-  private static mutex = new Mutex();
+  private static blockDataCache: LRU<string, Promise<string>>;
+  private static immutableDataCache: LRU<string, Promise<string>>;
+  
+  private static blockDataCacheMutex = new Mutex();
+  private static immutableDataCacheMutex = new Mutex();
+
+  private static options: CachedProviderOptions = {
+    blockDataCacheSize: 200,
+    immutableDataCacheSize: 100,
+  };
 
   public static from(provider: ethers.providers.Provider, cacheByBlockTag: boolean = true): ethers.providers.Provider {
-    if (CachedProvider.cache === undefined) {
-      CachedProvider.cache = new LRU<string, Promise<string>>({ max: 200 });
+    if (this.blockDataCache === undefined) {
+      this.blockDataCache = new LRU<string, Promise<string>>({ max: this.options.blockDataCacheSize });
+    }
+
+    if (this.immutableDataCache === undefined && !cacheByBlockTag) {
+      this.immutableDataCache = new LRU<string, Promise<string>>({ max: this.options.immutableDataCacheSize });
     }
 
     return new Proxy(provider, {
@@ -62,15 +79,20 @@ export class CachedProvider {
 
     const key = this.cacheKey(transaction, normalizedBlockTag, cacheByBlockTag);
 
+    // two different caches so information that shouldn't change between blocks is more efficiently handled
+    const [cache, mutex] = (cacheByBlockTag)
+      ? [this.blockDataCache, this.blockDataCacheMutex]
+      : [this.immutableDataCache, this.immutableDataCacheMutex];
+
     let promise: Promise<string>;
 
-    const release = await this.mutex.acquire();
+    const release = await mutex.acquire();
     try {
-      if (this.cache.has(key)) {
-        promise = this.cache.get(key)!;
+      if (cache.has(key)) {
+        promise = cache.get(key)!;
       } else {
         promise = provider.call(transaction, blockTag);
-        CachedProvider.cache.set(key, promise);
+        cache.set(key, promise);
       }
     } finally {
       release();
@@ -79,7 +101,35 @@ export class CachedProvider {
     return promise;
   }
 
+  private static updateBlockDataCache() {
+    if (this.blockDataCache !== undefined) {
+      this.blockDataCache = new LRU<string, Promise<string>>({ max: this.options.blockDataCacheSize });
+    }
+  }
+
+  private static updateImmutableDataCache() {
+    if (this.immutableDataCache !== undefined) {
+      this.immutableDataCache = new LRU<string, Promise<string>>({ max: this.options.immutableDataCacheSize });
+    }
+  }
+
   public static clearCache() {
-    this.cache.clear();
+    this.blockDataCache.clear();
+    this.immutableDataCache.clear();
+  }
+
+  public static set(options: Partial<CachedProviderOptions>) {
+    this.options = {
+      ...this.options,
+      ...options,
+    };
+
+    if (options.blockDataCacheSize !== undefined) {
+      this.updateBlockDataCache();
+    }
+
+    if (options.immutableDataCacheSize !== undefined) {
+      this.updateImmutableDataCache();
+    }
   }
 }
