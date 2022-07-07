@@ -1,7 +1,7 @@
 import { Interface } from "@ethersproject/abi";
-import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
-import { MockEthersProvider } from ".";
+import MockEthersProvider from "./mock_ethers_provider";
+import { toChecksumAddress } from "../utils";
 
 export default class MockEthersSigner {
   public readonly _isSigner: boolean;

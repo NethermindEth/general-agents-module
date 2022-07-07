@@ -1,8 +1,9 @@
-import { Finding, HandleTransaction, TransactionEvent } from "forta-agent";
+import { ethers, Finding, HandleTransaction, TransactionEvent } from "forta-agent";
 import EthTransfer from "./eth.transfers";
 import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
 import { createAddress } from "../utils";
-import { toWei } from "web3-utils";
+
+const etherToWei = (ether: string) => ethers.utils.parseUnits(ether).toString();
 
 describe("ETH Transfer Agent Tests", () => {
   let handleTransaction: HandleTransaction;
@@ -10,12 +11,12 @@ describe("ETH Transfer Agent Tests", () => {
   it("should return empty findings if value is under specified threshold", async () => {
     const handler = new EthTransfer({
       onFinding: generalTestFindingGenerator,
-      valueThreshold: toWei("100"),
+      valueThreshold: etherToWei("100"),
     });
 
     handleTransaction = handler.getHandleTransaction();
 
-    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ value: toWei("99") });
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({ value: etherToWei("99") });
 
     const findings: Finding[] = await handleTransaction(txEvent);
 
@@ -25,15 +26,15 @@ describe("ETH Transfer Agent Tests", () => {
   it("should return findings if value is equal or greater to specified threshold ", async () => {
     const handler = new EthTransfer({
       onFinding: generalTestFindingGenerator,
-      valueThreshold: toWei("100"),
+      valueThreshold: etherToWei("100"),
     });
 
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces(
-      { value: toWei("100") },
-      { value: toWei("1000") },
-      { value: toWei("10") }
+      { value: etherToWei("100") },
+      { value: etherToWei("1000") },
+      { value: etherToWei("10") }
     );
     const findings: Finding[] = await handleTransaction(txEvent);
     expect(findings).toStrictEqual([generalTestFindingGenerator(), generalTestFindingGenerator()]);
@@ -48,7 +49,7 @@ describe("ETH Transfer Agent Tests", () => {
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
-      value: toWei("15"),
+      value: etherToWei("15"),
       from: createAddress("0x13"),
     });
 
@@ -66,7 +67,7 @@ describe("ETH Transfer Agent Tests", () => {
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
-      value: toWei("15"),
+      value: etherToWei("15"),
       from: createAddress("0x12"),
     });
 
@@ -84,7 +85,7 @@ describe("ETH Transfer Agent Tests", () => {
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
-      value: toWei("15"),
+      value: etherToWei("15"),
       to: createAddress("0x13"),
     });
 
@@ -102,7 +103,7 @@ describe("ETH Transfer Agent Tests", () => {
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
-      value: toWei("15"),
+      value: etherToWei("15"),
       to: createAddress("0x12"),
     });
 
@@ -116,18 +117,18 @@ describe("ETH Transfer Agent Tests", () => {
       onFinding: generalTestFindingGenerator,
       from: createAddress("0x12"),
       to: createAddress("0x13"),
-      valueThreshold: toWei("50"),
+      valueThreshold: etherToWei("50"),
     });
 
     handleTransaction = handler.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces(
-      { value: toWei("100"), from: createAddress("0x13") },
-      { value: toWei("100"), from: createAddress("0x12") },
-      { value: toWei("40"), from: createAddress("0x12"), to: createAddress("0x13") },
-      { value: toWei("80"), from: createAddress("0x12"), to: createAddress("0x13") },
-      { value: toWei("800"), from: createAddress("0x13"), to: createAddress("0x1") },
-      { value: toWei("50"), from: createAddress("0x12"), to: createAddress("0x13") }
+      { value: etherToWei("100"), from: createAddress("0x13") },
+      { value: etherToWei("100"), from: createAddress("0x12") },
+      { value: etherToWei("40"), from: createAddress("0x12"), to: createAddress("0x13") },
+      { value: etherToWei("80"), from: createAddress("0x12"), to: createAddress("0x13") },
+      { value: etherToWei("800"), from: createAddress("0x13"), to: createAddress("0x1") },
+      { value: etherToWei("50"), from: createAddress("0x12"), to: createAddress("0x13") }
     );
 
     const findings: Finding[] = await handleTransaction(txEvent);
