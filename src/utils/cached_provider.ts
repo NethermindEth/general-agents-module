@@ -12,7 +12,7 @@ export interface CachedProviderOptions {
 export class CachedProvider {
   private static blockDataCache: LRU<string, Promise<string>>;
   private static immutableDataCache: LRU<string, Promise<string>>;
-  
+
   private static blockDataCacheMutex = new Mutex();
   private static immutableDataCacheMutex = new Mutex();
 
@@ -21,7 +21,7 @@ export class CachedProvider {
     immutableDataCacheSize: 100,
   };
 
-  public static from(provider: ethers.providers.Provider, cacheByBlockTag: boolean = true): ethers.providers.Provider {
+  public static from<T extends ethers.providers.Provider>(provider: T, cacheByBlockTag: boolean = true): T {
     if (this.blockDataCache === undefined) {
       this.blockDataCache = new LRU<string, Promise<string>>({ max: this.options.blockDataCacheSize });
     }
@@ -31,13 +31,13 @@ export class CachedProvider {
     }
 
     return new Proxy(provider, {
-      get(target: ethers.providers.Provider, prop: keyof ethers.providers.Provider) {
+      get(target: T, prop: string | symbol) {
         if (prop === "call") {
           return (transaction: Deferrable<TransactionRequest>, blockTag?: BlockTag | Promise<BlockTag>) => {
             return CachedProvider.call(target, transaction, blockTag, cacheByBlockTag);
           };
         } else {
-          return target[prop];
+          return target[prop as keyof T];
         }
       },
     });
@@ -80,7 +80,7 @@ export class CachedProvider {
     const key = this.cacheKey(transaction, normalizedBlockTag, cacheByBlockTag);
 
     // two different caches so information that shouldn't change between blocks is more efficiently handled
-    const [cache, mutex] = (cacheByBlockTag)
+    const [cache, mutex] = cacheByBlockTag
       ? [this.blockDataCache, this.blockDataCacheMutex]
       : [this.immutableDataCache, this.immutableDataCacheMutex];
 
