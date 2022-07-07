@@ -10,7 +10,7 @@ export class CachedProvider {
 
   public static from(provider: ethers.providers.Provider, cacheByBlockTag: boolean = true): ethers.providers.Provider {
     if (CachedProvider.cache === undefined) {
-      CachedProvider.cache = new LRU<string, Promise<string>>({ max: 1000 });
+      CachedProvider.cache = new LRU<string, Promise<string>>({ max: 200 });
     }
 
     return new Proxy(provider, {
