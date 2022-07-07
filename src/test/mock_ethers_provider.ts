@@ -1,10 +1,9 @@
 import { Interface } from "@ethersproject/abi";
-import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
 import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
 import { ethers } from "forta-agent";
 import MockEthersSigner from "./mock_ethers_signer";
-import { createAddress } from "../utils";
+import { createAddress, toChecksumAddress } from "../utils";
 
 interface CallParams {
   inputs: any[];
