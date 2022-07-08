@@ -23,14 +23,20 @@ export default class MockEthersProvider {
 
   constructor() {
     this._isProvider = true;
-    this.call = jest.fn();
+    this.call = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("call"));
     this.getLogs = jest.fn().mockImplementation(this._getLogs.bind(this));
-    this.getBlock = jest.fn();
-    this.getSigner = jest.fn();
-    this.getStorageAt = jest.fn();
-    this.getBlockNumber = jest.fn();
+    this.getBlock = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getBlock"));
+    this.getSigner = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getSigner"));
+    this.getStorageAt = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getStorageAt"));
+    this.getBlockNumber = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getBlockNumber"));
 
     this.logs = [];
+  }
+
+  private unconfiguredAsyncMockImplementation(method: string): () => Promise<string> {
+    return async () => {
+      throw new Error(`${method} was not configured for this input`);
+    };
   }
 
   public addCallTo(
@@ -74,23 +80,17 @@ export default class MockEthersProvider {
   }
 
   public addStorage(contract: string, slot: number, block: number, result: string): MockEthersProvider {
-    when(this.getStorageAt)
-      .calledWith(contract, slot, block)
-      .mockReturnValue(Promise.resolve(result));
+    when(this.getStorageAt).calledWith(contract, slot, block).mockReturnValue(Promise.resolve(result));
     return this;
   }
 
   public addBlock(blockNumber: number, block: any): MockEthersProvider {
-    when(this.getBlock)
-      .calledWith(blockNumber)
-      .mockReturnValue(Promise.resolve(block));
+    when(this.getBlock).calledWith(blockNumber).mockReturnValue(Promise.resolve(block));
     return this;
   }
 
   public setLatestBlock(block: number): MockEthersProvider {
-    when(this.getBlockNumber)
-      .calledWith()
-      .mockReturnValue(Promise.resolve(block));
+    when(this.getBlockNumber).calledWith().mockReturnValue(Promise.resolve(block));
     return this;
   }
 
@@ -158,9 +158,7 @@ export default class MockEthersProvider {
    * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
    */
   public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
-    when(this.getLogs)
-      .calledWith(filter)
-      .mockReturnValue(Promise.resolve(logs));
+    when(this.getLogs).calledWith(filter).mockReturnValue(Promise.resolve(logs));
     return this;
   }
 
