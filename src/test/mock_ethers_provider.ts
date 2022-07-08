@@ -48,7 +48,7 @@ export default class MockEthersProvider {
         },
         block
       )
-      .mockReturnValue(iface.encodeFunctionResult(id, params.outputs));
+      .mockReturnValue(Promise.resolve(iface.encodeFunctionResult(id, params.outputs)));
     return this;
   }
 
@@ -69,22 +69,28 @@ export default class MockEthersProvider {
         },
         block
       )
-      .mockReturnValue(iface.encodeFunctionResult(id, params.outputs));
+      .mockReturnValue(Promise.resolve(iface.encodeFunctionResult(id, params.outputs)));
     return this;
   }
 
   public addStorage(contract: string, slot: number, block: number, result: string): MockEthersProvider {
-    when(this.getStorageAt).calledWith(contract, slot, block).mockReturnValue(result);
+    when(this.getStorageAt)
+      .calledWith(contract, slot, block)
+      .mockReturnValue(Promise.resolve(result));
     return this;
   }
 
   public addBlock(blockNumber: number, block: any): MockEthersProvider {
-    when(this.getBlock).calledWith(blockNumber).mockReturnValue(block);
+    when(this.getBlock)
+      .calledWith(blockNumber)
+      .mockReturnValue(Promise.resolve(block));
     return this;
   }
 
   public setLatestBlock(block: number): MockEthersProvider {
-    when(this.getBlockNumber).calledWith().mockReturnValue(block);
+    when(this.getBlockNumber)
+      .calledWith()
+      .mockReturnValue(Promise.resolve(block));
     return this;
   }
 
@@ -98,7 +104,7 @@ export default class MockEthersProvider {
     return this;
   }
 
-  private _getLogs(filter: Filter | FilterByBlockHash): Log[] {
+  private async _getLogs(filter: Filter | FilterByBlockHash): Promise<Log[]> {
     let logs = this.logs;
 
     if (filter.address) {
@@ -152,7 +158,9 @@ export default class MockEthersProvider {
    * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
    */
   public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
-    when(this.getLogs).calledWith(filter).mockReturnValue(logs);
+    when(this.getLogs)
+      .calledWith(filter)
+      .mockReturnValue(Promise.resolve(logs));
     return this;
   }
 
