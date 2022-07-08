@@ -33,7 +33,7 @@ export default class MockEthersProvider {
     this.logs = [];
   }
 
-  private unconfiguredAsyncMockImplementation(method: string): () => Promise<string> {
+  private unconfiguredAsyncMockImplementation(method: string): () => Promise<never> {
     return async () => {
       throw new Error(`${method} was not configured for this input`);
     };
