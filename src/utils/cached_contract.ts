@@ -1,5 +1,5 @@
 import { ethers } from "forta-agent";
-import { CachedProvider } from "./cached_provider";
+import { ProviderCache } from "./provider_cache";
 
 export default class CachedContract extends ethers.Contract {
   constructor(
@@ -12,7 +12,7 @@ export default class CachedContract extends ethers.Contract {
       addressOrName,
       contractInterface,
       signerOrProvider instanceof ethers.providers.BaseProvider
-        ? CachedProvider.from(signerOrProvider, cacheByBlockTag)
+        ? ProviderCache.createProxy(signerOrProvider, cacheByBlockTag)
         : signerOrProvider
     );
   }
@@ -27,6 +27,6 @@ export default class CachedContract extends ethers.Contract {
   }
 
   public static clearCache() {
-    CachedProvider.clearCache();
+    ProviderCache.clear();
   }
 }

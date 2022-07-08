@@ -5,7 +5,7 @@ import { ethers } from "forta-agent";
 import { when } from "jest-when";
 import { createAddress } from ".";
 import { MockEthersProvider } from "../test";
-import { CachedProvider, CachedProviderOptions } from "./cached_provider";
+import { ProviderCache, ProviderCacheOptions } from "./provider_cache";
 
 class ExtendedMockEthersProvider extends MockEthersProvider {
   internalBlockNumber: number = 0;
@@ -40,7 +40,7 @@ class ExtendedMockEthersProvider extends MockEthersProvider {
   }
 }
 
-const OPTIONS: CachedProviderOptions = {
+const OPTIONS: ProviderCacheOptions = {
   blockDataCacheSize: 10,
   immutableDataCacheSize: 10,
 };
@@ -59,7 +59,7 @@ const TEST_IFACE = new ethers.utils.Interface([
 ]);
 const TEST_ADDRESS = createAddress("0x1");
 
-describe("CachedProvider tests suite", () => {
+describe("ProviderCache tests suite", () => {
   let mockProvider: ExtendedMockEthersProvider;
   let provider: ethers.providers.BaseProvider;
   let cachedProvider: ethers.providers.Provider;
@@ -108,14 +108,14 @@ describe("CachedProvider tests suite", () => {
   beforeEach(() => {
     mockProvider = new ExtendedMockEthersProvider();
     provider = mockProvider as unknown as ethers.providers.BaseProvider;
-    cachedProvider = CachedProvider.from(provider);
+    cachedProvider = ProviderCache.createProxy(provider);
 
-    CachedProvider.set(OPTIONS);
+    ProviderCache.set(OPTIONS);
   });
 
   it("should proxy properties from the original provider and return a modified version of call()", () => {
     const provider = new ethers.providers.JsonRpcProvider("test", 1);
-    const cachedProvider = CachedProvider.from(provider);
+    const cachedProvider = ProviderCache.createProxy(provider);
 
     for (const key in provider) {
       const member = key as keyof ethers.providers.JsonRpcProvider;
@@ -134,8 +134,8 @@ describe("CachedProvider tests suite", () => {
 
     await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfos[0].data }, "latest");
 
-    expect(CachedProvider["blockDataCache"]!.size).toBe(0);
-    expect(CachedProvider["immutableDataCache"]).toBeUndefined();
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
 
     encodedInfos = addCalls("1", "2", "3", "4", 0.1);
 
@@ -143,14 +143,14 @@ describe("CachedProvider tests suite", () => {
     // the added call block tag is also 0.1
     await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfos[0].data }, 0.1);
 
-    expect(CachedProvider["blockDataCache"]!.size).toBe(0);
-    expect(CachedProvider["immutableDataCache"]).toBeUndefined();
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
 
     when(mockProvider.call).calledWith({ data: "0x" }, 0).mockReturnValue(Promise.resolve("0x"));
     await cachedProvider.call({ data: "0x" }, 0);
 
-    expect(CachedProvider["blockDataCache"]!.size).toBe(0);
-    expect(CachedProvider["immutableDataCache"]).toBeUndefined();
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
   });
 
   it("should cache a call with valid block tag if cacheByBlockTag is set", async () => {
@@ -160,26 +160,26 @@ describe("CachedProvider tests suite", () => {
     for (const encodedInfo of encodedInfos) {
       expect(await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfo.data }, 1)).toBe(encodedInfo.result);
 
-      expect(CachedProvider["blockDataCache"]!.size).toBe(++expectedCacheSize);
-      expect(CachedProvider["blockDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, true))).toBe(true);
+      expect(ProviderCache["blockDataCache"]!.size).toBe(++expectedCacheSize);
+      expect(ProviderCache["blockDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, true))).toBe(true);
     }
 
-    expect(CachedProvider["immutableDataCache"]).toBeUndefined();
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
   });
 
   it("should cache a call with valid block tag if cacheByBlockTag is not set", async () => {
-    cachedProvider = CachedProvider.from(provider, false);
+    cachedProvider = ProviderCache.createProxy(provider, false);
     const encodedInfos = addCalls("5", "6", "7", "8", 1);
 
     let expectedCacheSize = 0;
     for (const encodedInfo of encodedInfos) {
       expect(await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfo.data }, 1)).toBe(encodedInfo.result);
 
-      expect(CachedProvider["immutableDataCache"]!.size).toBe(++expectedCacheSize);
-      expect(CachedProvider["immutableDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, false))).toBe(true);
+      expect(ProviderCache["immutableDataCache"]!.size).toBe(++expectedCacheSize);
+      expect(ProviderCache["immutableDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, false))).toBe(true);
     }
 
-    expect(CachedProvider["blockDataCache"]).not.toBeUndefined();
+    expect(ProviderCache["blockDataCache"]).not.toBeUndefined();
   });
 
   it("should allow clearing the cache", async () => {});

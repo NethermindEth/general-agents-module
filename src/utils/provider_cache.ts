@@ -5,24 +5,24 @@ import { BlockTag, TransactionRequest } from "@ethersproject/abstract-provider";
 import { Deferrable, resolveProperties } from "@ethersproject/properties";
 import { Transaction } from "@ethersproject/transactions";
 
-export interface CachedProviderOptions {
+export interface ProviderCacheOptions {
   blockDataCacheSize: number;
   immutableDataCacheSize: number;
 }
 
-export class CachedProvider {
+export class ProviderCache {
   private static blockDataCache?: LRU<string, Promise<Buffer>>;
   private static immutableDataCache?: LRU<string, Promise<Buffer>>;
 
   private static blockDataCacheMutex = new Mutex();
   private static immutableDataCacheMutex = new Mutex();
 
-  private static options: CachedProviderOptions = {
+  private static options: ProviderCacheOptions = {
     blockDataCacheSize: 200,
     immutableDataCacheSize: 100,
   };
 
-  public static from<T extends ethers.providers.BaseProvider>(provider: T, cacheByBlockTag: boolean = true): T {
+  public static createProxy<T extends ethers.providers.BaseProvider>(provider: T, cacheByBlockTag: boolean = true): T {
     if (this.blockDataCache === undefined && cacheByBlockTag) {
       this.blockDataCache = new LRU<string, Promise<Buffer>>({ max: this.options.blockDataCacheSize });
     }
@@ -38,7 +38,7 @@ export class CachedProvider {
             transaction: Deferrable<TransactionRequest>,
             blockTag?: BlockTag | Promise<BlockTag>
           ) => {
-            return CachedProvider.call(target, transaction, blockTag, cacheByBlockTag);
+            return ProviderCache.call(target, transaction, blockTag, cacheByBlockTag);
           };
 
           return cb;
@@ -145,12 +145,12 @@ export class CachedProvider {
     }
   }
 
-  public static clearCache() {
+  public static clear() {
     this.blockDataCache?.clear();
     this.immutableDataCache?.clear();
   }
 
-  public static set(options: Partial<CachedProviderOptions>) {
+  public static set(options: Partial<ProviderCacheOptions>) {
     this.options = {
       ...this.options,
       ...options,
