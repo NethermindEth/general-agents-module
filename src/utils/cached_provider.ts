@@ -11,8 +11,8 @@ export interface CachedProviderOptions {
 }
 
 export class CachedProvider {
-  private static blockDataCache: LRU<string, Promise<Buffer>>;
-  private static immutableDataCache: LRU<string, Promise<Buffer>>;
+  private static blockDataCache?: LRU<string, Promise<Buffer>>;
+  private static immutableDataCache?: LRU<string, Promise<Buffer>>;
 
   private static blockDataCacheMutex = new Mutex();
   private static immutableDataCacheMutex = new Mutex();
@@ -109,8 +109,8 @@ export class CachedProvider {
 
     // two different caches so information that shouldn't change between blocks is more efficiently handled
     const [cache, mutex] = cacheByBlockTag
-      ? [this.blockDataCache, this.blockDataCacheMutex]
-      : [this.immutableDataCache, this.immutableDataCacheMutex];
+      ? [this.blockDataCache!, this.blockDataCacheMutex]
+      : [this.immutableDataCache!, this.immutableDataCacheMutex];
 
     let promise: Promise<Buffer>;
 
@@ -142,8 +142,8 @@ export class CachedProvider {
   }
 
   public static clearCache() {
-    this.blockDataCache.clear();
-    this.immutableDataCache.clear();
+    this.blockDataCache?.clear();
+    this.immutableDataCache?.clear();
   }
 
   public static set(options: Partial<CachedProviderOptions>) {

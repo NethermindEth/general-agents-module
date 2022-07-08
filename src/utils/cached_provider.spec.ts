@@ -134,7 +134,7 @@ describe("CachedProvider tests suite", () => {
 
     await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfos[0].data }, "latest");
 
-    expect(CachedProvider["blockDataCache"].size).toBe(0);
+    expect(CachedProvider["blockDataCache"]!.size).toBe(0);
     expect(CachedProvider["immutableDataCache"]).toBeUndefined();
 
     encodedInfos = addCalls("1", "2", "3", "4", 0.1);
@@ -143,13 +143,13 @@ describe("CachedProvider tests suite", () => {
     // the added call block tag is also 0.1
     await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfos[0].data }, 0.1);
 
-    expect(CachedProvider["blockDataCache"].size).toBe(0);
+    expect(CachedProvider["blockDataCache"]!.size).toBe(0);
     expect(CachedProvider["immutableDataCache"]).toBeUndefined();
 
     when(mockProvider.call).calledWith({ data: "0x" }, 0).mockReturnValue(Promise.resolve("0x"));
     await cachedProvider.call({ data: "0x" }, 0);
 
-    expect(CachedProvider["blockDataCache"].size).toBe(0);
+    expect(CachedProvider["blockDataCache"]!.size).toBe(0);
     expect(CachedProvider["immutableDataCache"]).toBeUndefined();
   });
 
@@ -160,8 +160,8 @@ describe("CachedProvider tests suite", () => {
     for (const encodedInfo of encodedInfos) {
       expect(await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfo.data }, 1)).toBe(encodedInfo.result);
 
-      expect(CachedProvider["blockDataCache"].size).toBe(++expectedCacheSize);
-      expect(CachedProvider["blockDataCache"].has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, true))).toBe(true);
+      expect(CachedProvider["blockDataCache"]!.size).toBe(++expectedCacheSize);
+      expect(CachedProvider["blockDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, true))).toBe(true);
     }
 
     expect(CachedProvider["immutableDataCache"]).toBeUndefined();
@@ -175,10 +175,12 @@ describe("CachedProvider tests suite", () => {
     for (const encodedInfo of encodedInfos) {
       expect(await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfo.data }, 1)).toBe(encodedInfo.result);
 
-      expect(CachedProvider["immutableDataCache"].size).toBe(++expectedCacheSize);
-      expect(CachedProvider["immutableDataCache"].has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, false))).toBe(true);
+      expect(CachedProvider["immutableDataCache"]!.size).toBe(++expectedCacheSize);
+      expect(CachedProvider["immutableDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, false))).toBe(true);
     }
 
     expect(CachedProvider["blockDataCache"]).not.toBeUndefined();
   });
+
+  it("should allow clearing the cache", async () => {});
 });
