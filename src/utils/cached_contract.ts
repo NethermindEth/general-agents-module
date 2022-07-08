@@ -5,13 +5,13 @@ export class CachedContract extends ethers.Contract {
   constructor(
     addressOrName: string,
     contractInterface: ethers.ContractInterface,
-    signerOrProvider?: ethers.Signer | ethers.providers.Provider,
+    signerOrProvider?: ethers.Signer | ethers.providers.BaseProvider,
     cacheByBlockTag: boolean = true
   ) {
     super(
       addressOrName,
       contractInterface,
-      signerOrProvider instanceof ethers.providers.Provider
+      signerOrProvider instanceof ethers.providers.BaseProvider
         ? CachedProvider.from(signerOrProvider, cacheByBlockTag)
         : signerOrProvider
     );
