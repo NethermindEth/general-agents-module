@@ -70,7 +70,7 @@ export class CachedProvider {
     return true;
   }
 
-  private static async cacheKey(transaction: Transaction, blockTag: string, cacheByBlockTag: boolean): Promise<string> {
+  private static async computeCacheKey(transaction: Transaction, blockTag: string, cacheByBlockTag: boolean): Promise<string> {
     const data = transaction.data.slice(2);
     const to = transaction.to ? transaction.to.slice(2) : "";
     const block = cacheByBlockTag ? blockTag.slice(2) : "";
@@ -105,7 +105,7 @@ export class CachedProvider {
       blockTag: provider._getBlockTag(blockTag!),
     });
 
-    const key = await this.cacheKey(resolved.transaction, resolved.blockTag as string, cacheByBlockTag);
+    const key = await this.computeCacheKey(resolved.transaction, resolved.blockTag as string, cacheByBlockTag);
 
     // two different caches so information that shouldn't change between blocks is more efficiently handled
     const [cache, mutex] = cacheByBlockTag
