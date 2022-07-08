@@ -62,7 +62,6 @@ const TEST_ADDRESS = createAddress("0x1");
 describe("ProviderCache tests suite", () => {
   let mockProvider: ExtendedMockEthersProvider;
   let provider: ethers.providers.BaseProvider;
-  let cachedProvider: ethers.providers.Provider;
 
   const addCalls = (
     test2Param: string,
@@ -105,12 +104,17 @@ describe("ProviderCache tests suite", () => {
     ];
   };
 
+  beforeAll(() => {
+    ProviderCache.set(OPTIONS);
+  });
+
   beforeEach(() => {
     mockProvider = new ExtendedMockEthersProvider();
     provider = mockProvider as unknown as ethers.providers.BaseProvider;
-    cachedProvider = ProviderCache.createProxy(provider);
 
-    ProviderCache.set(OPTIONS);
+    // resetting caches as it would be when creating the first proxy
+    ProviderCache["blockDataCache"] = undefined;
+    ProviderCache["immutableDataCache"] = undefined;
   });
 
   it("should proxy properties from the original provider and return a modified version of call()", () => {
@@ -130,6 +134,7 @@ describe("ProviderCache tests suite", () => {
   });
 
   it("should proxy directly (also not caching) calls made with latest or decimal block tags and calls made without a to address", async () => {
+    const cachedProvider = ProviderCache.createProxy(provider);
     let encodedInfos = addCalls("1", "2", "3", "4", "latest");
 
     await cachedProvider.call({ to: TEST_ADDRESS, data: encodedInfos[0].data }, "latest");
@@ -154,7 +159,8 @@ describe("ProviderCache tests suite", () => {
   });
 
   it("should cache a call with valid block tag if cacheByBlockTag is set", async () => {
-    const encodedInfos = addCalls("1", "2", "3", "4", 1);
+    const cachedProvider = ProviderCache.createProxy(provider);
+    const encodedInfos = addCalls("5", "6", "7", "8", 1);
 
     let expectedCacheSize = 0;
     for (const encodedInfo of encodedInfos) {
@@ -168,8 +174,8 @@ describe("ProviderCache tests suite", () => {
   });
 
   it("should cache a call with valid block tag if cacheByBlockTag is not set", async () => {
-    cachedProvider = ProviderCache.createProxy(provider, false);
-    const encodedInfos = addCalls("5", "6", "7", "8", 1);
+    const cachedProvider = ProviderCache.createProxy(provider, false);
+    const encodedInfos = addCalls("9", "10", "11", "12", 1);
 
     let expectedCacheSize = 0;
     for (const encodedInfo of encodedInfos) {
@@ -179,8 +185,69 @@ describe("ProviderCache tests suite", () => {
       expect(ProviderCache["immutableDataCache"]!.has(cacheKey(TEST_ADDRESS, encodedInfo.data, 1, false))).toBe(true);
     }
 
-    expect(ProviderCache["blockDataCache"]).not.toBeUndefined();
+    expect(ProviderCache["blockDataCache"]).toBeUndefined();
   });
 
-  it("should allow clearing the cache", async () => {});
+  it("should clear the block data cache on clear() if it is not undefined", async () => {
+    const blockCachedProvider = ProviderCache.createProxy(provider, true);
+
+    const { data } = addCalls("13", "14", "15", "16", 1)[0];
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
+
+    await blockCachedProvider.call({ to: TEST_ADDRESS, data }, 1);
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(1);
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
+
+    ProviderCache.clear();
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]).toBeUndefined();
+  });
+
+  it("should clear the immutable data cache on clear() if it is not undefined", async () => {
+    const immutableCachedProvider = ProviderCache.createProxy(provider, false);
+
+    const { data } = addCalls("13", "14", "15", "16", 1)[0];
+
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(0);
+    expect(ProviderCache["blockDataCache"]).toBeUndefined();
+
+    await immutableCachedProvider.call({ to: TEST_ADDRESS, data }, 1);
+
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(1);
+    expect(ProviderCache["blockDataCache"]).toBeUndefined();
+
+    ProviderCache.clear();
+
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(0);
+    expect(ProviderCache["blockDataCache"]).toBeUndefined();
+  });
+
+  it("should clar both caches on clear() if both are not undefined", async () => {
+    const blockCachedProvider = ProviderCache.createProxy(provider, true);
+    const immutableCachedProvider = ProviderCache.createProxy(provider, false);
+
+    const { data } = addCalls("13", "14", "15", "16", 1)[0];
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(0);
+
+    await blockCachedProvider.call({ to: TEST_ADDRESS, data }, 1);
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(1);
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(0);
+
+    await immutableCachedProvider.call({ to: TEST_ADDRESS, data }, 1);
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(1);
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(1);
+
+    ProviderCache.clear();
+
+    expect(ProviderCache["blockDataCache"]!.size).toBe(0);
+    expect(ProviderCache["immutableDataCache"]!.size).toBe(0);
+  });
 });
