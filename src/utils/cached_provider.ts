@@ -23,7 +23,7 @@ export class CachedProvider {
   };
 
   public static from<T extends ethers.providers.BaseProvider>(provider: T, cacheByBlockTag: boolean = true): T {
-    if (this.blockDataCache === undefined) {
+    if (this.blockDataCache === undefined && cacheByBlockTag) {
       this.blockDataCache = new LRU<string, Promise<Buffer>>({ max: this.options.blockDataCacheSize });
     }
 
