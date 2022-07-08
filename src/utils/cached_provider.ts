@@ -70,7 +70,11 @@ export class CachedProvider {
     return true;
   }
 
-  private static async computeCacheKey(transaction: Transaction, blockTag: string, cacheByBlockTag: boolean): Promise<string> {
+  private static async computeCacheKey(
+    transaction: Transaction,
+    blockTag: string,
+    cacheByBlockTag: boolean
+  ): Promise<string> {
     const data = transaction.data.slice(2);
     const to = transaction.to ? transaction.to.slice(2) : "";
     const block = cacheByBlockTag ? blockTag.slice(2) : "";
