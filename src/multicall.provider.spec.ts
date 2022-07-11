@@ -22,7 +22,6 @@ describe("MulticallProvider test suite", () => {
   ];
   const TEST_IFACE = new Interface(TEST_ABI);
 
-  const TEST_BATCH_SIZE = 10;
   const TEST_BLOCKS = [12, 13, 15, 22];
 
   const TEST_ADDR = createAddress("0xa1");
@@ -88,7 +87,7 @@ describe("MulticallProvider test suite", () => {
 
   beforeAll(() => {
     mockMulticallProvider = new MockEthersProvider();
-    multicallProvider = new MulticallProvider(mockEthersProvider as any, 0, TEST_MULTICALL2_ADDRESSES, TEST_BATCH_SIZE);
+    multicallProvider = new MulticallProvider(mockEthersProvider as any, 0, TEST_MULTICALL2_ADDRESSES);
     generateMockProviderCall();
   });
 
@@ -117,7 +116,7 @@ describe("MulticallProvider test suite", () => {
   describe("tryAll", () => {
     it("should return expected results when all calls fail", async () => {
       const response = await multicallProvider.tryAll(TEST_CALLS, TEST_BLOCKS[1]);
-      expect(response).toStrictEqual(TEST_CALLS.map(() => Object({ success: false, returnData: "0x" })));
+      expect(response).toStrictEqual(TEST_CALLS.map(() => Object({ success: false, returnData: [] })));
     });
 
     it("should return expected results when all calls succeed", async () => {
@@ -138,9 +137,9 @@ describe("MulticallProvider test suite", () => {
       const response = await multicallProvider.tryAll(TEST_CALLS, TEST_BLOCKS[3]);
       expect(response).toStrictEqual([
         { success: true, returnData: TEST_OUTPUTS[0] },
-        { success: false, returnData: "0x" },
+        { success: false, returnData: [] },
         { success: true, returnData: TEST_OUTPUTS[2] },
-        { success: false, returnData: "0x" },
+        { success: false, returnData: [] },
       ]);
     });
   });
@@ -190,7 +189,7 @@ describe("MulticallProvider test suite", () => {
         const response = await multicallProvider.groupTryAll(groupCalls, TEST_BLOCKS[0]);
         expect(response).toStrictEqual(
           generateStructuredArray(
-            TEST_CALLS.map(() => Object({ success: false, returnData: "0x" })),
+            TEST_CALLS.map(() => Object({ success: false, returnData: [] })),
             dest
           )
         );
@@ -208,8 +207,8 @@ describe("MulticallProvider test suite", () => {
           generateStructuredArray(
             [
               { success: true, returnData: TEST_OUTPUTS[0] },
-              { success: false, returnData: "0x" },
-              { success: false, returnData: "0x" },
+              { success: false, returnData: [] },
+              { success: false, returnData: [] },
               { success: true, returnData: TEST_OUTPUTS[3] },
             ],
             dest
