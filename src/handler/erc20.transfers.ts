@@ -17,7 +17,7 @@ interface Metadata {
   amount: ethers.BigNumber;
 }
 
-export default class Erc20Transfer extends Handler<Options, Metadata> {
+export default class Erc20Transfers extends Handler<Options, Metadata> {
   filter: (log: LogDescription) => boolean;
 
   constructor(options: HandlerOptions<Options, Metadata>) {

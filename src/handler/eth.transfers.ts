@@ -13,7 +13,7 @@ interface Metadata {
   value: ethers.BigNumber;
 }
 
-export default class EthTransfer extends Handler<Options, Metadata> {
+export default class EthTransfers extends Handler<Options, Metadata> {
   isLarge: (value: ethers.BigNumber) => boolean = () => true;
 
   constructor(options: HandlerOptions<Options, Metadata>) {
