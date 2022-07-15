@@ -21,7 +21,7 @@ export type CallDescription = ethers.utils.TransactionDescription & {
 
 interface Metadata extends CallDescription {}
 
-export default class FunctionCalls extends Handler<Options, Metadata> {
+export default class TraceCalls extends Handler<Options, Metadata> {
   constructor(options: HandlerOptions<Options, Metadata>) {
     super(options);
 

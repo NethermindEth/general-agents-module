@@ -1,18 +1,18 @@
 import { ethers, Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { TestTransactionEvent, generalTestFindingGenerator } from "../test";
 import { createAddress } from "../utils";
-import FunctionCalls, { CallDescription } from "./function.calls";
+import TraceCalls, { CallDescription } from "./trace.calls";
 
 describe("Function calls detector Agent Tests", () => {
   let handleTransaction: HandleTransaction;
 
   it("should return empty findings if the expected function wasn't called", async () => {
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function func()",
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent();
     const findings: Finding[] = await handleTransaction(txEvent);
@@ -21,13 +21,13 @@ describe("Function calls detector Agent Tests", () => {
   });
 
   it("Should not break if no trace is passed", async () => {
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function func()",
       to: createAddress("0x0"),
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent: TransactionEvent = {
       addresses: { "0x": true },
@@ -37,13 +37,13 @@ describe("Function calls detector Agent Tests", () => {
   });
 
   it("should return a findings only if the function is called in the contract target `to`", async () => {
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function func()",
       to: createAddress("0x0"),
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
       function: "function func()",
@@ -63,13 +63,13 @@ describe("Function calls detector Agent Tests", () => {
   });
 
   it("should return a findings only if the function is called from the caller target `from`", async () => {
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function func()",
       from: createAddress("0x0"),
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
       function: "function func()",
@@ -89,14 +89,14 @@ describe("Function calls detector Agent Tests", () => {
   });
 
   it("should return a finding only if all the conditions are met", async () => {
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function func()",
       from: createAddress("0x1"),
       to: createAddress("0x2"),
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({
       function: "function func()",
@@ -159,14 +159,14 @@ describe("Function calls detector Agent Tests", () => {
     const from = createAddress("0x2");
     const output = ["0x20", createAddress("0x1")];
 
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: findingGenerator,
       signature: functionDefinition,
       to,
       from,
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces({
       function: functionDefinition,
@@ -196,7 +196,7 @@ describe("Function calls detector Agent Tests", () => {
       return myString === "Hello!";
     };
 
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: functionDefinition,
       from,
@@ -204,7 +204,7 @@ describe("Function calls detector Agent Tests", () => {
       filterByArguments,
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const args1 = ["2345675643", "Hello!"];
     const txEvent1 = new TestTransactionEvent().addTraces({
@@ -238,7 +238,7 @@ describe("Function calls detector Agent Tests", () => {
       return myString === "Hello!";
     };
 
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: ethers.utils.Fragment.from(functionDefinition).format("full"),
       from,
@@ -246,7 +246,7 @@ describe("Function calls detector Agent Tests", () => {
       filterByArguments,
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const args1 = ["2345675643", "Hello!"];
     const txEvent1 = new TestTransactionEvent().addTraces({
@@ -280,7 +280,7 @@ describe("Function calls detector Agent Tests", () => {
       return args[1] === "Hello!";
     };
 
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function myMethod(uint256,string)",
       to,
@@ -288,7 +288,7 @@ describe("Function calls detector Agent Tests", () => {
       filterByArguments,
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent = new TestTransactionEvent().addTraces({
       function: functionDefinition,
@@ -307,13 +307,13 @@ describe("Function calls detector Agent Tests", () => {
       return output && output.value.gte(3);
     };
 
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: functionDefinition,
       filterByOutput,
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces(
       { function: functionDefinition, output: [2] },
@@ -329,12 +329,12 @@ describe("Function calls detector Agent Tests", () => {
   it("should filter by selector if options are undefined", async () => {
     const functionDefinition = "function myMethodWithOutput() returns (uint256 value)";
 
-    const functionCalls = new FunctionCalls({
+    const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: functionDefinition,
     });
 
-    handleTransaction = functionCalls.getHandleTransaction();
+    handleTransaction = traceCalls.getHandleTransaction();
 
     const txEvent: TransactionEvent = new TestTransactionEvent().addTraces(
       { function: functionDefinition, output: [0] },
