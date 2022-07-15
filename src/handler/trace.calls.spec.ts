@@ -1,7 +1,7 @@
 import { ethers, Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { TestTransactionEvent, generalTestFindingGenerator } from "../test";
 import { createAddress } from "../utils";
-import TraceCalls, { CallDescription } from "./trace.calls";
+import TraceCalls from "./trace.calls";
 
 describe("Function calls detector Agent Tests", () => {
   let handleTransaction: HandleTransaction;
@@ -135,23 +135,7 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent4)]);
   });
 
-  it("Should pass correct metadata to findingGenerator", async () => {
-    const findingGenerator = (metadata: CallDescription): Finding => {
-      return Finding.fromObject({
-        name: "Test Name",
-        description: "Test Description",
-        alertId: "Test Id",
-        severity: FindingSeverity.Medium,
-        type: FindingType.Suspicious,
-        metadata: {
-          from: metadata?.from,
-          to: metadata?.to,
-          selector: metadata?.sighash,
-          arguments: metadata?.args,
-          output: metadata?.output,
-        } as unknown as Record<string, string>,
-      });
-    };
+  it("Should pass correct metadata to onFinding", async () => {
     const functionDefinition = "function myMethod(uint256 myNumber, string myString) returns (uint256, address)";
 
     const args = ["0x2345675643", "Hello!"];
@@ -160,7 +144,22 @@ describe("Function calls detector Agent Tests", () => {
     const output = ["0x20", createAddress("0x1")];
 
     const traceCalls = new TraceCalls({
-      onFinding: findingGenerator,
+      onFinding(metadata: TraceCalls.Metadata): Finding {
+        return Finding.fromObject({
+          name: "Test Name",
+          description: "Test Description",
+          alertId: "Test Id",
+          severity: FindingSeverity.Medium,
+          type: FindingType.Suspicious,
+          metadata: {
+            from: metadata?.from,
+            to: metadata?.to,
+            selector: metadata?.sighash,
+            arguments: metadata?.args,
+            output: metadata?.output,
+          } as unknown as Record<string, string>,
+        });
+      },
       signature: functionDefinition,
       to,
       from,

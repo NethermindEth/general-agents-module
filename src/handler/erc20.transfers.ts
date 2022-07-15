@@ -3,24 +3,26 @@ import { Handler, HandlerOptions } from "./handler";
 
 const EVENT_SIGNATURE = "event Transfer(address indexed from, address indexed to, uint256 amount)";
 
-interface Options {
-  emitter?: string;
-  from?: string;
-  to?: string;
-  amountThreshold?: ethers.BigNumberish | ((amount: ethers.BigNumber) => boolean);
+namespace Erc20Transfers {
+  export interface Options {
+    emitter?: string;
+    from?: string;
+    to?: string;
+    amountThreshold?: ethers.BigNumberish | ((amount: ethers.BigNumber) => boolean);
+  }
+
+  export interface Metadata {
+    emitter: string;
+    from: string;
+    to: string;
+    amount: ethers.BigNumber;
+  }
 }
 
-interface Metadata {
-  emitter: string;
-  from: string;
-  to: string;
-  amount: ethers.BigNumber;
-}
-
-export default class Erc20Transfers extends Handler<Options, Metadata> {
+class Erc20Transfers extends Handler<Erc20Transfers.Options, Erc20Transfers.Metadata> {
   filter: (log: LogDescription) => boolean;
 
-  constructor(options: HandlerOptions<Options, Metadata>) {
+  constructor(options: HandlerOptions<Erc20Transfers.Options, Erc20Transfers.Metadata>) {
     super(options);
 
     this.filter = this._createFilter();
@@ -58,7 +60,7 @@ export default class Erc20Transfers extends Handler<Options, Metadata> {
     };
   }
 
-  public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<Erc20Transfers.Metadata[] | null> {
     if (event instanceof BlockEvent) {
       return null;
     } else {
@@ -70,7 +72,9 @@ export default class Erc20Transfers extends Handler<Options, Metadata> {
           from: log.args.from,
           to: log.args.to,
           amount: log.args.amount,
-        })) as Metadata[];
+        })) as Erc20Transfers.Metadata[];
     }
   }
 }
+
+export default Erc20Transfers;

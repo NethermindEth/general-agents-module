@@ -1,22 +1,24 @@
 import { TransactionEvent, BlockEvent } from "forta-agent";
 import { Handler, HandlerOptions } from "./handler";
 
-interface Options {
-  addresses: string[];
+namespace BlacklistedAddresses {
+  export interface Options {
+    addresses: string[];
+  }
+
+  export interface Metadata {
+    addresses: string[];
+  }
 }
 
-interface Metadata {
-  addresses: string[];
-}
-
-export default class BlacklistedAddresses extends Handler<Options, Metadata> {
-  constructor(options: HandlerOptions<Options, Metadata>) {
+class BlacklistedAddresses extends Handler<BlacklistedAddresses.Options, BlacklistedAddresses.Metadata> {
+  constructor(options: HandlerOptions<BlacklistedAddresses.Options, BlacklistedAddresses.Metadata>) {
     super(options);
 
     this.options.addresses = this.options.addresses.map((el) => el.toLowerCase());
   }
 
-  public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<BlacklistedAddresses.Metadata[] | null> {
     if (event instanceof BlockEvent) {
       return null;
     } else {
@@ -26,3 +28,5 @@ export default class BlacklistedAddresses extends Handler<Options, Metadata> {
     }
   }
 }
+
+export default BlacklistedAddresses;
