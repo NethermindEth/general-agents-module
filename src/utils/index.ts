@@ -1,7 +1,7 @@
 import { ethers } from "forta-agent";
 import NetworkManager from "./network.manager";
-import { ProviderCache, ProviderCacheOptions } from "./provider_cache";
-import CachedContract from "./cached_contract";
+import { ProviderCache, ProviderCacheOptions } from "./provider.cache";
+import CachedContract from "./cached.contract";
 
 export const padAddress = (address: string) => ethers.utils.hexZeroPad(address, 20);
 export const createAddress = (address: string) => padAddress(address).toLowerCase();

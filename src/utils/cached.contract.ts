@@ -1,5 +1,5 @@
 import { ethers } from "forta-agent";
-import { ProviderCache } from "./provider_cache";
+import { ProviderCache } from "./provider.cache";
 
 export default class CachedContract extends ethers.Contract {
   constructor(

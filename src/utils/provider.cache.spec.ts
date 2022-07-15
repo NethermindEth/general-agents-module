@@ -5,7 +5,7 @@ import { ethers } from "forta-agent";
 import { when } from "jest-when";
 import { createAddress } from ".";
 import { MockEthersProvider } from "../test";
-import { ProviderCache, ProviderCacheOptions } from "./provider_cache";
+import { ProviderCache, ProviderCacheOptions } from "./provider.cache";
 
 class ExtendedMockEthersProvider extends MockEthersProvider {
   internalBlockNumber: number = 0;
