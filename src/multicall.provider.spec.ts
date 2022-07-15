@@ -1,17 +1,16 @@
 import { createAddress, MockEthersProvider } from "./tests";
 import { MULTICALL2_ABI, MulticallContract, MulticallProvider } from "./multicall.provider";
-import { formatBytes32String, Interface } from "ethers/lib/utils";
 import { ContractCall } from "ethers-multicall";
-import { BigNumber } from "ethers";
+import { ethers } from "forta-agent";
 
 describe("MulticallProvider test suite", () => {
-  const MULTICALL_IFACE = new Interface(MULTICALL2_ABI);
+  const MULTICALL_IFACE = new ethers.utils.Interface(MULTICALL2_ABI);
 
-  const mockEthersProvider = new MockEthersProvider();
+  const mockEthersProvider: MockEthersProvider = new MockEthersProvider();
   let mockMulticallProvider: MockEthersProvider;
 
   const TEST_MULTICALL2_ADDRESSES: Record<number, string> = {
-    0: createAddress("0xffe"), // netowrkId and multicall2 address used for tests
+    0: createAddress("0xffe"), // networkId and multicall2 address used for tests
   };
 
   const TEST_ABI = [
@@ -20,7 +19,7 @@ describe("MulticallProvider test suite", () => {
     "function func3(uint) external view returns (uint)",
     "function func4(address) external view returns (uint)",
   ];
-  const TEST_IFACE = new Interface(TEST_ABI);
+  const TEST_IFACE = new ethers.utils.Interface(TEST_ABI);
 
   const TEST_BLOCKS = [12, 13, 15, 22];
 
@@ -30,11 +29,11 @@ describe("MulticallProvider test suite", () => {
   const TEST_CALLS: ContractCall[] = [
     contract.func1(),
     contract.func2(),
-    contract.func3(BigNumber.from(5)),
+    contract.func3(ethers.BigNumber.from(5)),
     contract.func4(createAddress("0xb1")),
   ];
 
-  const TEST_OUTPUTS = TEST_CALLS.map((call) => BigNumber.from(formatBytes32String(call.name)));
+  const TEST_OUTPUTS = TEST_CALLS.map((call) => ethers.BigNumber.from(ethers.utils.formatBytes32String(call.name)));
 
   const addCallTo = (block: number | string, indexes: number[], inputs: any[]) => {
     for (let index of indexes) {
@@ -87,13 +86,29 @@ describe("MulticallProvider test suite", () => {
 
   beforeAll(() => {
     mockMulticallProvider = new MockEthersProvider();
-    multicallProvider = new MulticallProvider(mockEthersProvider as any, 0, TEST_MULTICALL2_ADDRESSES);
+
+    // @ts-expect-error (this can be changed to setNetwork in v3)
+    mockEthersProvider.getNetwork = jest.fn().mockReturnValue(Promise.resolve({ chainId: 0 }));
+
+    MulticallProvider.setMulticall2Addresses(TEST_MULTICALL2_ADDRESSES);
+    multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider, 0);
+
     generateMockProviderCall();
   });
 
   beforeEach(() => {
     mockMulticallProvider.clear();
     mockEthersProvider.clear();
+  });
+
+  describe("init", () => {
+    it("should get the correct address when calling init", async () => {
+      const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider);
+
+      await multicallProvider.init();
+
+      expect(multicallProvider["_multicallAddress"]).toBe(TEST_MULTICALL2_ADDRESSES[0]);
+    });
   });
 
   describe("all", () => {
