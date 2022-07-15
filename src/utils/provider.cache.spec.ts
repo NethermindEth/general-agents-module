@@ -226,7 +226,7 @@ describe("ProviderCache tests suite", () => {
     expect(ProviderCache["blockDataCache"]).toBeUndefined();
   });
 
-  it("should clar both caches on clear() if both are not undefined", async () => {
+  it("should clear both caches on clear() if both are not undefined", async () => {
     const blockCachedProvider = ProviderCache.createProxy(provider, true);
     const immutableCachedProvider = ProviderCache.createProxy(provider, false);
 
