@@ -20,7 +20,7 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([]);
   });
 
-  it("Should not break if no trace is passed", async () => {
+  it("should not break if no trace is passed", async () => {
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
       signature: "function func()",
@@ -135,7 +135,7 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent4)]);
   });
 
-  it("Should pass correct metadata to onFinding", async () => {
+  it("should pass correct metadata to onFinding", async () => {
     const functionDefinition = "function myMethod(uint256 myNumber, string myString) returns (uint256, address)";
 
     const args = ["0x2345675643", "Hello!"];
