@@ -1,7 +1,7 @@
 import type { BlockEvent, Finding, HandleBlock, HandleTransaction, TransactionEvent } from "forta-agent";
 import type { FindingGenerator } from "./types";
 
-export type HandlerOptions<Options, Metadata> = Options & { onFinding: FindingGenerator<Metadata> };
+export type HandlerOptions<Options, Metadata> = Options & { onFinding?: FindingGenerator<Metadata> };
 
 export abstract class Handler<Options, Metadata> {
   options: HandlerOptions<Options, Metadata>;
@@ -19,7 +19,7 @@ export abstract class Handler<Options, Metadata> {
   public handle(event: TransactionEvent | BlockEvent, onFinding?: FindingGenerator<Metadata>): Promise<Finding[]> {
     this._checkOnFinding(onFinding);
 
-    return this._handle(event, onFinding || this.options.onFinding);
+    return this._handle(event, (onFinding || this.options.onFinding)!);
   }
 
   protected async _handle(
