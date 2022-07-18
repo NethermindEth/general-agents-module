@@ -5,7 +5,7 @@ namespace EthTransfers {
   export interface Options {
     from?: string;
     to?: string;
-    valueThreshold?: ethers.BigNumberish | ((amount: ethers.BigNumber) => boolean);
+    valueThreshold?: ethers.BigNumberish | ((value: ethers.BigNumber) => boolean);
   }
 
   export interface Metadata {
