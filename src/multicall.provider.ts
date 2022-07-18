@@ -79,6 +79,13 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
 
   public async init() {
     const { chainId } = await this._provider.getNetwork();
+
+    if (multicall2Addresses[chainId] === undefined) {
+      throw new Error(
+        `Unsupported chain ID: ${chainId}. Please set a Multicall2 address for it through MulticallProvider.setMulticall2Addresses()`
+      );
+    }
+
     this._multicallAddress = multicall2Addresses[chainId];
   }
 
