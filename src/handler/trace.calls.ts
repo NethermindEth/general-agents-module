@@ -43,7 +43,7 @@ class TraceCalls extends Handler<TraceCalls.Options, TraceCalls.Metadata> {
         return false;
       }
 
-      if (this.options.includeErrors !== undefined && trace.error) {
+      if (!this.options.includeErrors && trace.error) {
         return false;
       }
 
