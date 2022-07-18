@@ -1,7 +1,7 @@
-import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
+import { ethers, Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
 import { createAddress } from "../utils";
-import Erc20Transfer from "./erc20.transfers";
+import Erc20Transfers from "./erc20.transfers";
 import { FindingGenerator } from "./types";
 
 const TOKEN_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
@@ -23,7 +23,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   let handleTransaction: HandleTransaction;
 
   it("should return empty findings if the expected event wasn't emitted", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       onFinding: generalTestFindingGenerator,
     });
@@ -37,7 +37,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return empty findings if the expected event wasn't emitted from the correct token", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       onFinding: generalTestFindingGenerator,
     });
@@ -56,7 +56,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the expected event was emitted from the correct token", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       onFinding: generalTestFindingGenerator,
     });
@@ -75,7 +75,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the event has in the field `to` the correct address", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       to: createAddress("0x12"),
       onFinding: generalTestFindingGenerator,
@@ -104,7 +104,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the event has in the field `from` the correct address", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       from: createAddress("0x12"),
       onFinding: generalTestFindingGenerator,
@@ -133,7 +133,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the event has in the field `amount` an amount greater than the specified threshold", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       amountThreshold: "350",
       onFinding: generalTestFindingGenerator,
@@ -173,7 +173,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if the event has the field `amount` satisfies the specified threshold callback", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       amountThreshold(amount) {
         return amount.gt("10") && amount.lt("100");
@@ -215,7 +215,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should not compare thresholds using lexicographic order", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       onFinding: generalTestFindingGenerator,
       amountThreshold: "10",
@@ -235,7 +235,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should return a finding only if all the conditions are met", async () => {
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
       from: createAddress("0x1"),
       to: createAddress("0x2"),
@@ -287,7 +287,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should pass correct metadata to findingGenerator", async () => {
-    const findingGenerator: FindingGenerator<Record<string, any>> = (metadata) => {
+    const onFinding = (metadata: Erc20Transfers.Metadata): Finding => {
       return Finding.fromObject({
         name: "testName",
         description: "testDescription",
@@ -295,16 +295,16 @@ describe("ERC20 Transfer Agent Tests", () => {
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
         metadata: {
-          from: metadata?.from,
-          to: metadata?.to,
-          amount: metadata?.amount.toString(),
+          from: metadata.from,
+          to: metadata.to,
+          amount: metadata.amount.toString(),
         },
       });
     };
 
-    const handler = new Erc20Transfer({
+    const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
-      onFinding: findingGenerator,
+      onFinding,
     });
 
     handleTransaction = handler.getHandleTransaction();
@@ -319,7 +319,12 @@ describe("ERC20 Transfer Agent Tests", () => {
     const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([
-      findingGenerator({ from: createAddress("0x1"), to: createAddress("0x2"), amount: "300" }),
+      onFinding({
+        emitter: TOKEN_ADDRESS,
+        from: createAddress("0x1"),
+        to: createAddress("0x2"),
+        amount: ethers.BigNumber.from("300"),
+      }),
     ]);
   });
 });

@@ -1,35 +1,35 @@
 import { TransactionEvent, ethers, BlockEvent, Trace } from "forta-agent";
 import { Handler, HandlerOptions } from "./handler";
 
-interface Options {
-  signature: string;
-  from?: string;
-  to?: string;
-  includeErrors?: boolean;
-  filterByArguments?: (args: ethers.utils.Result, index?: number, array?: ethers.utils.Result[]) => boolean;
-  filterByOutput?: (output: ethers.utils.Result, index?: number, array?: (ethers.utils.Result | null)[]) => boolean;
-  filter?: (call: CallDescription, index?: number, array?: CallDescription[]) => boolean;
+namespace TraceCalls {
+  export interface Options {
+    signatures: string[];
+    from?: string;
+    to?: string;
+    includeErrors?: boolean;
+    filterByArguments?: (args: ethers.utils.Result, index: number, array: ethers.utils.Result[]) => boolean;
+    filterByOutput?: (output: ethers.utils.Result, index: number, array: (ethers.utils.Result | null)[]) => boolean;
+    filter?: (call: Metadata, index: number, array: Metadata[]) => boolean;
+  }
+
+  export interface Metadata extends ethers.utils.TransactionDescription {
+    from: string;
+    to: string;
+    trace: Trace;
+    error: boolean;
+    output: ethers.utils.Result | null;
+  }
 }
 
-export type CallDescription = ethers.utils.TransactionDescription & {
-  from: string;
-  to: string;
-  trace: Trace;
-  error: boolean;
-  output: ethers.utils.Result | null;
-};
-
-interface Metadata extends CallDescription {}
-
-export default class FunctionCalls extends Handler<Options, Metadata> {
-  constructor(options: HandlerOptions<Options, Metadata>) {
+class TraceCalls extends Handler<TraceCalls.Options, TraceCalls.Metadata> {
+  constructor(options: HandlerOptions<TraceCalls.Options, TraceCalls.Metadata>) {
     super(options);
 
     if (this.options.from) this.options.from = this.options.from.toLowerCase();
     if (this.options.to) this.options.to = this.options.to.toLowerCase();
   }
 
-  private filterFunction(txEvent: TransactionEvent): CallDescription[] {
+  private filterFunction(txEvent: TransactionEvent): TraceCalls.Metadata[] {
     if (!txEvent.traces || !txEvent.traces.length) {
       return [];
     }
@@ -43,16 +43,16 @@ export default class FunctionCalls extends Handler<Options, Metadata> {
         return false;
       }
 
-      if (this.options.includeErrors !== undefined && trace.error) {
+      if (!this.options.includeErrors && trace.error) {
         return false;
       }
 
       return true;
     });
 
-    const iface = new ethers.utils.Interface([this.options.signature]);
+    const iface = new ethers.utils.Interface(this.options.signatures);
 
-    const results: CallDescription[] = [];
+    const results: TraceCalls.Metadata[] = [];
 
     for (const trace of traces) {
       let tx;
@@ -89,7 +89,7 @@ export default class FunctionCalls extends Handler<Options, Metadata> {
     return results;
   }
 
-  public async metadata(event: TransactionEvent | BlockEvent): Promise<Metadata[] | null> {
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<TraceCalls.Metadata[] | null> {
     if (event instanceof BlockEvent) {
       return null;
     } else {
@@ -119,3 +119,5 @@ export default class FunctionCalls extends Handler<Options, Metadata> {
     }
   }
 }
+
+export default TraceCalls;
