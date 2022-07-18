@@ -8,7 +8,7 @@ export const MULTICALL2_ABI = [
   "function tryAggregate(bool, tuple(address target, bytes callData)[] memory) public returns (tuple(bool success, bytes returnData)[] memory)",
 ];
 
-// multiCall2 contract addresses used by this class.
+// Multicall2 contract addresses used by this class.
 let multicall2Addresses: Record<number, string> = {
   1: "0x5ba1e12693dc8f9c48aad8770482f4739beed696", // Ethereum Mainnet
   3: "0x5ba1e12693dc8f9c48aad8770482f4739beed696", // Ropsten
