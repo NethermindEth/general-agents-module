@@ -1,51 +1,39 @@
-import provideERC20TransferHandler from "./erc20.transfers";
-import provideETHTransferHandler from "./eth.transfers";
-import provideFunctionCallsDetectorHandler from "./function.calls";
-import provideEventCheckerHandler from "./events.checker";
-import provideBlacklistedAddressesHandler from "./blacklisted.addresses";
+import * as handlers from "./handler";
+
 import {
-  FindingGenerator,
-  encodeParameter,
-  encodeParameters,
-  encodeFunctionCall,
-  decodeParameter,
-  decodeParameters,
-  decodeFunctionCallParameters,
-  encodeFunctionSignature,
-  encodeEventSignature,
+  padAddress,
+  createAddress,
+  createChecksumAddress,
+  toChecksumAddress,
+  NetworkManager,
+  ProviderCache,
+  CachedContract,
+  MulticallProvider,
+  MulticallContract,
 } from "./utils";
-import NetworkManager from "./network.manager";
 
 export {
-  provideERC20TransferHandler,
-  provideETHTransferHandler,
-  provideFunctionCallsDetectorHandler,
-  provideEventCheckerHandler,
-  provideBlacklistedAddressesHandler,
-  encodeParameter,
-  encodeParameters,
-  encodeFunctionCall,
-  decodeParameter,
-  decodeParameters,
-  decodeFunctionCallParameters,
-  encodeEventSignature,
-  encodeFunctionSignature,
-  FindingGenerator,
+  handlers,
+  padAddress,
+  createAddress,
+  createChecksumAddress,
+  toChecksumAddress,
   NetworkManager,
+  ProviderCache,
+  CachedContract,
+  MulticallProvider,
+  MulticallContract,
 };
 
 export default {
-  provideERC20TransferHandler,
-  provideETHTransferHandler,
-  provideFunctionCallsDetectorHandler,
-  provideEventCheckerHandler,
-  provideBlacklistedAddressesHandler,
-  encodeParameter,
-  encodeParameters,
-  encodeFunctionCall,
-  decodeParameter,
-  decodeParameters,
-  decodeFunctionCallParameters,
-  encodeEventSignature,
-  encodeFunctionSignature,
+  handlers,
+  padAddress,
+  createAddress,
+  createChecksumAddress,
+  toChecksumAddress,
+  NetworkManager,
+  ProviderCache,
+  CachedContract,
+  MulticallProvider,
+  MulticallContract,
 };
