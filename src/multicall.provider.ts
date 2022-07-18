@@ -28,6 +28,8 @@ let multicall2Addresses: Record<number, string> = {
 
 const DEFAULT_BATCH_SIZE = 50;
 
+// return types considering T is a tuple
+
 type AllResult<T> = [success: boolean, returns: T];
 
 type TryAllResult<T extends any[]> = {
