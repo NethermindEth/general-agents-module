@@ -9,7 +9,7 @@ describe("Function calls detector Agent Tests", () => {
   it("should return empty findings if the expected function wasn't called", async () => {
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: "function func()",
+      signatures: ["function func()"],
     });
 
     handleTransaction = traceCalls.getHandleTransaction();
@@ -23,7 +23,7 @@ describe("Function calls detector Agent Tests", () => {
   it("should not break if no trace is passed", async () => {
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: "function func()",
+      signatures: ["function func()"],
       to: createAddress("0x0"),
     });
 
@@ -36,10 +36,36 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([]);
   });
 
-  it("should return a findings only if the function is called in the contract target `to`", async () => {
+  it("should return findings only if the trace satisfies the `includeError` condition", async () => {
+    let traceCalls = new TraceCalls({
+      onFinding: generalTestFindingGenerator,
+      signatures: ["function func()"],
+      includeErrors: true,
+    });
+
+    handleTransaction = traceCalls.getHandleTransaction();
+
+    const txEvent1: TransactionEvent = new TestTransactionEvent().addTraces({ function: "function func()" });
+    txEvent1.traces[0].error = "error";
+
+    let findings: Finding[] = await handleTransaction(txEvent1);
+    expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent1)]);
+
+    traceCalls = new TraceCalls({
+      onFinding: generalTestFindingGenerator,
+      signatures: ["function func()"],
+    });
+
+    handleTransaction = traceCalls.getHandleTransaction();
+
+    findings = await handleTransaction(txEvent1);
+    expect(findings).toStrictEqual([]);
+  });
+
+  it("should return findings only if the function is called in the contract target `to`", async () => {
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: "function func()",
+      signatures: ["function func()"],
       to: createAddress("0x0"),
     });
 
@@ -62,10 +88,10 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([generalTestFindingGenerator(txEvent2)]);
   });
 
-  it("should return a findings only if the function is called from the caller target `from`", async () => {
+  it("should return findings only if the function is called from the caller target `from`", async () => {
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: "function func()",
+      signatures: ["function func()"],
       from: createAddress("0x0"),
     });
 
@@ -91,7 +117,7 @@ describe("Function calls detector Agent Tests", () => {
   it("should return a finding only if all the conditions are met", async () => {
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: "function func()",
+      signatures: ["function func()"],
       from: createAddress("0x1"),
       to: createAddress("0x2"),
     });
@@ -160,7 +186,7 @@ describe("Function calls detector Agent Tests", () => {
           } as unknown as Record<string, string>,
         });
       },
-      signature: functionDefinition,
+      signatures: [functionDefinition],
       to,
       from,
     });
@@ -197,7 +223,7 @@ describe("Function calls detector Agent Tests", () => {
 
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: functionDefinition,
+      signatures: [functionDefinition],
       from,
       to,
       filterByArguments,
@@ -239,7 +265,7 @@ describe("Function calls detector Agent Tests", () => {
 
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: ethers.utils.Fragment.from(functionDefinition).format("full"),
+      signatures: [ethers.utils.Fragment.from(functionDefinition).format("full")],
       from,
       to,
       filterByArguments,
@@ -281,7 +307,7 @@ describe("Function calls detector Agent Tests", () => {
 
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: "function myMethod(uint256,string)",
+      signatures: ["function myMethod(uint256,string)"],
       to,
       from,
       filterByArguments,
@@ -302,13 +328,13 @@ describe("Function calls detector Agent Tests", () => {
   it("should return findings only if calls fits with filterByOutput condition", async () => {
     const functionDefinition = "function myMethodWithOutput() returns (uint256 value)";
 
-    const filterByOutput = (output?: ethers.utils.Result): boolean => {
+    const filterByOutput = (output: ethers.utils.Result): boolean => {
       return output && output.value.gte(3);
     };
 
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: functionDefinition,
+      signatures: [functionDefinition],
       filterByOutput,
     });
 
@@ -325,12 +351,42 @@ describe("Function calls detector Agent Tests", () => {
     expect(findings).toStrictEqual([generalTestFindingGenerator(), generalTestFindingGenerator()]);
   });
 
-  it("should filter by selector if options are undefined", async () => {
+  it("should return findings only if calls fits with filter condition", async () => {
+    const functionDefinition = "function myMethodWithOutput() returns (uint256 value)";
+
+    const filter = (call: TraceCalls.Metadata): boolean => {
+      return call.output ? call.output[0].lte(3) : false;
+    };
+
+    const traceCalls = new TraceCalls({
+      onFinding: generalTestFindingGenerator,
+      signatures: [functionDefinition],
+      filter,
+    });
+
+    handleTransaction = traceCalls.getHandleTransaction();
+
+    const txEvent: TransactionEvent = new TestTransactionEvent().addTraces(
+      { function: functionDefinition, output: [2] },
+      { function: functionDefinition, output: [3] },
+      { function: functionDefinition, output: [1] },
+      { function: functionDefinition, output: [10] }
+    );
+
+    const findings: Finding[] = await handleTransaction(txEvent);
+    expect(findings).toStrictEqual([
+      generalTestFindingGenerator(),
+      generalTestFindingGenerator(),
+      generalTestFindingGenerator(),
+    ]);
+  });
+
+  it("should filter by selector if other options are undefined", async () => {
     const functionDefinition = "function myMethodWithOutput() returns (uint256 value)";
 
     const traceCalls = new TraceCalls({
       onFinding: generalTestFindingGenerator,
-      signature: functionDefinition,
+      signatures: [functionDefinition],
     });
 
     handleTransaction = traceCalls.getHandleTransaction();
