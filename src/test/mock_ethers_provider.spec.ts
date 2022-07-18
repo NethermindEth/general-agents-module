@@ -11,6 +11,12 @@ describe("MockEthersProvider tests suite", () => {
 
   beforeEach(() => mockProvider.clear());
 
+  it.each(["call", "getBlock", "getSigner", "getStorageAt", "getBlockNumber", "getNetwork"] as Array<
+    keyof MockEthersProvider
+  >)("%s should throw an error if not configured for a specific input", async (method) => {
+    await expect(mockProvider[method]).rejects.toEqual(new Error(`${method} was not configured for this input`));
+  });
+
   it("should return the correct storage", async () => {
     const CASES: [string, number, number, string][] = [
       ["0xdef10", 1, 0, "0xe0a0"],
