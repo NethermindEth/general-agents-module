@@ -98,6 +98,7 @@ describe("MulticallProvider test suite", () => {
 
   beforeAll(() => {
     mockEthersProvider = new MockEthersProvider();
+    mockEthersProvider.setNetwork(0);
 
     generateMockProviderCall();
 
@@ -110,13 +111,40 @@ describe("MulticallProvider test suite", () => {
     mockEthersProvider.setNetwork(0);
   });
 
+  describe("constructor", () => {
+    it("should get the correct Multicall2 address when specifying the chain ID", async () => {
+      const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider, 0);
+
+      expect(multicallProvider["_multicallAddress"]).toBe(TEST_MULTICALL2_ADDRESSES[0]);
+    });
+
+    it("should throw an error if there's no known Multicall2 address for a chain ID", async () => {
+      expect(() => {
+        new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider, 500);
+      }).toThrowError(
+        "Unsupported chain ID: 500. Please set a Multicall2 address for it through MulticallProvider.setMulticall2Addresses()"
+      );
+    });
+  });
+
   describe("init", () => {
-    it("should get the correct address when calling init", async () => {
+    it("should get the correct Multicall2 address when calling init", async () => {
       const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider);
 
       await multicallProvider.init();
 
       expect(multicallProvider["_multicallAddress"]).toBe(TEST_MULTICALL2_ADDRESSES[0]);
+    });
+
+    it("should throw an error if there's no known Multicall2 address for a chain ID", async () => {
+      const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider);
+      mockEthersProvider.setNetwork(500);
+
+      await expect(multicallProvider.init()).rejects.toEqual(
+        new Error(
+          "Unsupported chain ID: 500. Please set a Multicall2 address for it through MulticallProvider.setMulticall2Addresses()"
+        )
+      );
     });
   });
 
