@@ -3,7 +3,7 @@ import { when, resetAllWhenMocks } from "jest-when";
 import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
 import { ethers } from "forta-agent";
 import MockEthersSigner from "./mock_ethers_signer";
-import { toChecksumAddress } from "../utils";
+import { createAddress, toChecksumAddress } from "../utils";
 
 interface CallParams {
   inputs: any[];
@@ -17,6 +17,7 @@ export default class MockEthersProvider {
   public getSigner: any;
   public getStorageAt: any;
   public getBlockNumber: any;
+  public getNetwork: any;
   public readonly _isProvider: boolean;
 
   private logs: Array<ethers.providers.Log>;
@@ -29,6 +30,7 @@ export default class MockEthersProvider {
     this.getSigner = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getSigner"));
     this.getStorageAt = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getStorageAt"));
     this.getBlockNumber = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getBlockNumber"));
+    this.getNetwork = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getNetwork"));
 
     this.logs = [];
   }
@@ -154,12 +156,8 @@ export default class MockEthersProvider {
     return logs;
   }
 
-  /**
-   * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
-   */
-  public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
-    when(this.getLogs).calledWith(filter).mockReturnValue(Promise.resolve(logs));
-    return this;
+  public setNetwork(chainId: number, ensAddress: string = createAddress("0x0"), name: string = "") {
+    when(this.getNetwork).calledWith().mockReturnValue({ chainId, ensAddress, name });
   }
 
   public clear(): void {

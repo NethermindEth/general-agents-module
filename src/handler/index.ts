@@ -1,7 +1,6 @@
-import erc20Transfer from "./erc20.transfers";
-import ethTransfer from "./eth.transfers";
-import functionCalls from "./function.calls";
-import eventEmissions from "./events.checker";
-import blacklistedAddresses from "./blacklisted.addresses";
+import Erc20Transfers from "./erc20.transfers";
+import EthTransfers from "./eth.transfers";
+import TraceCalls from "./trace.calls";
+import BlacklistedAddresses from "./blacklisted.addresses";
 
-export { erc20Transfer, ethTransfer, functionCalls, eventEmissions, blacklistedAddresses };
+export { Erc20Transfers, EthTransfers, TraceCalls, BlacklistedAddresses };

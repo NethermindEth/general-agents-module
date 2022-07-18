@@ -1,5 +1,5 @@
 import { ethers, Finding, HandleTransaction, TransactionEvent } from "forta-agent";
-import EthTransfer from "./eth.transfers";
+import EthTransfers from "./eth.transfers";
 import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
 import { createAddress } from "../utils";
 
@@ -9,7 +9,7 @@ describe("ETH Transfer Agent Tests", () => {
   let handleTransaction: HandleTransaction;
 
   it("should return empty findings if value is under specified threshold", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       valueThreshold: etherToWei("100"),
     });
@@ -24,7 +24,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should return findings if value is equal or greater to specified threshold ", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       valueThreshold: etherToWei("100"),
     });
@@ -41,7 +41,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should return empty findings if transaction are not from the specified address", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       from: createAddress("0x12"),
     });
@@ -59,7 +59,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should return findings if transactions are from the specified address", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       from: createAddress("0x12"),
     });
@@ -77,7 +77,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should return empty findings if transactions are not to specified address", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       to: createAddress("0x12"),
     });
@@ -95,7 +95,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should return findings if transactions are to specified address", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       to: createAddress("0x12"),
     });
@@ -113,7 +113,7 @@ describe("ETH Transfer Agent Tests", () => {
   });
 
   it("should return findings only when all the specified conditions are met", async () => {
-    const handler = new EthTransfer({
+    const handler = new EthTransfers({
       onFinding: generalTestFindingGenerator,
       from: createAddress("0x12"),
       to: createAddress("0x13"),
