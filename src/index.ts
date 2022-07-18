@@ -8,6 +8,8 @@ import {
   NetworkManager,
   ProviderCache,
   CachedContract,
+  MulticallProvider,
+  MulticallContract,
 } from "./utils";
 
 export {
@@ -19,6 +21,8 @@ export {
   NetworkManager,
   ProviderCache,
   CachedContract,
+  MulticallProvider,
+  MulticallContract,
 };
 
 export default {
@@ -30,4 +34,6 @@ export default {
   NetworkManager,
   ProviderCache,
   CachedContract,
+  MulticallProvider,
+  MulticallContract,
 };
