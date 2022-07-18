@@ -14,131 +14,336 @@ or
 - npm install
 - npm run test
 
-## General Types
+## Handlers
 
-There are multiple types used across all the modules.
+Handlers are approaches for dealing with block and transaction events. They can either be integrated into a bot's logic
+to make it easier to get specific data based on transactions or blocks or used like Forta bot generators through.
 
--  `metadataVault`
-    > This type works as a store for every data that is passed to the `FindingGenerator`. It is a `dict` with `string` as keys and `any` type in its values.
--  `FindingGenerator`
-    > All the approaches receive a function with this type. This function will be in charge of creating the Findings when the agent's conditions are met. This function can receive a `metadataVault` as a parameter where finding relevant information will be passed, this information can be used for creating more informative findings. This type is an alias for `(metadata?: metadataVault) => Finding`. The information set in the `metadataVault` for every approach will be described in the approach documentation.
-- `CallParams`
-    > This is an object containing two properties, an `inputs` array and an `outputs` array.
+Each handler gets specific data, which is called metadata (related to what would be relevant for the alert metadata),
+from a transaction or block event. This data can be returned to be processed externally by calling
+`handler.metadata(event)`, but the handler can also receive a callback that creates a finding from its metadata. In
+this case, it can both return findings through `handler.handle(event)` and also generate the Forta bot handlers through
+`handler.getHandleBlock()` and `handler.getHandleTransaction()`.
 
-## Approaches
+`Handler` is an abstract base class and each specific handler extends it. The common interface is:
 
-### - Function Call Detector Handler
+- `Handler(options)`: Each handler has a specific set of options. The only common field between all the specific
+options is the optional `onFinding`, that defines how a finding will be generated based on the metadata. `Handler`, in this case, is a specific handler, not the `Handler` base class.
+- `metadata(event)`: This method returns a promise to an array of metadata objects related to a transaction or block
+or, if there's no implementation for a specific event (e.g. a handler only gets information from transactions, not
+blocks) it will return a promise that resolves to `null`.
+- `handle(event, onFinding?)`: This method handles a transaction or block event and returns a list of findings. `onFinding` will override `options.onFinding` if both were specified.
+- `getHandleBlock(onFinding?)`: This method returns a `forta-agent` `HandleBlock` handle callback. `onFinding` will override `options.onFinding` if both were specified.
+- `getHandleTransaction(onFinding?)`: This method returns a `forta-agent` `HandleTransaction` handle callback. `onFinding` will override `options.onFinding` if both were specified.
 
-This approach detects method calls on Smart Contracts. You need to provide the signature of the method you want to detect. You can also provide options for specifying extra filters, such as "what account made the call" or "what contract was called".
-#### How to use it
-```ts
-import { provideFunctionCallsDetectorHandler } from "forta-agent-tools";
+Each handler's options and metadata interfaces can be accessed through `Handler.Options` and `Handler.Metadata`
+(`Handler`, again, in this case, being a specific handler, not the `Handler` base class).
 
-const handler = provideFunctionCallsDetectorHandler (findingGenerator, functionSignature, handlerOptions?);
-```
+### BlacklistedAddresses
 
-#### Arguments
-
-- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
-  - `from`: The account calling the method.
-  - `to`: The Smart Contract called.
-  - `functionSelector`: The function selector of the transaction (The keccak256 hash of the signature of the function being called).
-  - `arguments`: The arguments used for calling the function.
-- `functionSignature`: The signature of the method you want to detect.
-- `handlerOptions`: This is an optional argument, it contains extra information for adding extra filtering to your detections. It is a JS object with the following optional properties:
-  - `from`: If provided, the approach will only detect method calls from the specified account.
-  - `to`: If provided, the approach will only detect method calls to the specified Smart Contract.
-  - `filterOnArguments`: This is a predicate receiving an array with the arguments used for calling the function. If provided, the approach will only detect method calls with arguments fitting with the passed predicate.
-
-
-### - Event Checker Handler 
-
-This approach detects events emitted. You need to provide the signature of the event you want to detect. You can also provide other arguments for specifying extra filters as "who emitted the event" or manually adding a specific filtering function.
-
-#### How to use it
-```ts
-import { provideEventCheckerHandler } from "forta-agent-tools";
-
-const handler = provideEventCheckerHandler(findingGenerator, eventSignature, address?, filter?);
-```
-
-#### Arguments
-
-- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
-  - `eventFragment`: An ethers.js EventFragment object related to the specific event.
-  - `name`: The event name.
-  - `signature`: The event signature.
-  - `topic`: The topic hash.
-  - `args`: The event input parameter values (both index-based and key-based access based on parameter order and names).
-  - `address`: The log originating address.
-- `eventSignature`: The event signature to be detected.
-- `address`: If provided, the approach will only detect events emitted from the specified account.
-- `filter`: If provided, the approach will only detect events that are not discarded by the filter. This function has the type `(log: LogDescription, index?: number, array?: LogDescription[]) => boolean`, it will be used as an argument for the common `filter` arrays function.
-
-### - ETH Transfer Handler
-
-This approach detects ETH transfers. You can also provide more arguments for specifying extra filters, such as "who made the transfer", "who is the receiver", and a minimum amount for detecting transfers.
+This handler detects transactions that contain addresses from a list provided by the user.
 
 #### How to use it
 
 ```ts
-import { provideETHTransferHandler } from "forta-agent-tools";
+import { Finding, FindingSeverity, FindingType, TransactionEvent } from "forta-agent";
+import { handlers, createAddress } from "forta-agent-tools";
 
-const handler = provideETHTransferHandler(findingGenerator, agentOptions?);
+const blacklistedAddressesHandler = new handlers.BlacklistedAddresses({
+  addresses: [createAddress("0x0")],
+  onFinding(metadata) {
+    return Finding.from({
+      name: "Blacklisted Address",
+      description: "A transaction involving a blacklisted address was found",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {},
+      addresses: metadata.addresses,
+    });
+  },
+});
+
+const handleTransaction = blacklistedAddressesHandler.getHandleTransaction();
+const handleBlock = blacklistedAddressesHandler.getHandleBlock();
+
+// or
+
+async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
+  const findings = await blacklistedAddressesHandler.handle(txEvent);
+
+  // or
+
+  const metadataList = await blacklistedAddressesHandler.metadata(txEvent);
+  const findingsFromMetadata = (metadataList || []).map((metadata) => {
+    return Finding.from({
+      name: "Blacklisted Address",
+      description: "A transaction involving a blacklisted address was found",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {},
+      addresses: metadata.addresses,
+    });
+  });
+
+  // ...
+}
 ```
 
-#### Arguments
+#### Options
 
-- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
-  - `from`: The account making the transfer.
-  - `to`: The account receiving the transfer.
-  - `amount`: The amount of `eth` sent in `wei`.
-- `agentOptions`: This is an optional argument, it contains extra information for adding extra filtering to your detections. It is a JS object with the following optional properties:
-  - `from`: If provided, the approach will only detect transfers from the specified account.
-  - `to`: If provided, the approach will only detect transfers to the specified account.
-  - `valueThreshold`: If provided, the approach will only detect transfers with a greater or equal amount of `eth` in `wei`.
+- `addresses`: Blacklisted addresses. A finding should be generated if any of them is involved in a transaction.
 
-### - ERC20 Transfer Handler
+#### Metadata
 
-This approach detects ERC-20 transfers. You will need to provide the address of the ERC-20 contract you want to detect transfers of. You can also provide more arguments for specifying extra filters, such as "who made the transfer", "who is the receiver of the transfer", and a minimum amount for detecting transfers.
+- `addresses`: Blacklisted addresses that were involved in a transaction.
+
+### Erc20Transfers
+
+This handler detects ERC20 token transfers in transactions.
 
 #### How to use it
 
 ```ts
-import { provideERC20TransferHandler } from "forta-agent-tools";
+import { Finding, FindingSeverity, FindingType, TransactionEvent } from "forta-agent";
+import { handlers, createAddress } from "forta-agent-tools";
 
-const handler = provideERC20TransferHandler(findingGenerator,  tokenAddress, agentOptions?);
+const erc20TransfersHandler = new handlers.Erc20Transfers({
+  emitter: createAddress("0x0"),
+  from: createAddress("0x1"),
+  to: createAddress("0x2"),
+  amountThreshold: "10000", // or (amount) => amount.gte("100")
+  onFinding(metadata) {
+    return Finding.from({
+      name: "Large ERC20 transfer",
+      description: "A large ERC20 transfer was detected",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {
+        from: metadata.from,
+        to: metadata.to,
+        amount: metadata.amount.toString(),
+      },
+    });
+  },
+});
+
+const handleTransaction = erc20TransfersHandler.getHandleTransaction();
+const handleBlock = erc20TransfersHandler.getHandleBlock();
+
+// or
+
+async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
+  const findings = await erc20TransfersHandler.handle(txEvent);
+
+  // or
+
+  const metadataList = await erc20TransfersHandler.metadata(txEvent);
+  const findingsFromMetadata = (metadataList || []).map((metadata) => {
+    return Finding.from({
+      name: "Large ERC20 transfer",
+      description: "A large ERC20 transfer was detected",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {
+        token: metadata.emitter,
+        from: metadata.from,
+        to: metadata.to,
+        amount: metadata.amount.toString(),
+      },
+    });
+  });
+
+  // ...
+}
 ```
 
-#### Arguments
-- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
-  - `from`: The account making the transfer.
-  - `to`: The account receiving the transfer.
-  - `amount`: The number of tokens sent.
-- `tokenAddress`: The address of the ERC-20 contract you want to detect transfers of.
-- `agentOptions`: This is an optional argument, it contains extra information for adding extra filtering to your detections. It is a JS object with the following optional properties:
-  - `from`: If provided, the approach will only detect transfers from the specified account.
-  - `to`: If provided, the approach will only detect transfers to the specified account.
-  - `valueThreshold`: If provided, the approach will only detect transfers with a greater or equal number of tokens.
+#### Options
 
-### - Blacklisted Addresses Handler
+- `emitter`: Token address, emitter of the `Transfer` events that will be listened.
+- `from`: Transfer sender.
+- `to`: Transfer receiver.
+- `amountThreshold`: Determines a filter based on the transfer amount. Can be either a value, like `"1000"` (doesn't
+consider the token's decimal places, same `uint256` representation as in the contract), case in which the transfer
+event will be filtered out when it amount less than that value, or a callback that defines whether the amount should lead to
+a finding or not.
 
-This approach detects transactions involving at least one blacklisted address. You will need to provide a list with the addresses you want to blacklist.
+#### Metadata
+
+- `emitter`: Token address.
+- `from`: Transfer sender.
+- `to`: Transfer receiver.
+- `amount`: Transfer amount.
+
+### EthTransfers
+
+This handler detects ether transfers in transactions.
 
 #### How to use it
 
 ```ts
-import { provideBlacklistedAddressesHandler } from "forta-agent-tools";
+import { Finding, FindingSeverity, FindingType, TransactionEvent } from "forta-agent";
+import { handlers, createAddress } from "forta-agent-tools";
 
-const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAddressesList);
+const ethTransfersHandler = new handlers.EthTransfers({
+  from: createAddress("0x0"),
+  to: createAddress("0x1"),
+  valueThreshold: "10000", // or (value) => value.gte("100")
+  onFinding(metadata) {
+    return Finding.from({
+      name: "Large ether transfer",
+      description: "A large ether transfer was detected",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {
+        from: metadata.from,
+        to: metadata.to,
+        value: metadata.value.toString(),
+      },
+    });
+  },
+});
+
+const handleTransaction = ethTransfersHandler.getHandleTransaction();
+const handleBlock = ethTransfersHandler.getHandleBlock();
+
+// or
+
+async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
+  const findings = await ethTransfersHandler.handle(txEvent);
+
+  // or
+
+  const metadataList = await ethTransfersHandler.metadata(txEvent);
+  const findingsFromMetadata = (metadataList || []).map((metadata) => {
+    return Finding.from({
+      name: "Large ether transfer",
+      description: "A large ether transfer was detected",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {
+        from: metadata.from,
+        to: metadata.to,
+        value: metadata.value.toString(),
+      },
+    });
+  });
+
+  // ...
+}
 ```
 
-#### Arguments
+#### Options
 
-- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the key:
-  - `addresses`: The list of blacklisted addresses involved in the transaction.
-- `blacklistedAddressesList`: The list of blacklisted addresses.
-  
+- `from`: Transfer sender.
+- `to`: Transfer receiver.
+- `valueThreshold`: Determines a filter based on the transfer amount. Can be either a value, like `"1000"` (in wei),
+case in which the transfer event will be filtered out when it amount less than that value, or a callback that defines
+whether the amount should lead to a finding or not.
+
+#### Metadata
+
+- `from`: Transfer sender.
+- `to`: Transfer receiver.
+- `value`: Transferred value in wei.
+
+### TraceCalls
+
+This handler parses and detects specific calls in transactions traces.
+
+#### How to use it
+
+```ts
+import { Finding, FindingSeverity, FindingType, TransactionEvent } from "forta-agent";
+import { handlers, createAddress } from "forta-agent-tools";
+
+const traceCallsHandler = new handlers.TraceCalls({
+  signature: "function func(uint256 param) returns (uint256 resp)",
+  from: createAddress("0x0"),
+  to: createAddress("0x1"),
+  includeErrors: false,
+  filterByArguments(args) {
+    return args.param.eq(0);
+  },
+  filterByOutput(output) {
+    return output.resp.eq(1);
+  },
+  filter(metadata) {
+    return metadata.trace.traceAddress.length === 1;
+  },
+  onFinding(metadata) {
+    return Finding.from({
+      name: "Func called in traces",
+      description: "A func call was detected in the transaction's traces",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {
+        from: metadata.from,
+        to: metadata.to,
+        error: metadata.error,
+        param: metadata.args.param.toString(),
+        resp: metadata.output.resp.toString(),
+      },
+    });
+  },
+});
+
+const handleTransaction = traceCallsHandler.getHandleTransaction();
+const handleBlock = traceCallsHandler.getHandleBlock();
+
+// or
+
+async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> {
+  const findings = await traceCallsHandler.handle(txEvent);
+
+  // or
+
+  const metadataList = await traceCallsHandler.metadata(txEvent);
+  const findingsFromMetadata = (metadataList || []).map((metadata) => {
+    return Finding.from({
+      name: "Func called in traces",
+      description: "A func call was detected in the transaction's traces",
+      severity: FindingSeverity.Info,
+      type: FindingType.Info,
+      metadata: {
+        from: metadata.from,
+        to: metadata.to,
+        error: metadata.error,
+        param: metadata.args.param.toString(),
+        resp: metadata.output.resp.toString(),
+      },
+    });
+  });
+
+  // ...
+}
+```
+
+#### Options
+
+- `signature`: Function signature to be monitored.
+- `from`: Call sender.
+- `to`: Call receiver.
+- `includeErrors`: Whether calls that had an error should be included or not (by default, falsy).
+- `filterByArguments`: Callback (same signature as a `array.filter(cb)` callback) to filter calls by arguments.
+- `filterByOutput`: Callback (same signature as a `array.filter(cb)` callback) to filter calls by returned values.
+- `filter`: Callback (same signature as a `array.filter(cb)` callback) to filter calls by metadata.
+
+#### Metadata
+
+- `from`: Call sender.
+- `to`: Call receiver.
+- `trace`: Trace object.
+- `error`: Whether there was an error during the call or not.
+- `output`: Call result. Will be `null` if `error` is `true`.
+
+As well as `ethers.utils.TransactionDescription`'s fields:
+
+- `functionFragment`: Function fragment from the signature.
+- `name`: Function name.
+- `args`: Function arguments.
+- `signature`: Function signature.
+- `sighash`: Function sighash.
+- `value`: Transaction value in wei.
 
 ## Utils
 
