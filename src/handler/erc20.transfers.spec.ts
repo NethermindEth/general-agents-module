@@ -1,4 +1,4 @@
-import { Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
+import { ethers, Finding, FindingSeverity, FindingType, HandleTransaction, TransactionEvent } from "forta-agent";
 import { generalTestFindingGenerator, TestTransactionEvent } from "../test";
 import { createAddress } from "../utils";
 import Erc20Transfers from "./erc20.transfers";
@@ -287,7 +287,7 @@ describe("ERC20 Transfer Agent Tests", () => {
   });
 
   it("should pass correct metadata to findingGenerator", async () => {
-    const findingGenerator: FindingGenerator<Record<string, any>> = (metadata) => {
+    const onFinding = (metadata: Erc20Transfers.Metadata): Finding => {
       return Finding.fromObject({
         name: "testName",
         description: "testDescription",
@@ -295,16 +295,16 @@ describe("ERC20 Transfer Agent Tests", () => {
         severity: FindingSeverity.Medium,
         type: FindingType.Suspicious,
         metadata: {
-          from: metadata?.from,
-          to: metadata?.to,
-          amount: metadata?.amount.toString(),
+          from: metadata.from,
+          to: metadata.to,
+          amount: metadata.amount.toString(),
         },
       });
     };
 
     const handler = new Erc20Transfers({
       emitter: TOKEN_ADDRESS,
-      onFinding: findingGenerator,
+      onFinding,
     });
 
     handleTransaction = handler.getHandleTransaction();
@@ -319,7 +319,12 @@ describe("ERC20 Transfer Agent Tests", () => {
     const findings: Finding[] = await handleTransaction(txEvent);
 
     expect(findings).toStrictEqual([
-      findingGenerator({ from: createAddress("0x1"), to: createAddress("0x2"), amount: "300" }),
+      onFinding({
+        emitter: TOKEN_ADDRESS,
+        from: createAddress("0x1"),
+        to: createAddress("0x2"),
+        amount: ethers.BigNumber.from("300"),
+      }),
     ]);
   });
 });
