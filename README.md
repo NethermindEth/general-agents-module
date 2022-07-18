@@ -142,6 +142,15 @@ const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAd
 
 ## Utils
 
+### Address Handling
+
+These are utility functions to create and manipulate addresses.
+
+- `padAddress(address)`: Simply pads left a hex string with zeroes so it fits the expected length.
+- `createAddress(address)`: Pads the provided address and ensures it is lowercase.
+- `createChecksumAddress(address)`: Pads the provided address and ensures it is in checksum format.
+- `toChecksumAddress(address)`: Formats a valid address (case-insensitive) in checksum format.
+
 ### TestTransactionEvent
 
 This is a helper class for creating `TransactionEvents` using the fluent interface pattern.
