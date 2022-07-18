@@ -343,3 +343,93 @@ networkManager.get("address"); // "address1" if the ChainID is 1, "address42" if
 - `setNetwork(chainId)`: Sets the instance's active ChainID. Throws an error if there is no entry for `chainId` in `networkData`.
 - `init(provider)`: Retrieves network data from the provider and sets the active ChainID. Throws an error if there is no entry for that ChainID in `networkData`.
 - `get(key)`: Gets the value of the field `key` in the active network's data record. Throws an error if `NetworkManager` was not yet initialized, i.e. the ChainID was not specified in the constructor and `NetworkManager.init()` or `NetworkManager.setNetwork()` were not called.
+
+### MulticallProvider
+
+This is an ethers provider-like interface built on top of `ethers-multicall`, but it also supports specifying a block
+tag for a call, using `Multicall2` features and making grouped calls.
+
+The calls are decoded using `ethers`, so each return data has the same structure as a call made by itself through an `ethers.Contract`.
+
+Supported chains (by default):
+- Ethereum Mainnet
+- Ropsten Testnet
+- Rinkeby Testnet
+- Görli Testnet
+- Kovan Testnet
+- Binance Smart Chain
+- Binance Smart Chain Testnet
+- Gnosis
+- Huobi ECO Chain Mainnet
+- Polygon Mainnet
+- Fantom Opera
+- Arbitrum One
+- Avalanche
+- Mumbai Testnet
+
+Other chains can also be supported by finding a deployed Multicall2 contract address and calling
+`MulticallProvider.setMulticall2Addresses({ [chainId]: multicall2Address })`. Default addresses can also be overriden.
+
+Basic usage:
+```ts
+import { getEthersProvider } from "forta-agent";
+import { MulticallProvider, MulticallContract, createAddress } from "forta-agent-tools";
+
+const provider = getEthersProvider();
+const multicallProvider = new MulticallProvider(provider);
+
+const token = new MulticallContract(createAddress("0x0"), [
+  "function balanceOf(address account) external view returns (uint256)",
+  "function allowance(address owner, address spender) external view returns (uint256)",
+]);
+
+async function initialize() {
+  // fetches the provider network and loads an appropriate Multicall2 address
+  // throws if the network is not supported
+  await multicallProvider.init();
+}
+
+async function getBalances() {
+  const addresses = [createAddress("0x1"), createAddress("0x2"), createAddress("0x3")];
+  const calls = addresses.map(address => token.balanceOf(address));
+  const blockTag = 1;
+
+  const [success, balancesAll] = await multicallProvider.all(calls, blockTag); // [success, [balance0, balance1, balance2]]
+
+  // or
+
+  const balancesTryAll = await multicallProvider.tryAll(calls, blockTag); // [{ success, returnData: balance0 }, { success, returnData: balance1 }, { success, returnData: balance2 }]
+
+  // or
+
+  const [successGrouped, balancesGrouped] = await multicallProvider.groupAll(
+    addresses.map(address => [token.balanceOf(address), token.allowance(address, createAddress("0x4"))])
+  ); // [success, [[balance0, allowance0], [balance1, allowance1], [balance2, allowance2]]]
+
+  // or
+
+  const balancesGroupTryAll = await multicallProvider.groupTryAll(
+    addresses.map(address => [token.balanceOf(address), token.allowance(address, createAddress("0x4"))])
+  ); // [
+  // [{ success, returnData: balance0 }, { success, returnData: allowance0 }],
+  // [{ success, returnData: balance1 }, { success, returnData: allowance1 }],
+  // [{ success, returnData: balance2 }, { success, returnData: allowance2 }],
+  //]
+}
+```
+
+#### How to use it
+- `MulticallProvider(provider, chainId?)`: Creates a `MulticallProvider` instance through an ethers provider `provider`.
+If `chainId` is specified, it's not necessary to call `init()` before making calls.
+- `MulticallProvider.setMulticall2Addresses(addresses)`: Allows overriding and adding support to more networks by
+specifying a valid `Multicall2` contract address to it.
+- `init()`: Fetches the provider's chain ID and and loads a `Multicall2` contract address. If there's no known address for that network, it throws an error.
+- `all(calls, blockTag?, batchSize?)`: Performs the calls in `blockTag` with `batchSize` sized multicalls and requires
+success of all of them. By default, `batchSize` is `50`.
+- `tryAll(calls, blockTag?, batchSize?)`: Performs the calls in `blockTag` with `batchSize` sized multicalls and
+doesn't require their success, returning a flag for each of them that indicates whether they were successful or not.
+By default, `batchSize` is `50`.
+- `groupAll(calls, blockTag?, batchSize?)`: Works in the same way as `all()`, but allows specifying groups of calls
+(e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
+- `groupAll(calls, blockTag?, batchSize?)`: Works in the same way as `tryAll()`, but allows specifying groups of calls
+(e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
