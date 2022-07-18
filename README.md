@@ -142,7 +142,7 @@ const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAd
 
 ## Utils
 
-###  TestTransactionEvent
+### TestTransactionEvent
 
 This is a helper class for creating `TransactionEvents` using the fluent interface pattern.
 
@@ -173,7 +173,7 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `addTrace(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
   > `TraceProps` is a TS object with the following optional fields `{ to, from, input, output }`.
 
-###  TestBlockEvent
+### TestBlockEvent
 
 This is a helper class for creating `BlockEvents` using the fluent interface pattern.
 
@@ -191,21 +191,18 @@ There are multiple methods you can use for creating the exact `BlockEvent` you w
 - `addTransactions(txns)` This method adds the hashes of a spread list of transaction events at the end of `block.transactions` field in the event.
 - `addTransactionsHashes(hashes)` This method adds a hashes spread list to the end of `block.transactions` field in the event.
 
-### MockEtherProvider
+### MockEthersProvider
 
 This is a helper class for mocking the `ethers.providers.Provider` class.
 
 Basic usage:
 ```ts
-import { 
-  MockEthersProvider, 
-  encodeParameter, 
-  createAddress,
-} from "forta-agent-tools/lib/test";
+import { MockEthersProvider } from "forta-agent-tools/lib/test";
+import { createAddress } from "forta-agent-tools";
 import { utils, Contract } from "ethers";
 
 const iface: utils.Interface =  new utils.Interface([
-  "function myAwersomeFunction(uint256 param1, string param2) extenal view returns (unit8 id, uint256 val)"
+  "function myAwesomeFunction(uint256 param1, string param2) extenal view returns (unit8 id, uint256 val)"
 ]);
 
 const address: string = createAddress("0xf00");
@@ -214,10 +211,10 @@ const data: string = createAddress("0xda7a");
 const mockProvider: MockEthersProvider = new MockEthersProvider()
   .addCallTo(
     address, 20, iface,
-    "myAwersomeFunction",
-    { inputs:[10, "tests"], outputs:[1, 2000]},
+    "myAwesomeFunction",
+    { inputs: [10, "tests"], outputs: [1, 2000] },
   )
-  .addStorage(address, 5, 15, encodeParameter("address", data));
+  .addStorage(address, 5, 15, utils.defaultAbiCoder.encode(["address"], [data]));
 ```
 
 #### How to use it
@@ -242,22 +239,18 @@ This mock provides some methods to set up the values that the provider should re
 All the data you set in the provider will be used until the `clear` function is called.
 
 
-### MockEtherSigner
+### MockEthersSigner
 
 This is a helper class for mocking the `ethers.providers.JsonRpcSigner` class. This class extends `MockEthersProvider`.
 
 Basic usage:
 ```ts
-import { 
-  MockEthersProvider,
-  MockEthersSigner, 
-  encodeParameter, 
-  createAddress,
-} from "forta-agent-tools/lib/test";
+import { MockEthersProvider, MockEthersSigner } from "forta-agent-tools/lib/test";
+import { createAddress } from "forta-agent-tools";
 import { utils, Contract } from "ethers";
 
 const iface: utils.Interface =  new utils.Interface([
-  "function myAwersomeFunction(uint256 param1, string param2)"
+  "function myAwesomeFunction(uint256 param1, string param2)"
 ]);
 
 const address: string = createAddress("0xf00");
@@ -268,7 +261,7 @@ const mockSigner: MockEthersSigner = new MockEthersSigner(mockProvider)
   .setAddress(from)
   .allowTransaction(
     address, contract, iface,
-    "myAwersomeFunction", [20, "twenty"]
+    "myAwesomeFunction", [20, "twenty"]
     { confirmations: 42 }, // receipt data
   )
 ```
