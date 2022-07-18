@@ -49,7 +49,7 @@ type GroupTryAllResult<T extends any[][]> = {
 
 // removes Provider.all() so it can be properly overriden even though the generics don't match
 // also turns properties visibility from private into protected so it's easier do use them
-declare class OmittedProvider {
+declare class _Provider {
   protected _provider: EthersProvider;
   protected _multicallAddress: string;
   constructor(provider: EthersProvider, chainId?: number);
@@ -61,10 +61,7 @@ declare class OmittedProvider {
  * Provider class heavily based on ethers-multicall, but supporting specifying a blockTag for the multicall contract
  * call and `tryAggregate`.
  */
-class MulticallProvider extends (Provider as unknown as new (
-  provider: EthersProvider,
-  chainId?: number
-) => OmittedProvider) {
+class MulticallProvider extends (Provider as unknown as new (provider: EthersProvider, chainId?: number) => _Provider) {
   constructor(provider: EthersProvider, chainId?: number) {
     super(provider, chainId);
 
