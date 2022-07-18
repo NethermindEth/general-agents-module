@@ -156,14 +156,6 @@ export default class MockEthersProvider {
     return logs;
   }
 
-  /**
-   * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
-   */
-  public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
-    when(this.getLogs).calledWith(filter).mockReturnValue(Promise.resolve(logs));
-    return this;
-  }
-
   public setNetwork(chainId: number, ensAddress: string = createAddress("0x0"), name: string = "") {
     when(this.getNetwork).calledWith().mockReturnValue({ chainId, ensAddress, name });
   }
