@@ -257,7 +257,7 @@ import { Finding, FindingSeverity, FindingType, TransactionEvent } from "forta-a
 import { handlers, createAddress } from "forta-agent-tools";
 
 const traceCallsHandler = new handlers.TraceCalls({
-  signature: "function func(uint256 param) returns (uint256 resp)",
+  signatures: ["function func(uint256 param) returns (uint256 resp)"],
   from: createAddress("0x0"),
   to: createAddress("0x1"),
   includeErrors: false,
@@ -320,7 +320,7 @@ async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> 
 
 #### Options
 
-- `signature`: Function signature to be monitored.
+- `signatures`: Function signatures to be monitored. Also used in decoding.
 - `from`: Call sender.
 - `to`: Call receiver.
 - `includeErrors`: Whether calls that had an error should be included or not (by default, falsy).

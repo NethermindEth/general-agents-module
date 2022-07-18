@@ -3,13 +3,13 @@ import { Handler, HandlerOptions } from "./handler";
 
 namespace TraceCalls {
   export interface Options {
-    signature: string;
+    signatures: string[];
     from?: string;
     to?: string;
     includeErrors?: boolean;
-    filterByArguments?: (args: ethers.utils.Result, index?: number, array?: ethers.utils.Result[]) => boolean;
-    filterByOutput?: (output: ethers.utils.Result, index?: number, array?: (ethers.utils.Result | null)[]) => boolean;
-    filter?: (call: Metadata, index?: number, array?: Metadata[]) => boolean;
+    filterByArguments?: (args: ethers.utils.Result, index: number, array: ethers.utils.Result[]) => boolean;
+    filterByOutput?: (output: ethers.utils.Result, index: number, array: (ethers.utils.Result | null)[]) => boolean;
+    filter?: (call: Metadata, index: number, array: Metadata[]) => boolean;
   }
 
   export interface Metadata extends ethers.utils.TransactionDescription {
@@ -50,7 +50,7 @@ class TraceCalls extends Handler<TraceCalls.Options, TraceCalls.Metadata> {
       return true;
     });
 
-    const iface = new ethers.utils.Interface([this.options.signature]);
+    const iface = new ethers.utils.Interface(this.options.signatures);
 
     const results: TraceCalls.Metadata[] = [];
 
