@@ -6,6 +6,8 @@ import {
   createChecksumAddress,
   toChecksumAddress,
   NetworkManager,
+  ProviderCache,
+  CachedContract,
 } from "./utils";
 
 export {
@@ -15,6 +17,8 @@ export {
   createChecksumAddress,
   toChecksumAddress,
   NetworkManager,
+  ProviderCache,
+  CachedContract,
 };
 
 export default {
@@ -24,4 +28,6 @@ export default {
   createChecksumAddress,
   toChecksumAddress,
   NetworkManager,
+  ProviderCache,
+  CachedContract,
 };

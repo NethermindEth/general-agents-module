@@ -529,3 +529,57 @@ networkManager.get("address"); // "address1" if the ChainID is 1, "address42" if
 - `setNetwork(chainId)`: Sets the instance's active ChainID. Throws an error if there is no entry for `chainId` in `networkData`.
 - `init(provider)`: Retrieves network data from the provider and sets the active ChainID. Throws an error if there is no entry for that ChainID in `networkData`.
 - `get(key)`: Gets the value of the field `key` in the active network's data record. Throws an error if `NetworkManager` was not yet initialized, i.e. the ChainID was not specified in the constructor and `NetworkManager.init()` or `NetworkManager.setNetwork()` were not called.
+
+### ProviderCache
+
+This is a class that can create a proxy to a provider which then caches call results and avoids cached calls being repeated both later and in the same block or transaction.
+
+Basic usage:
+```ts
+import { ProviderCache, createAddress } from "forta-agent-tools";
+import { ethers, getEthersProvider } from "forta-agent";
+
+const provider = getEthersProvider();
+const cachedProvider = ProviderCache.createProxy(provider);
+
+const address = createAddress("0x0");
+const iface: ethers.ContractInterface = [];
+
+// the cached provider can be used as a regular provider
+const contract = new ethers.Contract(address, iface, cachedProvider);
+```
+
+#### How to use it
+
+- `ProviderCache.createProxy(provider, cacheByBlockTag?)`: Creates a proxy to a provider that caches call results. If `cacheByBlockTag` is set to `false`, then the call is cached without taking the block tag into account, useful for cases where some data can't change between blocks. By default, `cacheByBlockTag` is set to `true`, thus the call result cache takes into account the block tag in which it's called.
+- `ProviderCache.clear()`: Clears the internal cache.
+- `ProviderCache.set(options)`: Sets options specified by `options`.
+  - `options.blockDataCacheSize?`: If it's defined, the block data cache (used when `cacheByBlockTag` is `true`) is cleared if it exists and its max size is changed to the value specified.
+  - `options.immutableDataCacheSize?`: if it's defined, the immutable data cache (used when `cacheByBlockTag` is `false`) is cleared if it exists and its max size is changed to the value specified.
+
+### CachedContract
+
+This is a shortcut class that extends `ethers.Contract` but uses a cached provider from `ProviderCache`. Creating a `CachedContract` by calling `new CachedContract(address, iface, provider, cacheByBlockTag?)` is equivalent to creating an `ethers.Contract` by calling `new ethers.Contract(address, iface, ProviderCache.createProxy(provider, cacheByBlockTag?))`. There's also some utility methods.
+
+Basic usage:
+```ts
+import { CachedContract, createAddress } from "forta-agent-tools";
+import { getEthersProvider } from "forta-agent";
+
+const provider = getEthersProvider();
+const address = createAddress("0x0");
+const iface: ethers.ContractInterface = [];
+
+const cachedContract = new CachedContract(address, iface, provider, true);
+
+// it can also be created from an existing ethers.Contract
+
+const contract = new ethers.Contract(address, iface, provider);
+const cachedContractfromContract = CachedContract.from(contract, true);
+```
+
+#### How to use it
+
+- `CachedContract(addressOrName, contractInterface, signerOrProvider, cacheByBlockTag?)`: Creates a new `CachedContract` instance with address `addressOrName`, interface `contractInterface` and a `ProviderCache` proxy to the provider `provider` with the specified `cacheByBlockTag` option. By default, `cacheByBlockTag` is set to `true`. Throws if `provider` type is not an extension of `ethers.providers.BaseProvider`.
+- `from(contract, cacheByBlockTag?)`: Creates a new `CachedContract` instance from `contract`, an `ethers.Contract` instance by collecting its fields and calling the constructor. A wrapper to `new CachedContract(contract.address, contract.interface, contract.provider, cacheByBlockTag?)`. By default, `cacheByBlockTag` is set to `true`. Throws if `contract` has a signer.
+- `clear()`: A shortcut to `ProviderCache.clear()`. Clears the `ProviderCache` global cache.
