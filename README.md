@@ -149,7 +149,7 @@ This is a helper class for creating `TransactionEvents` using the fluent interfa
 #### How to use it
 
 ```ts
-import { TestTransactionEvent } from "forta-agent-tools/lib/tests";
+import { TestTransactionEvent } from "forta-agent-tools/lib/test";
 
 const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).setTo(address2);
 ```
@@ -180,7 +180,7 @@ This is a helper class for creating `BlockEvents` using the fluent interface pat
 #### How to use it
 
 ```ts
-import { TestBlockEvent } from "forta-agent-tools/lib/tests";
+import { TestBlockEvent } from "forta-agent-tools/lib/test";
 
 const blockEvent: BlockEvent = new TestBlockEvent().setHash(blockHash).setNumber(blockNumber);
 ```
@@ -198,7 +198,7 @@ This is a helper function to simulate the execution of `run block` cli command w
 #### How to use it
 
 ```ts
-import { runBlock } from "forta-agent-tools/lib/tests";
+import { runBlock } from "forta-agent-tools/lib/test";
 
 async myFunction(params) => {
   ...
@@ -222,7 +222,7 @@ import {
   MockEthersProvider, 
   encodeParameter, 
   createAddress,
-} from "forta-agent-tools/lib/tests";
+} from "forta-agent-tools/lib/test";
 import { utils, Contract } from "ethers";
 
 const iface: utils.Interface =  new utils.Interface([
@@ -274,7 +274,7 @@ import {
   MockEthersSigner, 
   encodeParameter, 
   createAddress,
-} from "forta-agent-tools/lib/tests";
+} from "forta-agent-tools/lib/test";
 import { utils, Contract } from "ethers";
 
 const iface: utils.Interface =  new utils.Interface([
