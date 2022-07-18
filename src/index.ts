@@ -1,5 +1,27 @@
-export * as handlers from "./handler";
+import * as handlers from "./handler";
 
-import { createAddress, NetworkManager } from "./utils";
+import {
+  padAddress,
+  createAddress,
+  createChecksumAddress,
+  toChecksumAddress,
+  NetworkManager,
+} from "./utils";
 
-export { createAddress, NetworkManager };
+export {
+  handlers,
+  padAddress,
+  createAddress,
+  createChecksumAddress,
+  toChecksumAddress,
+  NetworkManager,
+};
+
+export default {
+  handlers,
+  padAddress,
+  createAddress,
+  createChecksumAddress,
+  toChecksumAddress,
+  NetworkManager,
+};
