@@ -45,11 +45,24 @@ type GroupTryAllResult<T extends any[][]> = {
   [K in keyof T]: K extends number ? TryAllResult<T[K]> : T[K];
 };
 
+// removes Provider.all() so it can be properly overriden even though the generics don't match
+// also turns properties visibility from private into protected so it's easier do use them
+declare class OmittedProvider {
+  protected _provider: EthersProvider;
+  protected _multicallAddress: string;
+  constructor(provider: EthersProvider, chainId?: number);
+  init(): Promise<void>;
+  getEthBalance(address: string): any;
+}
+
 /**
  * Provider class heavily based on ethers-multicall, but supporting specifying a blockTag for the multicall contract
  * call and `tryAggregate`.
  */
-class MulticallProvider extends Provider {
+class MulticallProvider extends (Provider as unknown as new (
+  provider: EthersProvider,
+  chainId?: number
+) => OmittedProvider) {
   constructor(provider: EthersProvider, chainId?: number) {
     super(provider, chainId);
 
@@ -65,22 +78,6 @@ class MulticallProvider extends Provider {
     };
   }
 
-  private get _provider(): EthersProvider {
-    return super["_provider"];
-  }
-
-  private set _provider(provider: EthersProvider) {
-    super["_provider"] = provider;
-  }
-
-  private get _multicallAddress(): string {
-    return super["_multicallAddress"];
-  }
-
-  private set _multicallAddress(multicallAddress: string) {
-    super["_multicallAddress"] = multicallAddress;
-  }
-
   public async init() {
     const { chainId } = await this._provider.getNetwork();
     this._multicallAddress = multicall2Addresses[chainId];
@@ -91,7 +88,6 @@ class MulticallProvider extends Provider {
    * @returns Tuple of format [success, results]. `success` indicates whether all the calls were successful or at least
    * one of them failed.
    */
-  // @ts-expect-error
   public async all<T extends any[] = ethers.utils.Result[]>(
     calls: ContractCall[],
     blockTag?: number | string,
