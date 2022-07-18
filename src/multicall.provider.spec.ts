@@ -59,7 +59,7 @@ describe("MulticallProvider test suite", () => {
         const results = args[1].map((call) => {
           const res = mockMulticallProvider.call({ data: call.callData, to: call.target }, blockTag);
           if (!res && args[0]) throw Error("Call failed");
-          return { success: res ? true : false, returnData: res ? res : "0x" };
+          return { success: Boolean(res), returnData: res ? res : "0x" };
         });
 
         return MULTICALL_IFACE.encodeFunctionResult("tryAggregate", [results]);
