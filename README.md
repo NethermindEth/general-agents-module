@@ -138,7 +138,26 @@ const agent = provideBlacklistedAddressesHandler(findingGenerator, blacklistedAd
 - `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the key:
   - `addresses`: The list of blacklisted addresses involved in the transaction.
 - `blacklistedAddressesList`: The list of blacklisted addresses.
-  
+
+### - Potential Exploiters Detector Handler
+
+This approach detects transactions when an address funded from Tornado Cash deploys a contract that contains suspicious hex strings. You need to provide the signature of the event, a list of Tornado Cash addresses and a list of suspicious hex strings. 
+
+#### How to use it
+
+```ts
+import { providePotentialExploiterHandler } from "forta-agent-tools";
+const handler = providePotentialExploiterHandler (findingGenerator, tornadoAddressesList, eventSignature, suspiciousHexStrings);
+```
+
+#### Arguments
+
+- `findingGenerator`: The purpose of this argument was explained in the "General Types" section. The function provided as an argument will receive a `metadataVault` with the keys:
+  - `from`: The account calling the transfer.
+  - `contractAddress`: The address of the contract deployed by the tornado funded address.
+- `tornadoAddressesList`: The list of Tornado cash addresses involved in the transaction.
+- `eventSignature`:  The event signature to be detected.
+- `suspiciousHexStrings`: The list of suspicious hex strings to be searched in deployed contract code.
 
 ## Utils
 
