@@ -1,13 +1,11 @@
-import { createAddress, MockEthersProvider } from "./tests";
+import { MockEthersProvider } from "../test";
+import { createAddress } from ".";
 import { MULTICALL2_ABI, MulticallContract, MulticallProvider } from "./multicall.provider";
 import { ContractCall } from "ethers-multicall";
 import { ethers } from "forta-agent";
 
 describe("MulticallProvider test suite", () => {
   const MULTICALL_IFACE = new ethers.utils.Interface(MULTICALL2_ABI);
-
-  const mockEthersProvider: MockEthersProvider = new MockEthersProvider();
-  let mockMulticallProvider: MockEthersProvider;
 
   const TEST_MULTICALL2_ADDRESSES: Record<number, string> = {
     0: createAddress("0xffe"), // networkId and multicall2 address used for tests
@@ -36,8 +34,8 @@ describe("MulticallProvider test suite", () => {
   const TEST_OUTPUTS = TEST_CALLS.map((call) => ethers.BigNumber.from(ethers.utils.formatBytes32String(call.name)));
 
   const addCallTo = (block: number | string, indexes: number[], inputs: any[]) => {
-    for (let index of indexes) {
-      mockMulticallProvider.addCallTo(TEST_ADDR, block, TEST_IFACE, TEST_CALLS[index].name, {
+    for (const index of indexes) {
+      mockEthersProvider.addCallTo(TEST_ADDR, block, TEST_IFACE, TEST_CALLS[index].name, {
         inputs: TEST_CALLS[index].params,
         outputs: [TEST_OUTPUTS[index]],
       });
@@ -47,7 +45,7 @@ describe("MulticallProvider test suite", () => {
   const generateMockProviderCall = () => {
     const _call = mockEthersProvider.call;
 
-    mockEthersProvider.call = jest.fn().mockImplementation(({ data, to, from }, blockTag) => {
+    mockEthersProvider.call = jest.fn().mockImplementation(async ({ data, to, from }, blockTag) => {
       if (to.toLowerCase() === TEST_MULTICALL2_ADDRESSES[0]) {
         const args = MULTICALL_IFACE.decodeFunctionData("tryAggregate", data) as [
           requireSuccess: boolean,
@@ -56,10 +54,22 @@ describe("MulticallProvider test suite", () => {
             target: string;
           }>
         ];
-        const results = args[1].map((call) => {
-          const res = mockMulticallProvider.call({ data: call.callData, to: call.target }, blockTag);
-          if (!res && args[0]) throw Error("Call failed");
-          return { success: Boolean(res), returnData: res ? res : "0x" };
+
+        const outputs = await Promise.all(
+          args[1].map(async (call) => {
+            try {
+              const output = await mockEthersProvider.call({ data: call.callData, to: call.target }, blockTag);
+              return output;
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        const results = outputs.map((output) => {
+          if (!output && args[0]) throw Error("Call failed");
+
+          return { success: output !== null, returnData: output !== null ? output : "0x" };
         });
 
         return MULTICALL_IFACE.encodeFunctionResult("tryAggregate", [results]);
@@ -74,40 +84,67 @@ describe("MulticallProvider test suite", () => {
     // note that sum(destribution) should be equals to calls.length
     const structuredArray = [];
     let i = 0;
-    for (let dest of destribution) {
+    for (const dest of destribution) {
       structuredArray.push(array.slice(i, i + dest));
       i += dest;
     }
     return structuredArray;
   };
+
   const TEST_DESTRIBUTIONS = [[1, 1, 1, 1], [2, 2], [3, 1], [4]];
 
   let multicallProvider: MulticallProvider;
+  let mockEthersProvider: MockEthersProvider;
 
   beforeAll(() => {
-    mockMulticallProvider = new MockEthersProvider();
+    mockEthersProvider = new MockEthersProvider();
+    mockEthersProvider.setNetwork(0);
 
-    // @ts-expect-error (this can be changed to setNetwork in v3)
-    mockEthersProvider.getNetwork = jest.fn().mockReturnValue(Promise.resolve({ chainId: 0 }));
+    generateMockProviderCall();
 
     MulticallProvider.setMulticall2Addresses(TEST_MULTICALL2_ADDRESSES);
     multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider, 0);
-
-    generateMockProviderCall();
   });
 
   beforeEach(() => {
-    mockMulticallProvider.clear();
     mockEthersProvider.clear();
+    mockEthersProvider.setNetwork(0);
+  });
+
+  describe("constructor", () => {
+    it("should get the correct Multicall2 address when specifying the chain ID", async () => {
+      const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider, 0);
+
+      expect(multicallProvider["_multicallAddress"]).toBe(TEST_MULTICALL2_ADDRESSES[0]);
+    });
+
+    it("should throw an error if there's no known Multicall2 address for a chain ID", async () => {
+      expect(() => {
+        new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider, 500);
+      }).toThrowError(
+        "Unsupported chain ID: 500. Please set a Multicall2 address for it through MulticallProvider.setMulticall2Addresses()"
+      );
+    });
   });
 
   describe("init", () => {
-    it("should get the correct address when calling init", async () => {
+    it("should get the correct Multicall2 address when calling init", async () => {
       const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider);
 
       await multicallProvider.init();
 
       expect(multicallProvider["_multicallAddress"]).toBe(TEST_MULTICALL2_ADDRESSES[0]);
+    });
+
+    it("should throw an error if there's no known Multicall2 address for a chain ID", async () => {
+      const multicallProvider = new MulticallProvider(mockEthersProvider as unknown as ethers.providers.Provider);
+      mockEthersProvider.setNetwork(500);
+
+      await expect(multicallProvider.init()).rejects.toEqual(
+        new Error(
+          "Unsupported chain ID: 500. Please set a Multicall2 address for it through MulticallProvider.setMulticall2Addresses()"
+        )
+      );
     });
   });
 
@@ -131,7 +168,7 @@ describe("MulticallProvider test suite", () => {
   describe("tryAll", () => {
     it("should return expected results when all calls fail", async () => {
       const response = await multicallProvider.tryAll(TEST_CALLS, TEST_BLOCKS[1]);
-      expect(response).toStrictEqual(TEST_CALLS.map(() => Object({ success: false, returnData: [] })));
+      expect(response).toStrictEqual(TEST_CALLS.map(() => ({ success: false, returnData: [] })));
     });
 
     it("should return expected results when all calls succeed", async () => {
@@ -161,7 +198,7 @@ describe("MulticallProvider test suite", () => {
 
   describe("groupAll", () => {
     it("should preserve the inputs structure when all calls succeed", async () => {
-      for (let dest of TEST_DESTRIBUTIONS) {
+      for (const dest of TEST_DESTRIBUTIONS) {
         const groupCalls = generateStructuredArray(TEST_CALLS, dest);
         addCallTo(TEST_BLOCKS[0], [0, 1, 2, 3], []);
 
@@ -171,7 +208,7 @@ describe("MulticallProvider test suite", () => {
     });
 
     it("should return expected results when one of calls fail", async () => {
-      for (let dest of TEST_DESTRIBUTIONS) {
+      for (const dest of TEST_DESTRIBUTIONS) {
         const groupCalls = generateStructuredArray(TEST_CALLS, dest);
         addCallTo(TEST_BLOCKS[0], [0, 1, 2], []);
 
@@ -183,14 +220,14 @@ describe("MulticallProvider test suite", () => {
 
   describe("groupTryAll", () => {
     it("should preserve the inputs structure when all calls succeed", async () => {
-      for (let dest of TEST_DESTRIBUTIONS) {
+      for (const dest of TEST_DESTRIBUTIONS) {
         const groupCalls = generateStructuredArray(TEST_CALLS, dest);
         addCallTo(TEST_BLOCKS[0], [0, 1, 2, 3], []);
 
         const response = await multicallProvider.groupTryAll(groupCalls, TEST_BLOCKS[0]);
         expect(response).toStrictEqual(
           generateStructuredArray(
-            TEST_OUTPUTS.map((output) => Object({ success: true, returnData: output })),
+            TEST_OUTPUTS.map((output) => ({ success: true, returnData: output })),
             dest
           )
         );
@@ -198,13 +235,13 @@ describe("MulticallProvider test suite", () => {
     });
 
     it("should return expected results when all calls fail", async () => {
-      for (let dest of TEST_DESTRIBUTIONS) {
+      for (const dest of TEST_DESTRIBUTIONS) {
         const groupCalls = generateStructuredArray(TEST_CALLS, dest);
 
         const response = await multicallProvider.groupTryAll(groupCalls, TEST_BLOCKS[0]);
         expect(response).toStrictEqual(
           generateStructuredArray(
-            TEST_CALLS.map(() => Object({ success: false, returnData: [] })),
+            TEST_CALLS.map(() => ({ success: false, returnData: [] })),
             dest
           )
         );
@@ -212,7 +249,7 @@ describe("MulticallProvider test suite", () => {
     });
 
     it("should preserve the inputs structure when some of calls fail", async () => {
-      for (let dest of TEST_DESTRIBUTIONS) {
+      for (const dest of TEST_DESTRIBUTIONS) {
         const groupCalls = generateStructuredArray(TEST_CALLS, dest);
 
         addCallTo(TEST_BLOCKS[0], [0, 3], []);

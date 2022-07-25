@@ -1,35 +1,44 @@
 import { Interface } from "@ethersproject/abi";
-import { toChecksumAddress } from "ethereumjs-util";
 import { when, resetAllWhenMocks } from "jest-when";
 import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider";
 import { ethers } from "forta-agent";
+import MockEthersSigner from "./mock_ethers_signer";
+import { createAddress, toChecksumAddress } from "../utils";
 
-export interface CallParams {
+interface CallParams {
   inputs: any[];
   outputs: any[];
 }
 
-export class MockEthersProvider {
+export default class MockEthersProvider {
   public call: any;
   public getLogs: any;
   public getBlock: any;
   public getSigner: any;
   public getStorageAt: any;
   public getBlockNumber: any;
+  public getNetwork: any;
   public readonly _isProvider: boolean;
 
   private logs: Array<ethers.providers.Log>;
 
   constructor() {
     this._isProvider = true;
-    this.call = jest.fn();
+    this.call = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("call"));
     this.getLogs = jest.fn().mockImplementation(this._getLogs.bind(this));
-    this.getBlock = jest.fn();
-    this.getSigner = jest.fn();
-    this.getStorageAt = jest.fn();
-    this.getBlockNumber = jest.fn();
+    this.getBlock = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getBlock"));
+    this.getSigner = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getSigner"));
+    this.getStorageAt = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getStorageAt"));
+    this.getBlockNumber = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getBlockNumber"));
+    this.getNetwork = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getNetwork"));
 
     this.logs = [];
+  }
+
+  private unconfiguredAsyncMockImplementation(method: string): () => Promise<never> {
+    return async () => {
+      throw new Error(`${method} was not configured for this input`);
+    };
   }
 
   public addCallTo(
@@ -47,7 +56,7 @@ export class MockEthersProvider {
         },
         block
       )
-      .mockReturnValue(iface.encodeFunctionResult(id, params.outputs));
+      .mockReturnValue(Promise.resolve(iface.encodeFunctionResult(id, params.outputs)));
     return this;
   }
 
@@ -68,22 +77,22 @@ export class MockEthersProvider {
         },
         block
       )
-      .mockReturnValue(iface.encodeFunctionResult(id, params.outputs));
+      .mockReturnValue(Promise.resolve(iface.encodeFunctionResult(id, params.outputs)));
     return this;
   }
 
   public addStorage(contract: string, slot: number, block: number, result: string): MockEthersProvider {
-    when(this.getStorageAt).calledWith(contract, slot, block).mockReturnValue(result);
+    when(this.getStorageAt).calledWith(contract, slot, block).mockReturnValue(Promise.resolve(result));
     return this;
   }
 
   public addBlock(blockNumber: number, block: any): MockEthersProvider {
-    when(this.getBlock).calledWith(blockNumber).mockReturnValue(block);
+    when(this.getBlock).calledWith(blockNumber).mockReturnValue(Promise.resolve(block));
     return this;
   }
 
   public setLatestBlock(block: number): MockEthersProvider {
-    when(this.getBlockNumber).calledWith().mockReturnValue(block);
+    when(this.getBlockNumber).calledWith().mockReturnValue(Promise.resolve(block));
     return this;
   }
 
@@ -97,7 +106,7 @@ export class MockEthersProvider {
     return this;
   }
 
-  private _getLogs(filter: Filter | FilterByBlockHash): Log[] {
+  private async _getLogs(filter: Filter | FilterByBlockHash): Promise<Log[]> {
     let logs = this.logs;
 
     if (filter.address) {
@@ -147,107 +156,13 @@ export class MockEthersProvider {
     return logs;
   }
 
-  /**
-   * @deprecated This method was deprecated. Please use {@link MockEthersProvider.addLogs} instead.
-   */
-  public addFilteredLogs(filter: Filter | FilterByBlockHash, logs: Log[]): MockEthersProvider {
-    when(this.getLogs).calledWith(filter).mockReturnValue(logs);
-    return this;
+  public setNetwork(chainId: number, ensAddress: string = createAddress("0x0"), name: string = "") {
+    when(this.getNetwork).calledWith().mockReturnValue({ chainId, ensAddress, name });
   }
 
   public clear(): void {
     resetAllWhenMocks();
 
     this.logs = [];
-  }
-}
-
-export class MockEthersSigner {
-  public readonly _isSigner: boolean;
-  public readonly provider: MockEthersProvider;
-  public getAddress: any;
-  public sendTransaction: any;
-
-  constructor(provider: MockEthersProvider) {
-    this._isSigner = true;
-    this.provider = provider;
-    this.getAddress = jest.fn();
-    this.sendTransaction = jest.fn();
-  }
-
-  // Provider functions ------------------------
-  // All this calls are redirected to the provider
-  public call(txData: any, block: number | string): any {
-    return this.provider.call(txData, block);
-  }
-
-  public getBlock(num: number): any {
-    return this.provider.getBlock(num);
-  }
-
-  public getSigner(signer: string): any {
-    this.provider.getSigner(signer);
-  }
-
-  public getStorageAt(contract: string, slot: number, block: number): any {
-    this.provider.getStorageAt(contract, slot, block);
-  }
-
-  public getBlockNumber(): any {
-    this.provider.getBlockNumber();
-  }
-  // -------------------------------------------
-
-  public setAddress(addr: string): MockEthersSigner {
-    when(this.getAddress).calledWith().mockReturnValue(addr);
-    return this;
-  }
-
-  public allowTransaction(
-    from: string,
-    to: string,
-    iface: Interface,
-    id: string,
-    values: any[],
-    receipt: any
-  ): MockEthersSigner {
-    when(this.sendTransaction)
-      .calledWith({
-        from,
-        to: toChecksumAddress(to),
-        data: iface.encodeFunctionData(id, values),
-      })
-      .mockReturnValue({
-        async wait() {
-          return {
-            logs: [], // can't be undefined
-            ...receipt,
-          };
-        },
-      });
-    return this;
-  }
-
-  public denyTransaction(
-    from: string,
-    to: string,
-    iface: Interface,
-    id: string,
-    values: any[],
-    message?: any
-  ): MockEthersSigner {
-    when(this.sendTransaction)
-      .calledWith({
-        from,
-        to: toChecksumAddress(to),
-        data: iface.encodeFunctionData(id, values),
-      })
-      //@ts-ignore
-      .mockRejectedValue(message);
-    return this;
-  }
-
-  public clear() {
-    resetAllWhenMocks();
   }
 }
