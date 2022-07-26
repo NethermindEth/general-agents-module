@@ -406,6 +406,26 @@ There are multiple methods you can use for creating the exact `BlockEvent` you w
 - `addTransactions(txns)` This method adds the hashes of a spread list of transaction events at the end of `block.transactions` field in the event.
 - `addTransactionsHashes(hashes)` This method adds a hashes spread list to the end of `block.transactions` field in the event.
 
+###  runBlock
+
+This is a helper function to simulate the execution of `run block` cli command when the agent has implemented a `handleTransaction` and a `handleBlock`.
+
+#### How to use it
+
+```ts
+import { runBlock } from "forta-agent-tools/lib/tests";
+
+async myFunction(params) => {
+  ...
+  const findings: Findings[] = await runBlock(agent, block, tx1, tx2, tx3, ..., txN);
+  ...
+};
+```
+Parameters description:
+- `agent`: It is a JS object with two properties, `handleTransaction` and `handleBlock`.
+- `block`: It is the `BlockEvent` that the agent will handle.
+- `tx#`: These are the `TransactionEvent` objects asociated with the `BlockEvent` that the agent will handle.
+
 ### MockEthersProvider
 
 This is a helper class for mocking the `ethers.providers.Provider` class.
