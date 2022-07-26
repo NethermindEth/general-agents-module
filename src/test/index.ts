@@ -13,16 +13,16 @@ import {
   TransactionEvent,
 } from "forta-agent";
 
-export interface Agent {
+export interface Bot {
   handleTransaction: HandleTransaction;
   handleBlock: HandleBlock;
 }
 
-export const runBlock = async (agent: Agent, block: BlockEvent, ...txns: TransactionEvent[]): Promise<Finding[]> => {
+export const runBlock = async (bot: Bot, block: BlockEvent, ...txns: TransactionEvent[]): Promise<Finding[]> => {
   let findings: Finding[] = [];
 
-  findings.push(...(await agent.handleBlock(block)));
-  for (let tx of txns) findings.push(...(await agent.handleTransaction(tx)));
+  findings.push(...(await bot.handleBlock(block)));
+  for (let tx of txns) findings.push(...(await bot.handleTransaction(tx)));
 
   return findings;
 };

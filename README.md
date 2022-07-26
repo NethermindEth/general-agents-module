@@ -417,12 +417,12 @@ import { runBlock } from "forta-agent-tools/lib/test";
 
 async myFunction(params) => {
   ...
-  const findings: Findings[] = await runBlock(agent, block, tx1, tx2, tx3, ..., txN);
+  const findings: Findings[] = await runBlock(bot, block, tx1, tx2, tx3, ..., txN);
   ...
 };
 ```
 Parameters description:
-- `agent`: It is a JS object with two properties, `handleTransaction` and `handleBlock`.
+- `bot`: It is a JS object with two properties, `handleTransaction` and `handleBlock`.
 - `block`: It is the `BlockEvent` that the bot will handle.
 - `tx#`: These are the `TransactionEvent` objects asociated with the `BlockEvent` that the bot will handle.
 
