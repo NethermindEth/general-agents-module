@@ -2,7 +2,6 @@ import { Contract } from "@ethersproject/contracts";
 import { Abi } from "ethers-multicall/dist/abi";
 import { Contract as MulticallContract, ContractCall, Provider } from "ethers-multicall";
 import { Provider as EthersProvider } from "@ethersproject/providers";
-import { ethers } from "forta-agent";
 
 export const MULTICALL2_ABI = [
   "function tryAggregate(bool, tuple(address target, bytes callData)[] memory) public returns (tuple(bool success, bytes returnData)[] memory)",
@@ -28,15 +27,15 @@ let multicall2Addresses: Record<number, string> = {
 
 const DEFAULT_BATCH_SIZE = 50;
 
-// return types considering T is a tuple
+type IndexOf<T extends any[]> = Exclude<keyof T, keyof any[]>;
 
+// return types considering T could be a tuple
 type AllResult<T extends any[]> = [success: true, returns: T] | [success: false, returns: never[]];
 
 type TryAllResult<T extends any[]> = {
-  [K in keyof T]: K extends number
-    ? { success: true; returnData: T[K] } | { success: false; returnData: never[] }
-    : T[K];
-};
+  [K in IndexOf<T>]: { success: true; returnData: T[K] } | { success: false; returnData: never[] };
+} &
+  { [K in keyof any[]]: T[K] };
 
 type GroupAllResult<T extends any[][]> =
   | [
@@ -47,9 +46,7 @@ type GroupAllResult<T extends any[][]> =
     ]
   | [success: false, returns: never[][]];
 
-type GroupTryAllResult<T extends any[][]> = {
-  [K in keyof T]: K extends number ? TryAllResult<T[K]> : T[K];
-};
+type GroupTryAllResult<T extends any[][]> = { [K in IndexOf<T>]: TryAllResult<T> } & { [K in keyof any[][]]: T[K] };
 
 // removes Provider.all() so it can be properly overriden even though the generics don't match
 // also turns properties visibility from private into protected so it's easier do use them
@@ -92,7 +89,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
    * @returns Tuple of format [success, results]. `success` indicates whether all the calls were successful or at least
    * one of them failed.
    */
-  public async all<T extends any[] = ethers.utils.Result[]>(
+  public async all<T extends any[] = any[]>(
     calls: ContractCall[],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
@@ -106,7 +103,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
   /**
    * Does not require success of calls, returns the success status and result of each call.
    */
-  public async tryAll<T extends any[] = ethers.utils.Result[]>(
+  public async tryAll<T extends any[] = any[]>(
     calls: ContractCall[],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
@@ -120,7 +117,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
   /**
    * Similar to `all` but supports a group of calls as an input. Preserves the inputs calls structure.
    */
-  public async groupAll<T extends any[][] = ethers.utils.Result[][]>(
+  public async groupAll<T extends any[][] = any[][]>(
     callGroups: ContractCall[][],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
@@ -138,7 +135,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
   /**
    * Similar to `tryAll` but supports a group of calls as an input. Preserves the inputs calls structure.
    */
-  public async groupTryAll<T extends any[][] = ethers.utils.Result[][]>(
+  public async groupTryAll<T extends any[][] = any[][]>(
     callGroups: ContractCall[][],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
@@ -151,7 +148,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
     }) as GroupTryAllResult<T>;
   }
 
-  private async _tryAll<T extends any[] = ethers.utils.Result[]>(
+  private async _tryAll<T extends any[] = any[]>(
     calls: ContractCall[],
     multicallAddress: string,
     provider: EthersProvider,
@@ -184,7 +181,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
     }) as TryAllResult<T>;
   }
 
-  private async _all<T extends any[] = ethers.utils.Result[]>(
+  private async _all<T extends any[] = any[]>(
     calls: ContractCall[],
     multicallAddress: string,
     provider: EthersProvider,
