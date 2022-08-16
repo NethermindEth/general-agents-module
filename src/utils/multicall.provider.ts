@@ -27,15 +27,18 @@ let multicall2Addresses: Record<number, string> = {
 
 const DEFAULT_BATCH_SIZE = 50;
 
-type IndexOf<T extends any[]> = Exclude<keyof T, keyof any[]>;
-
 // return types considering T could be a tuple
 type AllResult<T extends any[]> = [success: true, returns: T] | [success: false, returns: never[]];
 
-type TryAllResult<T extends any[]> = {
-  [K in IndexOf<T>]: { success: true; returnData: T[K] } | { success: false; returnData: never[] };
-} &
-  { [K in keyof any[]]: T[K] };
+type TryAllResult<T extends any[]> = number extends T["length"]
+  ? {
+      [K in keyof T]: K extends number
+        ? { success: true; returnData: T[K] } | { success: false; returnData: never[] }
+        : T[K];
+    }
+  : {
+      [K in keyof T]: { success: true; returnData: T[K] } | { success: false; returnData: never[] };
+    };
 
 type GroupAllResult<T extends any[][]> =
   | [
@@ -46,7 +49,9 @@ type GroupAllResult<T extends any[][]> =
     ]
   | [success: false, returns: never[][]];
 
-type GroupTryAllResult<T extends any[][]> = { [K in IndexOf<T>]: TryAllResult<T> } & { [K in keyof any[][]]: T[K] };
+type GroupTryAllResult<T extends any[][]> = {
+  [K in keyof T]: TryAllResult<T[K]>;
+};
 
 // removes Provider.all() so it can be properly overriden even though the generics don't match
 // also turns properties visibility from private into protected so it's easier do use them
