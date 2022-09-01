@@ -13,7 +13,8 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
-    "lint-fix": "tslint -p tsconfig.json --fix"
+    "lint-fix": "tslint -p tsconfig.json --fix",
+    "prepare": "tsc"
   },
   "keywords": [],
   "author": "Nethermind",
