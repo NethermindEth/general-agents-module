@@ -68,7 +68,7 @@ class Erc20Transfers extends Handler<Erc20Transfers.Options, Erc20Transfers.Meta
         .filterLog(EVENT_SIGNATURE)
         .filter(this.filter)
         .map((log) => ({
-          emitter: log.args.emitter,
+          emitter: log.args.emitter || log.address,
           from: log.args.from,
           to: log.args.to,
           amount: log.args.amount,
