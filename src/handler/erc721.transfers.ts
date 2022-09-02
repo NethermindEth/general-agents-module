@@ -72,7 +72,7 @@ class Erc721Transfers extends Handler<Erc721Transfers.Options, Erc721Transfers.M
     };
   }
 
-  public async metadata(event: TransactionEvent | BlockEvent): Promise<Erc20Transfers.Metadata[] | null> {
+  public async metadata(event: TransactionEvent | BlockEvent): Promise<Erc721Transfers.Metadata[] | null> {
     if (event instanceof BlockEvent) {
       return null;
     } else {
