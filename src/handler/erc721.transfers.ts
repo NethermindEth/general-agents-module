@@ -8,8 +8,7 @@ namespace Erc721Transfers {
     emitter?: string;
     from?: string;
     to?: string;
-    tokenId?: ethers.BigNumberish | ((amount: ethers.BigNumber) => boolean);
-    amountThreshold?: ethers.BigNumberish | ((amount: ethers.BigNumber) => boolean);
+    tokenId?: ethers.BigNumberish | ((tokenId: ethers.BigNumber) => boolean);
   }
 
   export interface Metadata {
@@ -17,7 +16,6 @@ namespace Erc721Transfers {
     from: string;
     to: string;
     tokenId: ethers.BigNumber;
-    amount: ethers.BigNumber;
   }
 }
 
@@ -58,16 +56,6 @@ class Erc721Transfers extends Handler<Erc721Transfers.Options, Erc721Transfers.M
         }
       }
 
-      if (this.options.amountThreshold !== undefined) {
-        if (typeof this.options.amountThreshold === "function" && !this.options.amountThreshold(log.args.amount)) {
-          return false;
-        }
-
-        if (typeof this.options.amountThreshold !== "function" && log.args.amount.lt(this.options.amountThreshold)) {
-          return false;
-        }
-      }
-
       return true;
     };
   }
@@ -84,7 +72,6 @@ class Erc721Transfers extends Handler<Erc721Transfers.Options, Erc721Transfers.M
           from: log.args.from,
           to: log.args.to,
           tokenId: log.args.tokenId,
-          amount: log.args.amount,
         })) as Erc721Transfers.Metadata[];
     }
   }
