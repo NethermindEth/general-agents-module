@@ -223,6 +223,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
     const subArrays = [];
 
     for (let i = 0; i < calls.length; i += batchSize) {
+      // @ts-ignore
       subArrays.push(calls.slice(i, i + batchSize));
     }
 
