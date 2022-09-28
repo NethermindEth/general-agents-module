@@ -85,6 +85,7 @@ describe("MulticallProvider test suite", () => {
     const structuredArray = [];
     let i = 0;
     for (const dest of destribution) {
+      // @ts-ignore
       structuredArray.push(array.slice(i, i + dest));
       i += dest;
     }
