@@ -456,8 +456,8 @@ const mockProvider: MockEthersProvider = new MockEthersProvider()
 
 This mock provides some methods to set up the values that the provider should return:
 - `addCallTo(contract, block, iface, id, { inputs, outputs })`. This method prepares a call to the `contract` address
-  at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier 
-  of the function to call, `inputs` are the parameters passed in the call and `outputs` are the values the call 
+  at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier
+  of the function to call, `inputs` are the parameters passed in the call and `outputs` are the values the call
   should return.
 - `addCallFrom(contract, from, block, iface, id, { inputs, outputs })`. Similar to `addCallTo` but only the `from` will be able to call
   the function.
