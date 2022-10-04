@@ -692,5 +692,5 @@ doesn't require their success, returning a flag for each of them that indicates 
 By default, `batchSize` is `50`.
 - `groupAll(calls, blockTag?, batchSize?)`: Works in the same way as `all()`, but allows specifying groups of calls
 (e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
-- `groupAll(calls, blockTag?, batchSize?)`: Works in the same way as `tryAll()`, but allows specifying groups of calls
+- `groupTryAll(calls, blockTag?, batchSize?)`: Works in the same way as `tryAll()`, but allows specifying groups of calls
 (e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
