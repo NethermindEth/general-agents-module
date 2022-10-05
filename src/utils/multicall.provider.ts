@@ -2,7 +2,6 @@ import { Contract } from "@ethersproject/contracts";
 import { Abi } from "ethers-multicall/dist/abi";
 import { Contract as MulticallContract, ContractCall, Provider } from "ethers-multicall";
 import { Provider as EthersProvider } from "@ethersproject/providers";
-import { ethers } from "forta-agent";
 
 export const MULTICALL2_ABI = [
   "function tryAggregate(bool, tuple(address target, bytes callData)[] memory) public returns (tuple(bool success, bytes returnData)[] memory)",
@@ -28,23 +27,30 @@ let multicall2Addresses: Record<number, string> = {
 
 const DEFAULT_BATCH_SIZE = 50;
 
-// return types considering T is a tuple
+// return types considering T could be a tuple
+type AllResult<T extends any[]> = [success: true, returns: T] | [success: false, returns: never[]];
 
-type AllResult<T> = [success: boolean, returns: T];
+type TryAllResult<T extends any[]> = number extends T["length"]
+  ? {
+      [K in keyof T]: K extends number
+        ? { success: true; returnData: T[K] } | { success: false; returnData: never[] }
+        : T[K];
+    }
+  : {
+      [K in keyof T]: { success: true; returnData: T[K] } | { success: false; returnData: never[] };
+    };
 
-type TryAllResult<T extends any[]> = {
-  [K in keyof T]: K extends number ? { success: boolean; returnData: T[K] } : T[K];
-};
-
-type GroupAllResult<T extends any[][]> = [
-  success: boolean,
-  returns: {
-    [K in keyof T]: T[K];
-  }
-];
+type GroupAllResult<T extends any[][]> =
+  | [
+      success: true,
+      returns: {
+        [K in keyof T]: T[K];
+      }
+    ]
+  | [success: false, returns: never[][]];
 
 type GroupTryAllResult<T extends any[][]> = {
-  [K in keyof T]: K extends number ? TryAllResult<T[K]> : T[K];
+  [K in keyof T]: TryAllResult<T[K]>;
 };
 
 // removes Provider.all() so it can be properly overriden even though the generics don't match
@@ -88,7 +94,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
    * @returns Tuple of format [success, results]. `success` indicates whether all the calls were successful or at least
    * one of them failed.
    */
-  public async all<T extends any[] = ethers.utils.Result[]>(
+  public async all<T extends any[] = any[]>(
     calls: ContractCall[],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
@@ -102,7 +108,7 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
   /**
    * Does not require success of calls, returns the success status and result of each call.
    */
-  public async tryAll<T extends any[] = ethers.utils.Result[]>(
+  public async tryAll<T extends any[] = any[]>(
     calls: ContractCall[],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
@@ -116,39 +122,38 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
   /**
    * Similar to `all` but supports a group of calls as an input. Preserves the inputs calls structure.
    */
-  public async groupAll<T extends any[][] = ethers.utils.Result[][]>(
+  public async groupAll<T extends any[][] = any[][]>(
     callGroups: ContractCall[][],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
   ): Promise<GroupAllResult<T>> {
-    const flatResults = await this.all<T>(callGroups.flat(), blockTag, batchSize);
-    const success = flatResults[0];
+    const [success, flatResults] = await this.all(callGroups.flat(), blockTag, batchSize);
 
     let i = 0;
     const resultsData = callGroups.map((group) => {
-      return flatResults[1].slice(i, (i += group.length));
+      return flatResults.slice(i, (i += group.length));
     });
 
-    return [success, success ? resultsData : []] as unknown as GroupAllResult<T>;
+    return [success, success ? resultsData : []] as GroupAllResult<T>;
   }
 
   /**
    * Similar to `tryAll` but supports a group of calls as an input. Preserves the inputs calls structure.
    */
-  public async groupTryAll<T extends any[][] = ethers.utils.Result[][]>(
+  public async groupTryAll<T extends any[][] = any[][]>(
     callGroups: ContractCall[][],
     blockTag?: number | string,
     batchSize: number = DEFAULT_BATCH_SIZE
   ): Promise<GroupTryAllResult<T>> {
-    const flatResults = await this.tryAll<T>(callGroups.flat(), blockTag, batchSize);
+    const flatResults = await this.tryAll(callGroups.flat(), blockTag, batchSize);
 
     let i = 0;
     return callGroups.map((group) => {
       return flatResults.slice(i, (i += group.length));
-    }) as unknown as GroupTryAllResult<T>;
+    }) as GroupTryAllResult<T>;
   }
 
-  private async _tryAll<T extends any[] = ethers.utils.Result[]>(
+  private async _tryAll<T extends any[] = any[]>(
     calls: ContractCall[],
     multicallAddress: string,
     provider: EthersProvider,
@@ -174,14 +179,14 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
 
       if (result.success) {
         const params = Abi.decode(call.outputs, result.returnData);
-        return { success: result.success, returnData: call.outputs.length === 1 ? params[0] : params };
+        return { success: true, returnData: call.outputs.length === 1 ? params[0] : params };
       } else {
-        return { success: result.success, returnData: [] as any };
+        return { success: false, returnData: [] };
       }
-    }) as unknown as TryAllResult<T>;
+    }) as TryAllResult<T>;
   }
 
-  private async _all<T extends any[] = ethers.utils.Result[]>(
+  private async _all<T extends any[] = any[]>(
     calls: ContractCall[],
     multicallAddress: string,
     provider: EthersProvider,
@@ -198,22 +203,23 @@ class MulticallProvider extends (Provider as unknown as new (provider: EthersPro
     // split requests into batches of size `batchSize`
     const batches = this.batchArray(requests, batchSize);
 
+    let results;
     try {
-      const results = (
+      results = (
         await Promise.all(batches.map((batch) => multicall2.callStatic.tryAggregate(true, batch, { blockTag })))
       ).flat() as Array<{ success: boolean; returnData: string }>;
-
-      const decodedResults = results.map((result, idx) => {
-        const call = calls[idx];
-        const params = Abi.decode(call.outputs, result.returnData);
-
-        return { success: result.success, returnData: call.outputs.length === 1 ? params[0] : params };
-      });
-
-      return [true, decodedResults.map((result) => result.returnData) as T] as AllResult<T>;
     } catch (e) {
-      return [false, [] as unknown as T] as AllResult<T>;
+      return [false, []];
     }
+
+    const decodedReturnData = results.map((result, idx) => {
+      const call = calls[idx];
+      const params = Abi.decode(call.outputs, result.returnData);
+
+      return call.outputs.length === 1 ? params[0] : params;
+    });
+
+    return [true, decodedReturnData] as AllResult<T>;
   }
 
   /**
