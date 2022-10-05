@@ -384,8 +384,8 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `addAnonymousEventLog(address, data, topics)` This method adds a log to the `receipt.logs` field. `address` argument is the zero address by default, `topics` is a spread list with the indexed event arguments, and `data` is the empty string by default.
 - `addInterfaceEventLog(event, address, inputs)` This method adds a log to the `receipt.logs` field. `event` is an `ethers.utils.EventFragment` instance, `address` argument is the zero address by default, `inputs` argument is an array of event parameter values and is an empty array by default.
 - `addInvolvedAddresses(addresses)` This method adds a spread list of addresses to `addresses` field.
-- `addTrace(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
-  > `TraceProps` is a TS object with the following optional fields `{ to, from, input, output }`.
+- `addTraces(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
+  > `TraceProps` is a TS object with the following optional fields `{ function, to, from, arguments, output, value, traceAddress }`.
 
 ### TestBlockEvent
 
@@ -456,8 +456,8 @@ const mockProvider: MockEthersProvider = new MockEthersProvider()
 
 This mock provides some methods to set up the values that the provider should return:
 - `addCallTo(contract, block, iface, id, { inputs, outputs })`. This method prepares a call to the `contract` address
-  at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier 
-  of the function to call, `inputs` are the parameters passed in the call and `outputs` are the values the call 
+  at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier
+  of the function to call, `inputs` are the parameters passed in the call and `outputs` are the values the call
   should return.
 - `addCallFrom(contract, from, block, iface, id, { inputs, outputs })`. Similar to `addCallTo` but only the `from` will be able to call
   the function.

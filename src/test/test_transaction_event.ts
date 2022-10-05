@@ -8,6 +8,7 @@ interface TraceProps {
   arguments?: any[];
   output?: any[];
   value?: string;
+  traceAddress?: number[];
 }
 
 export class TestTransactionEvent extends TransactionEvent {
@@ -114,6 +115,7 @@ export class TestTransactionEvent extends TransactionEvent {
             from: props.from?.toLowerCase(),
             value: props.value,
           },
+          traceAddress: props.traceAddress,
         } as Trace;
       }
 
@@ -129,6 +131,7 @@ export class TestTransactionEvent extends TransactionEvent {
         result: {
           output: iface.encodeFunctionResult(functionFragment, props.output),
         },
+        traceAddress: props.traceAddress,
       } as Trace;
     };
 
