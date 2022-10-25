@@ -13,6 +13,7 @@ let multicall2Addresses: Record<number, string> = {
   3: "0x5ba1e12693dc8f9c48aad8770482f4739beed696", // Ropsten
   4: "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696", // Rinkeby
   5: "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696", // Görli
+  10: "0x2DC0E2aa608532Da689e89e237dF582B783E552C", // Optimism
   42: "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696", // Kovan
   56: "0x012Cd050ACF174E41872Fd20B696ebaBdA117e9D", // Binance Smart Chain
   97: "0xf08eD5944312c1a0A364e1655D2738765111e61B", // Binance Smart Chain Testnet
