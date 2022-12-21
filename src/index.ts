@@ -10,6 +10,7 @@ import {
   CachedContract,
   MulticallProvider,
   MulticallContract,
+  VictimIdentifier,
 } from "./utils";
 
 export {
@@ -23,6 +24,7 @@ export {
   CachedContract,
   MulticallProvider,
   MulticallContract,
+  VictimIdentifier,
 };
 
 export default {
@@ -36,4 +38,5 @@ export default {
   CachedContract,
   MulticallProvider,
   MulticallContract,
+  VictimIdentifier,
 };
