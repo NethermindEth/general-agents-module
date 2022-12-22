@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import { etherscanApis, LUABASE_API_KEY, MORALIS_API_KEY } from "./config";
 import { getWebsiteAndTwitter } from "./urlAndTwitter";
 
@@ -40,7 +41,7 @@ export const fetchLuabaseDb = async (address: string, chain: string): Promise<st
   };
   let response;
   try {
-    response = await (await fetch("https://q.luabase.com/run", options)).json();
+    response = (await (await fetch("https://q.luabase.com/run", options)).json()) as any;
     return response.data[0].tag;
   } catch {
     return "";
@@ -145,7 +146,9 @@ export const getUniswapPrice = async (chainId: number, token: string) => {
     params: { chain: getMoralisChainByChainId(chainId) },
     headers: { accept: "application/json", "X-API-Key": MORALIS_API_KEY },
   };
-  const response = await (await fetch(`https://deep-index.moralis.io/api/v2/erc20/${token}/price`, options)).json();
+  const response = (await (
+    await fetch(`https://deep-index.moralis.io/api/v2/erc20/${token}/price`, options)
+  ).json()) as any;
   return response.usdPrice;
 };
 
@@ -155,7 +158,7 @@ export const getContractCreator = async (address: string, chainId: number) => {
 
   let result;
   try {
-    result = await (await fetch(url)).json();
+    result = (await (await fetch(url)).json()) as any;
     if (result.message.startsWith("NOTOK")) {
       console.log(`block explorer error occured; skipping check for ${address}`);
       return "";
@@ -171,7 +174,7 @@ export const getContractName = async (address: string, chainId: number) => {
   const url = `${urlContractName}&address=${address}&apikey=${key}`;
   let result;
   try {
-    result = await (await fetch(url)).json();
+    result = (await (await fetch(url)).json()) as any;
     if (result.message.startsWith("NOTOK")) {
       console.log(`block explorer error occured; skipping check for ${address}`);
       return "Not Found";

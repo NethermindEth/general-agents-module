@@ -13,6 +13,7 @@ import {
   getUniswapPrice,
   uniswapV3Query,
 } from "./helper";
+import fetch from "node-fetch";
 
 export default class TokenInfoFetcher {
   provider: providers.Provider;
@@ -129,7 +130,7 @@ export default class TokenInfoFetcher {
         let retries = 3;
         while (retries > 0) {
           try {
-            response = await (await fetch(getNativeTokenPrice(chain))).json();
+            response = (await (await fetch(getNativeTokenPrice(chain))).json()) as any;
             break;
           } catch {
             retries--;
@@ -145,7 +146,7 @@ export default class TokenInfoFetcher {
       } else {
         const chain = getChainByChainId(chainId);
         try {
-          response = await (await fetch(getTokenPriceUrl(chain, token))).json();
+          response = (await (await fetch(getTokenPriceUrl(chain, token))).json()) as any;
           if (response && response[token]) {
             usdPrice = response[token].usd;
           } else {
@@ -183,18 +184,18 @@ export default class TokenInfoFetcher {
       let response;
       if (tag.startsWith("Uniswap V3")) {
         try {
-          response = await (
+          response = (await (
             await fetch(SUBGRAPH_URL, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ query: uniswapV3Query(tokenOrPool) }),
             })
-          ).json();
+          ).json()) as any;
           response.data.positions.forEach((position: { owner: string }) => holders.push(position.owner));
         } catch {}
       } else {
         try {
-          response = await (await fetch(getTopTokenHoldersUrl(tokenOrPool, ETHPLORER_API_KEY))).json();
+          response = (await (await fetch(getTopTokenHoldersUrl(tokenOrPool, ETHPLORER_API_KEY))).json()) as any;
           response.holders.forEach((holder: { address: string; balance: number; share: number }) =>
             holders.push(holder.address)
           );

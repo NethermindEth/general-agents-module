@@ -1,6 +1,7 @@
 import { ethers, TransactionEvent, getAlerts } from "forta-agent";
 import { AlertsResponse } from "forta-agent/dist/sdk/graphql/forta";
 import LRU from "lru-cache";
+import fetch from "node-fetch";
 import AddressesExtractor from "./helpers/addresses.extractor";
 import {
   ERC20_TRANSFER_EVENT,
@@ -36,7 +37,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   }
 
   private getProtocols = async () => {
-    const response = await (await fetch("https://api.llama.fi/protocols")).json();
+    const response = (await (await fetch("https://api.llama.fi/protocols")).json()) as any;
     response.forEach((protocol: any) => {
       this.protocols.push([protocol.slug, protocol.url, protocol.twitter]);
     });
@@ -276,13 +277,13 @@ export default class VictimIdentifier extends TokenInfoFetcher {
           // If the tag was still not found, try to fetch it from the Ethereum Lists database
           if (!tag) {
             try {
-              const ethereumListsDbResponse = await (
+              const ethereumListsDbResponse = (await (
                 await fetch(
                   `https://raw.githubusercontent.com/ethereum-lists/contracts/main/contracts/${chainId}/${ethers.utils.getAddress(
                     victim
                   )}.json`
                 )
-              ).json();
+              ).json()) as any;
               tag = ethereumListsDbResponse.project;
             } catch {
               // If an error occurs, try to fetch the tag using the ERC20 'symbol' or 'name' methods
