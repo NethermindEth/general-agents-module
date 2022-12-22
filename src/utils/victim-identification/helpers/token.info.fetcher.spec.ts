@@ -2,26 +2,12 @@ import { BigNumber, ethers } from "ethers";
 import TokenInfoFetcher from "./token.info.fetcher";
 import { TOKEN_ABI, MKR_TOKEN_ABI } from "./constants";
 import { Interface } from "ethers/lib/utils";
-import { when } from "jest-when";
 import { MockEthersProvider } from "../../../test";
 import { createAddress } from "../..";
 import fetch from "node-fetch";
 
 jest.mock("node-fetch");
 const { Response } = jest.requireActual("node-fetch");
-
-class MockEthersProviderExtended extends MockEthersProvider {
-  public getBalance: any;
-  constructor() {
-    super();
-    this.getBalance = jest.fn();
-  }
-
-  public setBalance(address: string, block: number, balance: BigNumber): MockEthersProviderExtended {
-    when(this.getBalance).calledWith(address, block).mockReturnValue(Promise.resolve(balance));
-    return this;
-  }
-}
 
 // [blockNumber, balance]
 const TEST_BALANCES: [number, BigNumber][] = [
@@ -67,7 +53,7 @@ const TOKEN_IFACE = new Interface(TOKEN_ABI);
 const MKR_TOKEN_IFACE = new Interface(MKR_TOKEN_ABI);
 
 describe("TokenInfoFetcher tests suite", () => {
-  const mockProvider: MockEthersProviderExtended = new MockEthersProviderExtended();
+  const mockProvider: MockEthersProvider = new MockEthersProvider();
   let fetcher: TokenInfoFetcher;
 
   beforeAll(() => {
