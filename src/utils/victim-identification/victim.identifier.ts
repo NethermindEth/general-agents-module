@@ -296,7 +296,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             }
           }
         }
-        // Skip transaction for certain tags
+        // Skip the victim if the tag is empty or if it is a known false positive
         if (
           tag === "Not Found" ||
           tag === "" || // 0x227ad7bdeaefa4f23da290d19f17705949b65923e334b66288de5d6329e599c3
