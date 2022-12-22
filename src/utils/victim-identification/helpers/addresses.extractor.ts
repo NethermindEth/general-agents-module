@@ -11,21 +11,21 @@ export default class AddressesExtractor {
     this.provider = provider;
   }
 
-  private isContract = async (address: string) => {
-    const code = await this.provider.getCode(address);
-    return code !== "0x";
+  private isContract = async (address: string, blockNumber: number) => {
+    const code = await this.provider.getCode(address, blockNumber);
+    return code && code !== "0x";
   };
 
-  private getStorageAddresses = async (address: string) => {
+  private getStorageAddresses = async (address: string, blockNumber: number) => {
     const addressSet = new Set<string>();
 
     for (let i = 0; i < CONTRACT_SLOT_ANALYSIS_DEPTH; i++) {
-      const mem: string = await this.provider.getStorageAt(ethers.utils.getAddress(address), i);
+      const mem: string = await this.provider.getStorageAt(ethers.utils.getAddress(address), i, blockNumber);
       if (mem != "0x0000000000000000000000000000000000000000000000000000000000000000") {
-        if (await this.isContract(mem.substring(0, 42))) {
+        if (await this.isContract(mem.substring(0, 42), blockNumber)) {
           addressSet.add(ethers.utils.getAddress(mem.substring(0, 42)));
         }
-        if (await this.isContract(mem.substring(26))) {
+        if (await this.isContract(mem.substring(26), blockNumber)) {
           addressSet.add(ethers.utils.getAddress("0x" + mem.substring(26)));
         }
       }
@@ -33,11 +33,11 @@ export default class AddressesExtractor {
     return addressSet;
   };
 
-  private getOpcodeAddresses = async (address: string) => {
+  private getOpcodeAddresses = async (address: string, blockNumber: number, _evm: typeof EVM) => {
     const addressSet = new Set<string>();
 
-    const code = await this.provider.getCode(address);
-    const evm = new EVM(code);
+    const code = await this.provider.getCode(address, blockNumber);
+    const evm = new _evm(code);
     const opcode = evm.getOpcodes();
 
     await Promise.all(
@@ -45,11 +45,11 @@ export default class AddressesExtractor {
         if (op.pushData) {
           const param = op.pushData.toString("hex");
           if (param.length === 40) {
-            if (await this.isContract(param)) {
+            if (await this.isContract("0x" + param, blockNumber)) {
               addressSet.add(ethers.utils.getAddress("0x" + param));
             }
           } else if (param.length === 64) {
-            if (await this.isContract(param.substring(24))) {
+            if (await this.isContract("0x" + param.substring(24), blockNumber)) {
               addressSet.add(ethers.utils.getAddress("0x" + param.substring(24)));
             }
           }
@@ -62,7 +62,7 @@ export default class AddressesExtractor {
   public extractAddresses = async (txEvent: TransactionEvent): Promise<Set<string>> => {
     let extractedAddresses: string[] = [];
     let createdContractAddresses: string[] = [];
-    const { traces } = txEvent;
+    const { traces, blockNumber } = txEvent;
 
     if (traces.length > 0) {
       await Promise.all(
@@ -71,8 +71,8 @@ export default class AddressesExtractor {
             if (txEvent.from === trace.action.from || createdContractAddresses.includes(trace.action.from)) {
               const createdContractAddress = trace.result.address;
               createdContractAddresses.push(createdContractAddress);
-              const storageAddresses = await this.getStorageAddresses(createdContractAddress);
-              const opcodeAddresses = await this.getOpcodeAddresses(createdContractAddress);
+              const storageAddresses = await this.getStorageAddresses(createdContractAddress, blockNumber);
+              const opcodeAddresses = await this.getOpcodeAddresses(createdContractAddress, blockNumber, EVM);
               extractedAddresses.push(...Array.from(storageAddresses), ...Array.from(opcodeAddresses));
             }
           }
@@ -83,8 +83,8 @@ export default class AddressesExtractor {
         const nonce = txEvent.transaction.nonce;
         const createdContractAddress = ethers.utils.getContractAddress({ from: txEvent.from, nonce: nonce });
         createdContractAddresses.push(createdContractAddress);
-        const storageAddresses = await this.getStorageAddresses(createdContractAddress);
-        const opcodeAddresses = await this.getOpcodeAddresses(createdContractAddress);
+        const storageAddresses = await this.getStorageAddresses(createdContractAddress, blockNumber);
+        const opcodeAddresses = await this.getOpcodeAddresses(createdContractAddress, blockNumber, EVM);
         extractedAddresses.push(...Array.from(storageAddresses), ...Array.from(opcodeAddresses));
       }
     }
