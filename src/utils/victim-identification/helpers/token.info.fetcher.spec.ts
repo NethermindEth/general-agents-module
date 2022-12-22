@@ -5,6 +5,10 @@ import { Interface } from "ethers/lib/utils";
 import { when } from "jest-when";
 import { MockEthersProvider } from "../../../test";
 import { createAddress } from "../..";
+import fetch from "node-fetch";
+
+jest.mock("node-fetch");
+const { Response } = jest.requireActual("node-fetch");
 
 class MockEthersProviderExtended extends MockEthersProvider {
   public getBalance: any;
@@ -176,20 +180,16 @@ describe("TokenInfoFetcher tests suite", () => {
 
   it("should fetch the value in USD correctly", async () => {
     const chainId = 1;
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ ethereum: { usd: 1.2 } }),
-      })
-    ) as jest.Mock;
+
+    const mockFetch = jest.mocked(fetch, true);
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ ethereum: { usd: 1.2 } })));
 
     const fetchedNativeValue = await fetcher.getValueInUsd(TEST_BLOCK, chainId, "2000000000000000000", "native");
     expect(fetchedNativeValue).toStrictEqual(2.4);
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ "0x00000000000000000000000000000000000000a2": { usd: 3 } }),
-      })
-    ) as jest.Mock;
+    mockFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ "0x00000000000000000000000000000000000000a2": { usd: 3 } }))
+    );
 
     mockProvider.addCallTo(tokenAddress, TEST_BLOCK, TOKEN_IFACE, "decimals", {
       inputs: [],
@@ -206,31 +206,30 @@ describe("TokenInfoFetcher tests suite", () => {
     const EOAholders = await fetcher.getHolders(createAddress("0x9812"), true, "Tag");
     expect(EOAholders).toStrictEqual([]);
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () =>
-          Promise.resolve({
-            data: {
-              positions: [{ owner: createAddress("0xffaabb") }, { owner: createAddress("0xffaabbcc") }],
-            },
-          }),
-      })
-    ) as jest.Mock;
+    const mockFetch = jest.mocked(fetch, true);
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            positions: [{ owner: createAddress("0xffaabb") }, { owner: createAddress("0xffaabbcc") }],
+          },
+        })
+      )
+    );
 
     const uniswapV3Holders = await fetcher.getHolders(tokenAddress, false, "Uniswap V3");
     expect(uniswapV3Holders).toStrictEqual([createAddress("0xffaabb"), createAddress("0xffaabbcc")]);
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () =>
-          Promise.resolve({
-            holders: [
-              { address: createAddress("0xaabb"), balance: 33, share: 28 },
-              { address: createAddress("0xaabbcc"), balance: 233, share: 228 },
-            ],
-          }),
-      })
-    ) as jest.Mock;
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          holders: [
+            { address: createAddress("0xaabb"), balance: 33, share: 28 },
+            { address: createAddress("0xaabbcc"), balance: 233, share: 228 },
+          ],
+        })
+      )
+    );
 
     const erc20Holders = await fetcher.getHolders(tokenAddress, false, "Not Uniswap V3");
     expect(erc20Holders).toStrictEqual([createAddress("0xaabb"), createAddress("0xaabbcc")]);
