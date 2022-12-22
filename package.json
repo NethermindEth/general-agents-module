@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "test": "jest",
+    "postinstall": "cp -r node_modules/evm/src/interfaces node_modules/evm/typings/src",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
