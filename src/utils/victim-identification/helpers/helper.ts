@@ -1,6 +1,6 @@
-import fetch from "node-fetch";
-import { etherscanApis, LUABASE_API_KEY, MORALIS_API_KEY } from "./config";
+import { etherscanApis, restApis } from "./config";
 import { getWebsiteAndTwitter } from "./urlAndTwitter";
+import fetch from "node-fetch";
 
 export const urlAndTwitterFetcher = (protocols: string[][], tag: string): string[] => {
   const correctProtocols = protocols
@@ -19,6 +19,8 @@ export const urlAndTwitterFetcher = (protocols: string[][], tag: string): string
 };
 
 export const fetchLuabaseDb = async (address: string, chain: string): Promise<string> => {
+  if (restApis["luabaseKey"] === "") return "";
+
   const sqlQuery: string = `
         select tag
         from ${chain}.tags 
@@ -36,7 +38,7 @@ export const fetchLuabaseDb = async (address: string, chain: string): Promise<st
           parameters: {},
         },
       },
-      api_key: LUABASE_API_KEY,
+      api_key: restApis["luabaseKey"],
     }),
   };
   let response;
@@ -141,10 +143,11 @@ export const getNativeTokenPrice = (chain: string) => {
 
 // Fetches prices from both UniswapV2 and UniswapV3
 export const getUniswapPrice = async (chainId: number, token: string) => {
+  if (restApis["moralisKey"] === "") return 0;
   const options = {
     method: "GET",
     params: { chain: getMoralisChainByChainId(chainId) },
-    headers: { accept: "application/json", "X-API-Key": MORALIS_API_KEY },
+    headers: { accept: "application/json", "X-API-Key": restApis["moralisKey"] },
   };
   const response = (await (
     await fetch(`https://deep-index.moralis.io/api/v2/erc20/${token}/price`, options)

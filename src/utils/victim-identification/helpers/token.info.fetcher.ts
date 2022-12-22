@@ -2,7 +2,7 @@ import { providers, Contract, BigNumber, ethers } from "ethers";
 import { Interface } from "ethers/lib/utils";
 import LRU from "lru-cache";
 import { MKR_TOKEN_ABI, TOKEN_ABI, SUBGRAPH_URL } from "./constants";
-import { ETHPLORER_API_KEY } from "./config";
+import { restApis } from "./config";
 import {
   getChainByChainId,
   getNativeTokenByChainId,
@@ -195,7 +195,7 @@ export default class TokenInfoFetcher {
         } catch {}
       } else {
         try {
-          response = (await (await fetch(getTopTokenHoldersUrl(tokenOrPool, ETHPLORER_API_KEY))).json()) as any;
+          response = (await (await fetch(getTopTokenHoldersUrl(tokenOrPool, restApis["ethplorerKey"]))).json()) as any;
           response.holders.forEach((holder: { address: string; balance: number; share: number }) =>
             holders.push(holder.address)
           );

@@ -18,6 +18,7 @@ import {
   getContractCreator,
   getContractName,
 } from "./helpers/helper";
+import { apiKeys, etherscanApis, restApis } from "./helpers/config";
 
 export default class VictimIdentifier extends TokenInfoFetcher {
   addressesExtractor: AddressesExtractor;
@@ -26,8 +27,35 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   private victimOccurences: Record<string, number>;
   private isContractCache: LRU<string, boolean>;
 
-  constructor(provider: ethers.providers.JsonRpcProvider) {
+  constructor(provider: ethers.providers.JsonRpcProvider, apiKeys: apiKeys) {
     super(provider);
+
+    // Extract the keys or set default values
+    const {
+      ethplorerApiKey = "freekey",
+      luabaseApiKey = "",
+      moralisApiKey = "",
+      etherscanApiKey = "YourApiKeyToken",
+      optimisticEtherscanApiKey = "YourApiKeyToken",
+      bscscanApiKey = "YourApiKeyToken",
+      polygonscanApiKey = "YourApiKeyToken",
+      fantomscanApiKey = "YourApiKeyToken",
+      arbitrumApiKey = "YourApiKeyToken",
+      snowtraceApiKey = "YourApiKeyToken",
+    } = apiKeys;
+
+    // Set the keys
+    restApis["luabaseKey"] = luabaseApiKey;
+    restApis["ethplorerKey"] = ethplorerApiKey;
+    restApis["moralisKey"] = moralisApiKey;
+    etherscanApis[1].key = etherscanApiKey;
+    etherscanApis[10].key = optimisticEtherscanApiKey;
+    etherscanApis[56].key = bscscanApiKey;
+    etherscanApis[137].key = polygonscanApiKey;
+    etherscanApis[250].key = fantomscanApiKey;
+    etherscanApis[42161].key = arbitrumApiKey;
+    etherscanApis[43114].key = snowtraceApiKey;
+
     this.addressesExtractor = new AddressesExtractor(provider);
     this.init = false;
     this.protocols = [];
