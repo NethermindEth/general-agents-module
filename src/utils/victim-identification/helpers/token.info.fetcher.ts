@@ -150,7 +150,7 @@ export default class TokenInfoFetcher {
           if (response && response[token]) {
             usdPrice = response[token].usd;
           } else {
-            throw new Error("Error: Can't fetch USD price on CG");
+            throw new Error("Error: Can't fetch USD price on CoinGecko");
           }
         } catch {
           if (chainId === 10 || chainId === 42161) return 0; // Moralis API is not available on Optimism & Arbitrum
