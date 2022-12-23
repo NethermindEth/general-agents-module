@@ -2,7 +2,7 @@
 
 ## Description
 
-This module contains some common approaches for building Forta Agents. You will also find some tools for writing tests for these agents. These approaches can be composed for creating more complex agents or used only for checking without returning their findings.
+This module contains some common approaches for building Forta Bots. You will also find some tools for writing tests for these bots. These approaches can be composed for creating more complex bots or used only for checking without returning their findings.
 
 ## Installation
 
@@ -28,10 +28,10 @@ this case, it can both return findings through `handler.handle(event)` and also 
 `Handler` is an abstract base class and each specific handler extends it. The common interface is:
 
 - `Handler(options)`: Each handler has a specific set of options. The only common field between all the specific
-options is the optional `onFinding`, that defines how a finding will be generated based on the metadata. `Handler`, in this case, is a specific handler, not the `Handler` base class.
+  options is the optional `onFinding`, that defines how a finding will be generated based on the metadata. `Handler`, in this case, is a specific handler, not the `Handler` base class.
 - `metadata(event)`: This method returns a promise to an array of metadata objects related to a transaction or block
-or, if there's no implementation for a specific event (e.g. a handler only gets information from transactions, not
-blocks) it will return a promise that resolves to `null`.
+  or, if there's no implementation for a specific event (e.g. a handler only gets information from transactions, not
+  blocks) it will return a promise that resolves to `null`.
 - `handle(event, onFinding?)`: This method handles a transaction or block event and returns a list of findings. `onFinding` will override `options.onFinding` if both were specified.
 - `getHandleBlock(onFinding?)`: This method returns a `forta-agent` `HandleBlock` handle callback. `onFinding` will override `options.onFinding` if both were specified.
 - `getHandleTransaction(onFinding?)`: This method returns a `forta-agent` `HandleTransaction` handle callback. `onFinding` will override `options.onFinding` if both were specified.
@@ -163,9 +163,9 @@ async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> 
 - `from`: Transfer sender.
 - `to`: Transfer receiver.
 - `amountThreshold`: Determines a filter based on the transfer amount. Can be either a value, like `"1000"` (doesn't
-consider the token's decimal places, same `uint256` representation as in the contract), case in which the transfer
-event will be filtered out when it amount less than that value, or a callback that defines whether the amount should lead to
-a finding or not.
+  consider the token's decimal places, same `uint256` representation as in the contract), case in which the transfer
+  event will be filtered out when it amount less than that value, or a callback that defines whether the amount should lead to
+  a finding or not.
 
 #### Metadata
 
@@ -237,8 +237,8 @@ async function handleTransaction(txEvent: TransactionEvent): Promise<Finding[]> 
 - `from`: Transfer sender.
 - `to`: Transfer receiver.
 - `valueThreshold`: Determines a filter based on the transfer amount. Can be either a value, like `"1000"` (in wei),
-case in which the transfer event will be filtered out when it amount less than that value, or a callback that defines
-whether the amount should lead to a finding or not.
+  case in which the transfer event will be filtered out when it amount less than that value, or a callback that defines
+  whether the amount should lead to a finding or not.
 
 #### Metadata
 
@@ -369,6 +369,7 @@ const txEvent: TransactionEvent = new TestTransactionEvent().setFrom(address1).s
 ```
 
 There are multiple methods you can use for creating the exact `TransactionEvent` you want:
+
 - `setFrom(address)` This method sets the `transaction.from` field in the event.
 - `setTo(address)` This method sets the `transaction.to` field in the event.
 - `setGas(value)` This method sets the `transaction.gas` field in the event.
@@ -400,13 +401,14 @@ const blockEvent: BlockEvent = new TestBlockEvent().setHash(blockHash).setNumber
 ```
 
 There are multiple methods you can use for creating the exact `BlockEvent` you want:
+
 - `setHash(blockHash)` This method sets the `block.hash` field in the event.
 - `setParentHash(blockHash)` This method sets the `block.parentHash` field in the event.
 - `setNumber(blockNumber)` This method sets the `block.number` field in the event.
 - `addTransactions(txns)` This method adds the hashes of a spread list of transaction events at the end of `block.transactions` field in the event.
 - `addTransactionsHashes(hashes)` This method adds a hashes spread list to the end of `block.transactions` field in the event.
 
-###  runBlock
+### runBlock
 
 This is a helper function to simulate the execution of `run block` cli command when the bot has implemented a `handleTransaction` and a `handleBlock`.
 
@@ -421,7 +423,9 @@ async myFunction(params) => {
   ...
 };
 ```
+
 Parameters description:
+
 - `bot`: It is a JS object with two properties, `handleTransaction` and `handleBlock`.
 - `block`: It is the `BlockEvent` that the bot will handle.
 - `tx#`: These are the `TransactionEvent` objects asociated with the `BlockEvent` that the bot will handle.
@@ -431,30 +435,28 @@ Parameters description:
 This is a helper class for mocking the `ethers.providers.Provider` class.
 
 Basic usage:
+
 ```ts
 import { MockEthersProvider } from "forta-agent-tools/lib/test";
 import { createAddress } from "forta-agent-tools";
 import { utils, Contract } from "ethers";
 
-const iface: utils.Interface =  new utils.Interface([
-  "function myAwesomeFunction(uint256 param1, string param2) extenal view returns (unit8 id, uint256 val)"
+const iface: utils.Interface = new utils.Interface([
+  "function myAwesomeFunction(uint256 param1, string param2) extenal view returns (unit8 id, uint256 val)",
 ]);
 
 const address: string = createAddress("0xf00");
 const data: string = createAddress("0xda7a");
 
 const mockProvider: MockEthersProvider = new MockEthersProvider()
-  .addCallTo(
-    address, 20, iface,
-    "myAwesomeFunction",
-    { inputs: [10, "tests"], outputs: [1, 2000] },
-  )
+  .addCallTo(address, 20, iface, "myAwesomeFunction", { inputs: [10, "tests"], outputs: [1, 2000] })
   .addStorage(address, 5, 15, utils.defaultAbiCoder.encode(["address"], [data]));
 ```
 
 #### How to use it
 
 This mock provides some methods to set up the values that the provider should return:
+
 - `addCallTo(contract, block, iface, id, { inputs, outputs })`. This method prepares a call to the `contract` address
   at the specified `block`, where `iface` is the `ethers.utils.Interface` object relative to the contract, `id` is the identifier
   of the function to call, `inputs` are the parameters passed in the call and `outputs` are the values the call
@@ -472,12 +474,12 @@ This mock provides some methods to set up the values that the provider should re
 
 All the data you set in the provider will be used until the `clear` function is called.
 
-
 ### MockEthersSigner
 
 This is a helper class for mocking the `ethers.providers.JsonRpcSigner` class. This class extends `MockEthersProvider`.
 
 Basic usage:
+
 ```ts
 import { MockEthersProvider, MockEthersSigner } from "forta-agent-tools/lib/test";
 import { createAddress } from "forta-agent-tools";
@@ -503,6 +505,7 @@ const mockSigner: MockEthersSigner = new MockEthersSigner(mockProvider)
 #### How to use it
 
 This mock provides some methods to set up the values that the signer should return:
+
 - `setAddress(address)`. This method sets the address that the signer can sign.
 - `allowTransaction(from, to, iface, id, inputs)`. This method prepares a txn sent to `to` and signed from `from`. The transaction is meant to call the method `id` taken from the `iface` of the `to` contract passing the `inputs` as parameters. `receipt` will be the receipt returned by the transaction.
 - `denyTransaction(from, to, iface, id, inputs, msg)`. Same conditions of `allowTransaction` but in this case the transaction will be reverted with `msg` message.
@@ -514,6 +517,7 @@ All the data you set in the signer will be used until the `clear` function is ca
 This is a tool to help with storing data relative to the network the bot will be running at.
 
 Basic usage:
+
 ```ts
 import { NetworkManager } from "forta-agent-tools";
 
@@ -556,6 +560,7 @@ networkManager.get("address"); // "address1" if the ChainID is 1, "address42" if
 This is a class that can create a proxy to a provider which then caches call results and avoids cached calls being repeated both later and in the same block or transaction.
 
 Basic usage:
+
 ```ts
 import { ProviderCache, createAddress } from "forta-agent-tools";
 import { ethers, getEthersProvider } from "forta-agent";
@@ -583,6 +588,7 @@ const contract = new ethers.Contract(address, iface, cachedProvider);
 This is a shortcut class that extends `ethers.Contract` but uses a cached provider from `ProviderCache`. Creating a `CachedContract` by calling `new CachedContract(address, iface, provider, cacheByBlockTag?)` is equivalent to creating an `ethers.Contract` by calling `new ethers.Contract(address, iface, ProviderCache.createProxy(provider, cacheByBlockTag?))`. There's also some utility methods.
 
 Basic usage:
+
 ```ts
 import { CachedContract, createAddress } from "forta-agent-tools";
 import { getEthersProvider } from "forta-agent";
@@ -613,13 +619,14 @@ tag for a call, using `Multicall2` features and making grouped calls.
 The calls are decoded using `ethers`, so each return data has the same structure as a call made by itself through an `ethers.Contract`.
 
 Supported chains (by default):
+
 - Ethereum Mainnet
 - Ropsten Testnet
 - Rinkeby Testnet
 - Görli Testnet
 - Kovan Testnet
-- Binance Smart Chain
-- Binance Smart Chain Testnet
+- BNB Smart Chain
+- BNB Smart Chain Testnet
 - Gnosis
 - Huobi ECO Chain Mainnet
 - Polygon Mainnet
@@ -632,6 +639,7 @@ Other chains can also be supported by finding a deployed Multicall2 contract add
 `MulticallProvider.setMulticall2Addresses({ [chainId]: multicall2Address })`. Default addresses can also be overriden.
 
 Basic usage:
+
 ```ts
 import { getEthersProvider } from "forta-agent";
 import { MulticallProvider, MulticallContract, createAddress } from "forta-agent-tools";
@@ -652,7 +660,7 @@ async function initialize() {
 
 async function getBalances() {
   const addresses = [createAddress("0x1"), createAddress("0x2"), createAddress("0x3")];
-  const calls = addresses.map(address => token.balanceOf(address));
+  const calls = addresses.map((address) => token.balanceOf(address));
   const blockTag = 1;
 
   const [success, balancesAll] = await multicallProvider.all(calls, blockTag); // [success, [balance0, balance1, balance2]]
@@ -664,13 +672,13 @@ async function getBalances() {
   // or
 
   const [successGrouped, balancesGrouped] = await multicallProvider.groupAll(
-    addresses.map(address => [token.balanceOf(address), token.allowance(address, createAddress("0x4"))])
+    addresses.map((address) => [token.balanceOf(address), token.allowance(address, createAddress("0x4"))])
   ); // [success, [[balance0, allowance0], [balance1, allowance1], [balance2, allowance2]]]
 
   // or
 
   const balancesGroupTryAll = await multicallProvider.groupTryAll(
-    addresses.map(address => [token.balanceOf(address), token.allowance(address, createAddress("0x4"))])
+    addresses.map((address) => [token.balanceOf(address), token.allowance(address, createAddress("0x4"))])
   ); // [
   // [{ success, returnData: balance0 }, { success, returnData: allowance0 }],
   // [{ success, returnData: balance1 }, { success, returnData: allowance1 }],
@@ -680,17 +688,86 @@ async function getBalances() {
 ```
 
 #### How to use it
+
 - `MulticallProvider(provider, chainId?)`: Creates a `MulticallProvider` instance through an ethers provider `provider`.
-If `chainId` is specified, it's not necessary to call `init()` before making calls.
+  If `chainId` is specified, it's not necessary to call `init()` before making calls.
 - `MulticallProvider.setMulticall2Addresses(addresses)`: Allows overriding and adding support to more networks by
-specifying a valid `Multicall2` contract address to it.
+  specifying a valid `Multicall2` contract address to it.
 - `init()`: Fetches the provider's chain ID and and loads a `Multicall2` contract address. If there's no known address for that network, it throws an error.
 - `all(calls, blockTag?, batchSize?)`: Performs the calls in `blockTag` with `batchSize` sized multicalls and requires
-success of all of them. By default, `batchSize` is `50`.
+  success of all of them. By default, `batchSize` is `50`.
 - `tryAll(calls, blockTag?, batchSize?)`: Performs the calls in `blockTag` with `batchSize` sized multicalls and
-doesn't require their success, returning a flag for each of them that indicates whether they were successful or not.
-By default, `batchSize` is `50`.
+  doesn't require their success, returning a flag for each of them that indicates whether they were successful or not.
+  By default, `batchSize` is `50`.
 - `groupAll(calls, blockTag?, batchSize?)`: Works in the same way as `all()`, but allows specifying groups of calls
-(e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
+  (e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
 - `groupTryAll(calls, blockTag?, batchSize?)`: Works in the same way as `tryAll()`, but allows specifying groups of calls
-(e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
+  (e.g. `[[call0, call1], [call2, call3]]`) and keeps that same structure in the returned data.
+
+### VictimIdentifier
+
+This is a class library that identifies protocol victims 1) during the preparation stage of an attack, where victims are cotained in a newly deployed contract's code, 2) during the exploitation stage of an attack in transactions after which the protocol's balance in USD is reduced.
+
+Supported chains:
+
+- Ethereum Mainnet
+- BNB Smart Chain
+- Polygon Mainnet
+- Fantom Opera
+- Arbitrum One
+- Optimism Mainnet
+- Avalanche
+
+Basic usage:
+
+```ts
+import { Finding, HandleTransaction, TransactionEvent, ethers, getEthersProvider } from "forta-agent";
+import { VictimIdentifier } from "forta-agent-tools";
+
+const keys = {
+  ethplorerApiKey: "...",
+  luabaseApiKey: "...",
+  moralisApiKey: "...",
+  etherscanApiKey: "...",
+  optimisticEtherscanApiKey: "...",
+  bscscanApiKey: "...",
+  polygonscanApiKey: "...",
+  fantomscanApiKey: "...",
+  arbiscanApiKey: "...",
+  snowtraceApiKey: "...",
+};
+
+export const provideHandleTransaction =
+  (victimsIdentifier: VictimIdentifier): HandleTransaction =>
+  async (txEvent: TransactionEvent) => {
+    const findings: Finding[] = [];
+
+    const victims = await victimsIdentifier.getIdentifiedVictims(txEvent);
+    //Returns a Record<string, {protocolUrl: string; protocolTwitter: string; tag: string; holders: string[];}>
+
+    // Rest of the logic
+    return findings;
+  };
+
+export default {
+  provideHandleTransaction,
+  handleTransaction: provideHandleTransaction(new VictimIdentifier(getEthersProvider(), keys)),
+};
+```
+
+#### How to use it
+
+- Create a config file with any of the following optional API keys:
+  - Ethplorer API (Fetches the addresses of pool tokens holders)
+  - Luabase API (Fetches the block explorer tag)
+  - Moralis API (Fetches token prices when CoinGecko calls fail)
+  - Block Explorer APIs (Fetches the address of a contract's creator / a contract name)
+    - Etherscan
+    - Optimistic Etherscan
+    - Bscscan
+    - Polygonscan
+    - Fantomscan
+    - Arbiscan
+    - Snowtrace
+- Initialize a `VictimIdentifier` instance that takes as parameters 1) an ethers provider and 2) the API keys.
+- Call `VictimIdentifier`'s method `getIdentifiedVictims()` which takes as input a `TransactionEvent`.
