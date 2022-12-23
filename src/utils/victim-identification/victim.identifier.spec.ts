@@ -120,7 +120,7 @@ const testKeys = {
   bscscanApiKey: "Test6",
   polygonscanApiKey: "Test7",
   fantomscanApiKey: "Test8",
-  arbitrumApiKey: "Test9",
+  arbiscanApiKey: "Test9",
   snowtraceApiKey: "Test10",
 };
 

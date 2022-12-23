@@ -7,7 +7,7 @@ export interface apiKeys {
   bscscanApiKey?: string;
   polygonscanApiKey?: string;
   fantomscanApiKey?: string;
-  arbitrumApiKey?: string;
+  arbiscanApiKey?: string;
   snowtraceApiKey?: string;
 }
 

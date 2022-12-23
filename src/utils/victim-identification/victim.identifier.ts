@@ -40,7 +40,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       bscscanApiKey = "YourApiKeyToken",
       polygonscanApiKey = "YourApiKeyToken",
       fantomscanApiKey = "YourApiKeyToken",
-      arbitrumApiKey = "YourApiKeyToken",
+      arbiscanApiKey = "YourApiKeyToken",
       snowtraceApiKey = "YourApiKeyToken",
     } = apiKeys;
 
@@ -53,7 +53,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     etherscanApis[56].key = bscscanApiKey;
     etherscanApis[137].key = polygonscanApiKey;
     etherscanApis[250].key = fantomscanApiKey;
-    etherscanApis[42161].key = arbitrumApiKey;
+    etherscanApis[42161].key = arbiscanApiKey;
     etherscanApis[43114].key = snowtraceApiKey;
 
     this.addressesExtractor = new AddressesExtractor(provider);
