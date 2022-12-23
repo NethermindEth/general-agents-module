@@ -186,11 +186,8 @@ describe("TokenInfoFetcher tests suite", () => {
   });
 
   it("should fetch the token holders correctly", async () => {
-    const nativeHolders = await fetcher.getHolders("native", false, "Tag");
+    const nativeHolders = await fetcher.getHolders("native", "Tag");
     expect(nativeHolders).toStrictEqual([]);
-
-    const EOAholders = await fetcher.getHolders(createAddress("0x9812"), true, "Tag");
-    expect(EOAholders).toStrictEqual([]);
 
     const mockFetch = jest.mocked(fetch, true);
     mockFetch.mockResolvedValueOnce(
@@ -203,7 +200,7 @@ describe("TokenInfoFetcher tests suite", () => {
       )
     );
 
-    const uniswapV3Holders = await fetcher.getHolders(tokenAddress, false, "Uniswap V3");
+    const uniswapV3Holders = await fetcher.getHolders(tokenAddress, "Uniswap V3");
     expect(uniswapV3Holders).toStrictEqual([createAddress("0xffaabb"), createAddress("0xffaabbcc")]);
 
     mockFetch.mockResolvedValueOnce(
@@ -217,7 +214,7 @@ describe("TokenInfoFetcher tests suite", () => {
       )
     );
 
-    const erc20Holders = await fetcher.getHolders(tokenAddress, false, "Not Uniswap V3");
+    const erc20Holders = await fetcher.getHolders(tokenAddress, "Not Uniswap V3");
     expect(erc20Holders).toStrictEqual([createAddress("0xaabb"), createAddress("0xaabbcc")]);
   });
 });

@@ -66,6 +66,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
 
   private getProtocols = async () => {
     const response = (await (await fetch("https://api.llama.fi/protocols")).json()) as any;
+    console.log(response);
     response.forEach((protocol: any) => {
       this.protocols.push([protocol.slug, protocol.url, protocol.twitter]);
     });
@@ -343,7 +344,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             await this.getName(blockNumber, victim.toLowerCase())
           );
         }
-        const holders = await this.getHolders(victim, false, tag);
+        const holders = await this.getHolders(victim, tag);
 
         return {
           protocolUrl,

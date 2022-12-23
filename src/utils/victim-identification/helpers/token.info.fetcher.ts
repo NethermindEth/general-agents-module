@@ -176,9 +176,8 @@ export default class TokenInfoFetcher {
     return Number(tokenAmount) * usdPrice;
   }
 
-  public async getHolders(tokenOrPool: string, isEOA: boolean, tag: string): Promise<string[]> {
+  public async getHolders(tokenOrPool: string, tag: string): Promise<string[]> {
     let holders: string[] = [];
-    if (isEOA) return holders;
 
     if (tokenOrPool !== "native") {
       let response;
