@@ -706,7 +706,9 @@ async function getBalances() {
 
 ### VictimIdentifier
 
-This is a class library that identifies protocol victims 1) during the preparation stage of an attack, where victims are cotained in a newly deployed contract's code, 2) during the exploitation stage of an attack in transactions after which the protocol's balance in USD is reduced.
+This is a class library that identifies protocol victims:
+* 1) during the preparation stage of an attack, where victims are contained in a newly deployed contract's code
+* 2) during the exploitation stage of an attack, in transactions where the victim protocol's balance, denominated in USD, is reduced.
 
 Supported chains:
 
