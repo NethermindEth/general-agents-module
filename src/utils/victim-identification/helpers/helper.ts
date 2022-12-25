@@ -179,7 +179,7 @@ export const getContractName = async (address: string, chainId: number) => {
   try {
     result = (await (await fetch(url)).json()) as any;
     if (result.message.startsWith("NOTOK")) {
-      console.log(`block explorer error occured; skipping check for ${address}`);
+      console.log(`block explorer error occured; skipping contract name check for ${address}`);
       return "Not Found";
     }
     const contractName = result.result[0].ContractName;
