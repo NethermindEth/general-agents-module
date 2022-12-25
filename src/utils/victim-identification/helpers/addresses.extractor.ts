@@ -25,7 +25,7 @@ export default class AddressesExtractor {
         if (await this.isContract(mem.substring(0, 42), blockNumber)) {
           addressSet.add(ethers.utils.getAddress(mem.substring(0, 42)));
         }
-        if (await this.isContract(mem.substring(26), blockNumber)) {
+        if (await this.isContract("0x" + mem.substring(26), blockNumber)) {
           addressSet.add(ethers.utils.getAddress("0x" + mem.substring(26)));
         }
       }
