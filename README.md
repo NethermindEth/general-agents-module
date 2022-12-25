@@ -772,4 +772,4 @@ export default {
     - Arbiscan
     - Snowtrace
 - Initialize a `VictimIdentifier` instance that takes as parameters: 1) an ethers provider and 2) the API keys.
-- Call `VictimIdentifier`'s method `getIdentifiedVictims()` which takes as input a `TransactionEvent`.
+- Call `VictimIdentifier`'s method `getIdentifiedVictims()` which takes as an input a `TransactionEvent`.
