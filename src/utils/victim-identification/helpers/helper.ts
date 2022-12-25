@@ -163,7 +163,7 @@ export const getContractCreator = async (address: string, chainId: number) => {
   try {
     result = (await (await fetch(url)).json()) as any;
     if (result.message.startsWith("NOTOK")) {
-      console.log(`block explorer error occured; skipping check for ${address}`);
+      console.log(`block explorer error occured; skipping contract creator check for ${address}`);
       return "";
     }
     return result.result[0].contractCreator;
