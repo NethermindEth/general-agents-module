@@ -140,7 +140,7 @@ const fetchProtocols = () => {
   );
 };
 
-describe.only("Victim Identifier tests suite", () => {
+describe("Victim Identifier tests suite", () => {
   const mockProvider: MockEthersProviderExtended = new MockEthersProviderExtended();
   let victimIdentifier: VictimIdentifier;
 
@@ -266,6 +266,7 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // First call is to the Luabase DB for the 1st extracted contract address
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -274,6 +275,7 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 2) {
+        // As the tag is fetched from Luabase on the previous call, the 2nd call is to Ethplorer API in regards to the holders
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -285,6 +287,7 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
+        // Same process for the 2nd extracted contract address
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -456,8 +459,10 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // Call the Luabase DB to fetch the tag that "fails"
         return Promise.resolve(new Response(JSON.stringify({})));
       } else if (callCount === 2) {
+        // As the tag was not fetched in the previous call, it tries to fetch the contract creator address, but also "fails" (e.g. due to a block explorer API limit)
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -466,6 +471,7 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
+        // Then it successfully fetches the project using the Ethereum lists DB
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -533,8 +539,10 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // Luabase doesn't return the tag
         return Promise.resolve(new Response(JSON.stringify({})));
       } else if (callCount === 2) {
+        // Block explorer call to fetch the contract creator address "fails"
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -546,7 +554,7 @@ describe.only("Victim Identifier tests suite", () => {
     });
 
     const TOKEN_IFACE = new Interface(TOKEN_ABI);
-
+    // Not implementating a mock implementation of the call to the Ethereum lists DB implies a call, so it then tries to fetch the token's name
     mockProvider.addCallTo(extractedAddress1, 344123, TOKEN_IFACE, "name", {
       inputs: [],
       outputs: ["DOGE"],
@@ -609,8 +617,10 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // Luabase doesn't return the tag
         return Promise.resolve(new Response(JSON.stringify({})));
       } else if (callCount === 2) {
+        // Block explorer call to fetch the contract creator address "fails"
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -619,8 +629,10 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
+        // Call to the Ethereum lists DB fails
         return Promise.reject(new Response(JSON.stringify({})));
       } else if (callCount === 4) {
+        // Not mocking an ERC20 symbol/name call implying a failed call, so it then fetches the contract name
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -662,6 +674,7 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // In exploitation stage victims cases, the first call is to fetch the token price. Not adding a mock implementation for the rest of the calls implies that the tag ended up being fetched through the ERC20 token's symbol
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -669,8 +682,6 @@ describe.only("Victim Identifier tests suite", () => {
             })
           )
         );
-      } else if (callCount === 2) {
-        return Promise.reject(new Response());
       }
     });
 
@@ -715,6 +726,7 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // In exploitation stage victims cases, the first call is to fetch the token price. Not adding a mock implementation for the rest of the calls implies that the tag ended up being fetched through the ERC20 token's symbol
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -722,8 +734,6 @@ describe.only("Victim Identifier tests suite", () => {
             })
           )
         );
-      } else if (callCount === 2) {
-        return Promise.reject(new Response());
       }
     });
 
@@ -770,6 +780,7 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // First call to fetch the token's price
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -778,8 +789,10 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 2) {
+        // Mock a failed call to fetch the price of the same token for the case of the receiver of the ERC20 transfer, as it's not needed
         return Promise.reject(new Response());
       } else if (callCount === 3) {
+        // Fetch the price of the native token in regards to the native token transfer
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -787,8 +800,6 @@ describe.only("Victim Identifier tests suite", () => {
             })
           )
         );
-      } else if (callCount === 4) {
-        return Promise.reject(new Response());
       }
     });
 
@@ -799,6 +810,7 @@ describe.only("Victim Identifier tests suite", () => {
       outputs: [18],
     });
 
+    // By not mocking any of the rest calls, the tag is fetched using the ERC20 token's symbol method.
     mockProvider.addCallTo(FROM, 99, TOKEN_IFACE, "symbol", {
       inputs: [],
       outputs: ["ERC20LostERC20"],
@@ -869,6 +881,7 @@ describe.only("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
+        // Fetch the price of the native token in regards to the exploitation stage victim
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -877,6 +890,7 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 2) {
+        // Fetch the price of the native token for the case of the receiver in order to keep the correct order of the calls (Alternatively, 3 [due to the retries] failed could have been used)
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -885,14 +899,19 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
+        // Exploitation Stage Victim: Failed call to Luabase DB
         return Promise.reject(new Response());
       } else if (callCount === 4) {
+        // Exploitation Stage Victim: Failed call to get the contract creator address
         return Promise.reject(new Response());
       } else if (callCount === 5) {
+        // Exploitation Stage Victim: Failed call to Ethereum list DB
         return Promise.reject(new Response());
       } else if (callCount === 6) {
+        // Exploitation Stage Victim: Failed call to get the token holders
         return Promise.reject(new Response());
       } else if (callCount === 7) {
+        // Preparation Stage Victim: Call to Luabase DB
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -901,6 +920,7 @@ describe.only("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 8) {
+        // Preparation Stage Victim: Call to the Ethplorer API
         return Promise.resolve(
           new Response(
             JSON.stringify({
