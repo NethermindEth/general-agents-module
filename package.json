@@ -1,6 +1,6 @@
 {
   "name": "forta-agent-tools",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Forta Agents for common approaches",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "postinstall": "cp -r node_modules/evm/src/interfaces node_modules/evm/typings/src",
+    "prebuild": "cp -r node_modules/evm/src/interfaces node_modules/evm/typings/src",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
