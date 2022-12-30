@@ -16,7 +16,7 @@ import {
 import fetch from "node-fetch";
 
 export default class TokenInfoFetcher {
-  provider: providers.Provider;
+  provider: providers.JsonRpcProvider;
   private cache: LRU<string, BigNumber | number | string>;
   private tokensPriceCache: LRU<string, number>;
   private tokenContract: Contract;

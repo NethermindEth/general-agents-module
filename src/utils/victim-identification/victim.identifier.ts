@@ -274,7 +274,12 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     return this.victimOccurences;
   };
 
-  private identifyVictims = async (victims: string[], chainId: number, blockNumber: number) => {
+  private identifyVictims = async (
+    provider: ethers.providers.JsonRpcProvider,
+    victims: string[],
+    chainId: number,
+    blockNumber: number
+  ) => {
     let identifiedVictims: Record<
       string,
       { protocolUrl: string; protocolTwitter: string; tag: string; holders: string[] }
@@ -319,7 +324,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
 
               // If the tag is "Not Found", try to fetch the contract name
               if (tag === "Not Found") {
-                tag = await getContractName(victim, chainId);
+                tag = await getContractName(provider, victim, chainId);
               }
             }
           }
@@ -383,7 +388,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     const victimsToProcess = Array.from(
       new Set([...exploitationStageVictims, ...Object.keys(sortedPreparationStageVictims)])
     );
-    const victims = await this.identifyVictims(victimsToProcess, chainId, blockNumber);
+    const victims = await this.identifyVictims(this.provider, victimsToProcess, chainId, blockNumber);
 
     return victims;
   };

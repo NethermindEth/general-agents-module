@@ -1,6 +1,8 @@
+import { getImplementationAddressFromProxy } from "@openzeppelin/upgrades-core";
 import { etherscanApis, restApis } from "./config";
 import { getWebsiteAndTwitter } from "./urlAndTwitter";
 import fetch from "node-fetch";
+import { ethers } from "forta-agent";
 
 export const urlAndTwitterFetcher = (protocols: string[][], tag: string): string[] => {
   const correctProtocols = protocols
@@ -172,9 +174,9 @@ export const getContractCreator = async (address: string, chainId: number) => {
   }
 };
 
-export const getContractName = async (address: string, chainId: number) => {
+export const getContractName = async (provider: ethers.providers.JsonRpcProvider, address: string, chainId: number) => {
   const { urlContractName, key }: { urlContractName: string; key: string } = etherscanApis[chainId];
-  const url = `${urlContractName}&address=${address}&apikey=${key}`;
+  let url = `${urlContractName}&address=${address}&apikey=${key}`;
   let result;
   try {
     result = (await (await fetch(url)).json()) as any;
@@ -182,10 +184,31 @@ export const getContractName = async (address: string, chainId: number) => {
       console.log(`block explorer error occured; skipping contract name check for ${address}`);
       return "Not Found";
     }
-    const contractName = result.result[0].ContractName;
-    if (contractName === "" || contractName.toLowerCase().includes("proxy")) {
+    let contractName = result.result[0].ContractName;
+    if (contractName === "") {
       return "Not Found";
     }
+
+    if (contractName.toLowerCase().includes("proxy")) {
+      let implementation: string | undefined;
+
+      implementation = await getImplementationAddressFromProxy(provider, address);
+      if (implementation !== undefined) {
+        url = `${urlContractName}&address=${implementation}&apikey=${key}`;
+        result = (await (await fetch(url)).json()) as any;
+
+        if (result.message.startsWith("NOTOK")) {
+          console.log(`block explorer error occured; skipping contract name check for ${address}`);
+          return "Not Found";
+        }
+
+        contractName = result.result[0].ContractName;
+        if (contractName === "") {
+          return "Not Found";
+        }
+      }
+    }
+
     return contractName;
   } catch {
     return "Not Found";

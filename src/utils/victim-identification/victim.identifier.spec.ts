@@ -19,6 +19,12 @@ jest.mock("forta-agent", () => {
   };
 });
 
+jest.mock("@openzeppelin/upgrades-core", () => {
+  return {
+    getImplementationAddressFromProxy: jest.fn().mockResolvedValue("0x1234567890"),
+  };
+});
+
 jest.mock("node-fetch");
 const { Response } = jest.requireActual("node-fetch");
 
@@ -633,6 +639,16 @@ describe("Victim Identifier tests suite", () => {
         return Promise.reject(new Response(JSON.stringify({})));
       } else if (callCount === 4) {
         // Not mocking an ERC20 symbol/name call implying a failed call, so it then fetches the contract name
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              message: "OOOK",
+              result: [{ ContractName: "proxyyyyyy" }],
+            })
+          )
+        );
+      } else if (callCount === 5) {
+        // Call to the block explorer API to fetch the implementation contract name
         return Promise.resolve(
           new Response(
             JSON.stringify({
