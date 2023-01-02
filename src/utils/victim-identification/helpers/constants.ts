@@ -23,6 +23,7 @@ export const TOKEN_ABI = [
   "function symbol() external view returns (string)",
   "function name() public view returns (string)",
   "function decimals() external view returns (uint8)",
+  "function totalSupply() external view returns (uint256)",
 ];
 
 export const MKR_TOKEN_ABI = ["function symbol() external view returns (bytes32)"];

@@ -47,6 +47,21 @@ export default class TokenInfoFetcher {
     return balance;
   }
 
+  public async getTotalSupply(block: number, tokenAddress: string): Promise<BigNumber> {
+    const token = this.tokenContract.attach(tokenAddress);
+
+    const key: string = `totalSupply-${tokenAddress}-${block}`;
+    if (this.cache.has(key)) return this.cache.get(key) as BigNumber;
+
+    const totalSupply: BigNumber = await token.totalSupply({
+      blockTag: block,
+    });
+
+    this.cache.set(key, totalSupply);
+
+    return totalSupply;
+  }
+
   public async getSymbolOrName(chainId: number, block: number | string, tokenAddress: string): Promise<string> {
     const token = this.tokenContract.attach(tokenAddress);
     const key: string = `symbol-${chainId}-${tokenAddress}-${block}`;
