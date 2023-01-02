@@ -329,26 +329,32 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             }
           }
         }
-        // Skip the victim if the tag is empty or if it is a known false positive
+        // Skip the victim if it is a known false positive
         if (
-          tag === "Not Found" ||
-          tag === "" || // 0x227ad7bdeaefa4f23da290d19f17705949b65923e334b66288de5d6329e599c3
           tag.startsWith("MEV") ||
           tag.startsWith("Null") ||
           tag.startsWith("Fund") || // 0xa294cca691e4c83b1fc0c8d63d9a3eef0a196de1
-          tag.split(" ").includes("Hack") || // 0x1b4d1e3318b1bffca9562b7aca468009d971d59848b6c0672dd1600d481693b6
           tag.split(" ").includes("Exploiter")
         ) {
           return;
         }
-        let [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(this.protocols, tag);
-        if (protocolUrl === "" && protocolTwitter === "") {
-          [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(
-            this.protocols,
-            await this.getName(blockNumber, victim.toLowerCase())
-          );
+
+        let protocolUrl = "";
+        let protocolTwitter = "";
+        let holders: string[] = [];
+
+        if (tag !== "Not Found" && tag !== "") {
+          [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(this.protocols, tag);
+          if (protocolUrl === "" && protocolTwitter === "") {
+            [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(
+              this.protocols,
+              await this.getName(blockNumber, victim.toLowerCase())
+            );
+          }
+          holders = await this.getHolders(victim, tag);
+        } else if (tag === "Not Found") {
+          tag = "";
         }
-        const holders = await this.getHolders(victim, tag);
 
         return {
           protocolUrl,
