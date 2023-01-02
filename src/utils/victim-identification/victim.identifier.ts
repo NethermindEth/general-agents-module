@@ -213,6 +213,27 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       }
     });
 
+    // For tokens with no USD value fetched, check if the balance change is greater than 10% of the total supply
+    await Promise.all(
+      Array.from(balanceChangesMapUsd.entries()).map(async ([key, record]) => {
+        return Promise.all(
+          Object.keys(record).map(async (token) => {
+            const usdValue = record[token];
+            if (usdValue === 0) {
+              const value = balanceChangesMap.get(key);
+              if (value![token].isNegative()) {
+                const totalSupply = await this.getTotalSupply(txEvent.blockNumber, token);
+                const threshold = totalSupply.div(10);
+                if (value![token].mul(-1).gt(threshold)) {
+                  victims.push(key);
+                }
+              }
+            }
+          })
+        );
+      })
+    );
+
     return victims;
   };
 

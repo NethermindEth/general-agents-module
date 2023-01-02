@@ -718,6 +718,44 @@ describe("Victim Identifier tests suite", () => {
     });
   });
 
+  it("should return an exploitation stage victim when its tag is found, exploited via an ERC20 Transfer when the USD value can't be fetched but the balance change is over 10% of the total supply", async () => {
+    const TRANSFER_IFACE = new Interface([ERC20_TRANSFER_EVENT]);
+    const TEST_TOKEN = createAddress("0x2222");
+    const FROM = createAddress("0x1234");
+    const TO = createAddress("0x5678");
+    const event = TRANSFER_IFACE.getEvent("Transfer");
+    const data = [FROM, TO, ethers.BigNumber.from("3424324324423423")];
+
+    const mockTxEvent = new TestTransactionEvent().setBlock(5444123).addEventLog(event, TEST_TOKEN, data);
+    mockProvider.setCode(FROM, "0x1", 5444123);
+
+    const TOKEN_IFACE = new Interface(TOKEN_ABI);
+
+    mockProvider.addCallTo(TEST_TOKEN, 5444123, TOKEN_IFACE, "totalSupply", {
+      inputs: [],
+      outputs: [ethers.BigNumber.from("4424324324423423")], // over 10% of the total supply
+    });
+
+    mockProvider.addCallTo(TEST_TOKEN, 5444123, TOKEN_IFACE, "decimals", {
+      inputs: [],
+      outputs: [18],
+    });
+
+    mockProvider.addCallTo(FROM, 5444123, TOKEN_IFACE, "symbol", {
+      inputs: [],
+      outputs: ["LpToken"],
+    });
+    const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
+    expect(victims).toStrictEqual({
+      "0x0000000000000000000000000000000000001234": {
+        holders: [],
+        protocolTwitter: "",
+        protocolUrl: "",
+        tag: "LpToken",
+      },
+    });
+  });
+
   it("should return an exploitation stage victim when its tag is found, exploited via a native transfer", async () => {
     const FROM = createAddress("0x1234");
     const TO = createAddress("0x5678");
