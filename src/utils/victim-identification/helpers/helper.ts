@@ -206,10 +206,10 @@ export const getContractName = async (provider: ethers.providers.JsonRpcProvider
         if (contractName === "") {
           return "Not Found";
         }
-      }
-    }
 
-    return contractName;
+        return contractName;
+      } else return "Not Found";
+    } else return contractName;
   } catch {
     return "Not Found";
   }
