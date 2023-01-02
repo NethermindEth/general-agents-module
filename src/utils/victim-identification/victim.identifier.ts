@@ -225,12 +225,12 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       this.init = true;
       blockNumberRange = {
         startBlockNumber: 0,
-        endBlockNumber: blockNumber,
+        endBlockNumber: blockNumber - 1,
       };
     } else {
       blockNumberRange = {
-        startBlockNumber: blockNumber,
-        endBlockNumber: blockNumber,
+        startBlockNumber: blockNumber - 1,
+        endBlockNumber: blockNumber - 1,
       };
     }
 
@@ -245,7 +245,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
           botIds: PREPARATION_BOT,
           chainId: chainId,
           blockNumberRange: blockNumberRange,
-          first: 6000,
+          first: 4000,
           startingCursor: startingCursor,
         });
 
