@@ -231,7 +231,12 @@ export default class VictimIdentifier extends TokenInfoFetcher {
                 const threshold = totalSupply.div(20); // 5%
                 const absValue = value![token].mul(-1);
                 if (absValue.gt(threshold)) {
-                  const percentage = absValue.mul(100).div(totalSupply).toNumber();
+                  let percentage: number;
+                  try {
+                    percentage = absValue.mul(100).div(totalSupply).toNumber();
+                  } catch {
+                    percentage = 100;
+                  }
                   const confidence = this.getExploitationStageConfidenceLevel(percentage, "totalSupply") as number;
                   victims.push({ address, confidence });
                 }
