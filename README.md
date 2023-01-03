@@ -707,8 +707,9 @@ async function getBalances() {
 ### VictimIdentifier
 
 This is a class library that identifies protocol victims:
-* 1) during the preparation stage of an attack, where victims are contained in a newly deployed contract's code
-* 2) during the exploitation stage of an attack, in transactions where the victim protocol's balance, denominated in USD, is reduced.
+
+- 1. during the preparation stage of an attack, where victims are contained in a newly deployed contract's code
+- 2. during the exploitation stage of an attack, in transactions where the victim protocol's balance, denominated in USD, is reduced.
 
 Supported chains:
 
@@ -745,7 +746,24 @@ export const provideHandleTransaction =
     const findings: Finding[] = [];
 
     const victims = await victimsIdentifier.getIdentifiedVictims(txEvent);
-    //Returns a Record<string, {protocolUrl: string; protocolTwitter: string; tag: string; holders: string[];}>
+    /*Returns an object of type: 
+    {
+      exploitationStage: Record<string, {
+          protocolUrl: string;
+          protocolTwitter: string;
+          tag: string;
+          holders: string[];
+          confidence: number;
+      }>;
+      preparationStage: Record<string, {
+          protocolUrl: string;
+          protocolTwitter: string;
+          tag: string;
+          holders: string[];
+          confidence: number;
+      }>;
+    }
+    */
 
     // Rest of the logic
     return findings;
