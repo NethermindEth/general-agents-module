@@ -24,7 +24,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   addressesExtractor: AddressesExtractor;
   private init: boolean;
   private protocols: string[][];
-  private victimOccurences: Record<string, number>;
+  private victimOccurrences: Record<string, number>;
   private isContractCache: LRU<string, boolean>;
 
   constructor(provider: ethers.providers.JsonRpcProvider, apiKeys: apiKeys) {
@@ -60,7 +60,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     this.init = false;
     this.protocols = [];
     this.getProtocols();
-    this.victimOccurences = {};
+    this.victimOccurrences = {};
     this.isContractCache = new LRU<string, boolean>({ max: 10000 });
   }
 
@@ -276,7 +276,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             const values: string[] = Object.values(alert.metadata);
             const victimContracts: string[] = values.filter((value: string) => value.startsWith("0x"));
             victimContracts.forEach((victim: string) => {
-              this.victimOccurences[victim] = this.victimOccurences[victim] ? ++this.victimOccurences[victim] : 1;
+              this.victimOccurrences[victim] = this.victimOccurrences[victim] ? ++this.victimOccurrences[victim] : 1;
             });
           }
         });
@@ -292,7 +292,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       }
     }
 
-    return this.victimOccurences;
+    return this.victimOccurrences;
   };
 
   private identifyVictims = async (
@@ -395,7 +395,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   public getIdentifiedVictims = async (txEvent: TransactionEvent) => {
     const { network: chainId, blockNumber } = txEvent;
     if (blockNumber !== this.latestBlockNumber) {
-      this.victimOccurences = await this.getVictimOccurences(txEvent);
+      this.victimOccurrences = await this.getVictimOccurences(txEvent);
       this.latestBlockNumber = blockNumber;
     }
 
@@ -403,7 +403,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     const extractedAddresses = await this.addressesExtractor.extractAddresses(txEvent);
     const sortedRecord: Record<string, number> = {};
     for (const victim of Array.from(extractedAddresses)) {
-      sortedRecord[victim] = this.victimOccurences.hasOwnProperty(victim) ? this.victimOccurences[victim] : 0;
+      sortedRecord[victim] = this.victimOccurrences.hasOwnProperty(victim) ? this.victimOccurrences[victim] : 0;
     }
     const sortedPreparationStageVictims: Record<string, number> = Object.fromEntries(
       Object.entries(sortedRecord).sort((a, b) => a[1] - b[1])
