@@ -25,6 +25,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   private init: boolean;
   private protocols: string[][];
   private victimOccurrences: Record<string, number>;
+  private maxOccurrences: number;
   private isContractCache: LRU<string, boolean>;
 
   constructor(provider: ethers.providers.JsonRpcProvider, apiKeys: apiKeys) {
@@ -61,6 +62,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     this.protocols = [];
     this.getProtocols();
     this.victimOccurrences = {};
+    this.maxOccurrences = 0;
     this.isContractCache = new LRU<string, boolean>({ max: 10000 });
   }
 
@@ -293,6 +295,44 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     }
 
     return this.victimOccurrences;
+  };
+
+  private getPreparationStageConfidenceLevels = (victims: Record<string, number>): Record<string, number> => {
+    // Create an object to store the confidence levels for each victim
+    const confidenceLevels: Record<string, number> = {};
+
+    // Loop through the victims
+    for (const victim in victims) {
+      // Calculate and round the confidence level for the current victim
+      let confidenceLevel = Math.round((1 - victims[victim] / (this.maxOccurrences / 4)) * 10) / 10;
+
+      // Ensure that the confidence level is never less than 0
+      confidenceLevel = Math.max(confidenceLevel, 0);
+
+      // Store the confidence level in the confidenceLevels object
+      confidenceLevels[victim] = confidenceLevel;
+    }
+
+    // Return the confidenceLevels object
+    return confidenceLevels;
+  };
+
+  private getExploitationStageConfidenceLevel = (value: number, method: string) => {
+    // "value" is either the USD value or the percentage of total supply
+    if (method === "usdValue") {
+      const level = Math.round(value / (MAX_USD_VALUE / 10)) / 10;
+      return Math.min(1, level);
+    } else if (method === "totalSupply") {
+      if (value >= 30) {
+        return 1;
+      } else if (value >= 20) {
+        return 0.9;
+      } else if (value >= 10) {
+        return 0.8;
+      } else if (value >= 5) {
+        return 0.7;
+      }
+    }
   };
 
   private identifyVictims = async (
