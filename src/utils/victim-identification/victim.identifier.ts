@@ -9,6 +9,7 @@ import {
   wrappedNativeTokens,
   WRAPPED_NATIVE_TOKEN_EVENTS,
   ZERO,
+  MAX_USD_VALUE,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
 import {
@@ -293,6 +294,16 @@ export default class VictimIdentifier extends TokenInfoFetcher {
         }
       }
     }
+
+    let maxOccurrences = 0;
+
+    for (const victim in this.victimOccurrences) {
+      if (this.victimOccurrences[victim] > maxOccurrences) {
+        maxOccurrences = this.victimOccurrences[victim];
+      }
+    }
+
+    this.maxOccurrences = maxOccurrences;
 
     return this.victimOccurrences;
   };
