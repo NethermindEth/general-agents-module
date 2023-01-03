@@ -205,30 +205,35 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       })
     );
 
-    const victims: string[] = [];
-    balanceChangesMapUsd.forEach((record: Record<string, number>, key: string) => {
+    const victims: { address: string; confidence: number }[] = [];
+
+    balanceChangesMapUsd.forEach((record: Record<string, number>, address: string) => {
       const sum = Object.values(record).reduce((acc, value) => {
         return acc + value;
       }, 0);
       // If the sum of the values is less than -100 USD, add the address to the victims list
       if (sum < -100) {
-        victims.push(key);
+        const confidence = this.getExploitationStageConfidenceLevel(sum * -1, "usdValue") as number;
+        victims.push({ address, confidence });
       }
     });
 
     // For tokens with no USD value fetched, check if the balance change is greater than 10% of the total supply
     await Promise.all(
-      Array.from(balanceChangesMapUsd.entries()).map(async ([key, record]) => {
+      Array.from(balanceChangesMapUsd.entries()).map(async ([address, record]) => {
         return Promise.all(
           Object.keys(record).map(async (token) => {
             const usdValue = record[token];
             if (usdValue === 0) {
-              const value = balanceChangesMap.get(key);
+              const value = balanceChangesMap.get(address);
               if (value![token].isNegative()) {
                 const totalSupply = await this.getTotalSupply(txEvent.blockNumber, token);
-                const threshold = totalSupply.div(10);
-                if (value![token].mul(-1).gt(threshold)) {
-                  victims.push(key);
+                const threshold = totalSupply.div(20); // 5%
+                const absValue = value![token].mul(-1);
+                if (absValue.gt(threshold)) {
+                  const percentage = absValue.mul(100).div(totalSupply).toNumber();
+                  const confidence = this.getExploitationStageConfidenceLevel(percentage, "totalSupply") as number;
+                  victims.push({ address, confidence });
                 }
               }
             }
@@ -463,11 +468,68 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     // Fetch potential victims on the exploitation stage
     const exploitationStageVictims = await this.getExploitationStageVictims(txEvent);
 
-    const victimsToProcess = Array.from(
-      new Set([...exploitationStageVictims, ...Object.keys(sortedPreparationStageVictims)])
-    );
-    const victims = await this.identifyVictims(this.provider, victimsToProcess, chainId, blockNumber);
+    // Calculate confidence levels for preparation stage victims
+    const preparationStageConfidenceLevels = this.getPreparationStageConfidenceLevels(sortedPreparationStageVictims);
 
-    return victims;
+    // Create the final object with the confidence levels
+    const preparationStageVictimsWithConfidence: Record<
+      string,
+      {
+        protocolUrl: string;
+        protocolTwitter: string;
+        tag: string;
+        holders: string[];
+        confidence: number;
+      }
+    > = {};
+
+    // Identify the preparation stage victims
+    const preparationStageIdentifiedVictims = await this.identifyVictims(
+      this.provider,
+      Object.keys(sortedPreparationStageVictims),
+      chainId,
+      blockNumber
+    );
+
+    // Add confidence property to the preparation stage victims objects
+    for (const victim in preparationStageConfidenceLevels) {
+      preparationStageVictimsWithConfidence[victim] = {
+        ...preparationStageIdentifiedVictims[victim],
+        confidence: preparationStageConfidenceLevels[victim],
+      };
+    }
+
+    // Identify the exploitation stage victims
+    const exploitationStageIdentifiedVictims = await this.identifyVictims(
+      this.provider,
+      exploitationStageVictims.map((victim) => victim.address),
+      chainId,
+      blockNumber
+    );
+
+    // Create the final object with the confidence levels
+    const exploitationStageVictimsWithConfidence: Record<
+      string,
+      {
+        protocolUrl: string;
+        protocolTwitter: string;
+        tag: string;
+        holders: string[];
+        confidence: number;
+      }
+    > = {};
+
+    // Add confidence property to the exploitation stage victims objects
+    for (const victim of exploitationStageVictims) {
+      exploitationStageVictimsWithConfidence[victim.address] = {
+        ...exploitationStageIdentifiedVictims[victim.address],
+        confidence: victim.confidence,
+      };
+    }
+
+    return {
+      exploitationStage: exploitationStageVictimsWithConfidence,
+      preparationStage: preparationStageVictimsWithConfidence,
+    };
   };
 }
