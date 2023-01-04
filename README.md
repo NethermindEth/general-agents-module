@@ -708,8 +708,17 @@ async function getBalances() {
 
 This is a class library that identifies protocol victims:
 
-- 1. during the preparation stage of an attack, where victims are contained in a newly deployed contract's code
-- 2. during the exploitation stage of an attack, in transactions where the victim protocol's balance, denominated in USD, is reduced.
+1.  during the preparation stage of an attack, where victims are contained in a newly deployed contract's code
+2.  during the exploitation stage of an attack, in transactions where the victim protocol's balance is reduced:
+    - more than $100, when denominated in USD, or
+    - more than 5% of the token's total supply.
+
+The library also calculates the `Confidence Level` (0-1) for each of the victims:
+
+- Preparation stage:
+  - The `Confidence Level` is determined based on the number of occurrences of the victim address in previously deployed contracts code.
+- Exploitation stage:
+  - The `Confidence Level` is determined either based on the USD value (with $500000 or more being the CL: 1 and by then splitting the CL into 10 parts) or based on the percentage of the token's total supply in which case there are 4 levels of confidence (5%-9%: CL 0.7, 10%-19%: CL 0.8, 20-29%%: CL 0.9, >30%: CL 1)
 
 Supported chains:
 

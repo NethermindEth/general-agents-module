@@ -198,7 +198,9 @@ export const getContractName = async (provider: ethers.providers.JsonRpcProvider
         result = (await (await fetch(url)).json()) as any;
 
         if (result.message.startsWith("NOTOK")) {
-          console.log(`block explorer error occured; skipping contract name check for ${address}`);
+          console.log(
+            `block explorer error occurred; skipping contract name check for implentation address at ${address}`
+          );
           return "Not Found";
         }
 

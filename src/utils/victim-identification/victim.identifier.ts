@@ -218,18 +218,21 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       }
     });
 
-    // For tokens with no USD value fetched, check if the balance change is greater than 10% of the total supply
+    // For tokens with no USD value fetched, check if the balance change is greater than 5% of the total supply
     await Promise.all(
       Array.from(balanceChangesMapUsd.entries()).map(async ([address, record]) => {
         return Promise.all(
           Object.keys(record).map(async (token) => {
             const usdValue = record[token];
+
             if (usdValue === 0) {
               const value = balanceChangesMap.get(address);
+
               if (value![token].isNegative()) {
                 const totalSupply = await this.getTotalSupply(txEvent.blockNumber, token);
                 const threshold = totalSupply.div(20); // 5%
                 const absValue = value![token].mul(-1);
+
                 if (absValue.gt(threshold)) {
                   let percentage: number;
                   try {
@@ -237,6 +240,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
                   } catch {
                     percentage = 100;
                   }
+
                   const confidence = this.getExploitationStageConfidenceLevel(percentage, "totalSupply") as number;
                   victims.push({ address, confidence });
                 }
@@ -324,7 +328,14 @@ export default class VictimIdentifier extends TokenInfoFetcher {
 
     // Loop through the victims
     for (const victim in victims) {
-      // Calculate and round the confidence level for the current victim
+      /*
+        Calculate Confidence Level based on the number of occurrences of the victim address in previously deployed contracts
+        If the number of occurrences is equal to or greater than the maximum number of occurrences divided by 4 (this.maxOccurrences/4), the Confidence Level is 0.
+        Otherwise, the Confidence Level is calculated by dividing the number of occurrences by the maximum number of occurrences (divided by 4)
+        and then subtracting the result from 1.
+        The resulting Confidence Level is then multiplied by 10 and divided by 10, which has the effect of rounding the value to the nearest tenth.
+        The final Confidence Level will be a number between 0 and 1, with 0.1 increments (e.g. 0.1, 0.2, 0.3, etc.)
+       */
       let confidenceLevel = Math.round((1 - victims[victim] / (this.maxOccurrences / 4)) * 10) / 10;
 
       // Ensure that the confidence level is never less than 0
@@ -341,6 +352,16 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   private getExploitationStageConfidenceLevel = (value: number, method: string) => {
     // "value" is either the USD value or the percentage of total supply
     if (method === "usdValue") {
+      /*
+        Calculate Confidence Level based on USD value.
+        If the value is MAX_USD_VALUE or more, the Confidence Level is 1.
+        Otherwise, the Confidence Level is calculated by:
+         - Dividing the value by the maximum value (MAX_USD_VALUE)
+         - Dividing the result by 10, which splits the range into 10 parts
+         - Rounding the result to the nearest tenth
+         - Dividing the result by 10, which scales the value down by a factor of 10 (range 0-1)
+        The resulting Confidence Level will be a number between 0 and 1, with 0.1 increments (e.g. 0.1, 0.2, 0.3, etc.)
+      */
       const level = Math.round(value / (MAX_USD_VALUE / 10)) / 10;
       return Math.min(1, level);
     } else if (method === "totalSupply") {
