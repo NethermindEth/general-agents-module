@@ -46,6 +46,15 @@ const TEST_DECIMALS: [number, number][] = [
   [50, 9],
 ];
 
+// [blockNumber, token, totalSupply]
+const TEST_TOTAL_SUPPLIES: [number, string, BigNumber][] = [
+  [10, createAddress("0xa1"), BigNumber.from(100)],
+  [20, createAddress("0xa2"), BigNumber.from(1000)],
+  [30, createAddress("0xa3"), BigNumber.from(10000)],
+  [40, createAddress("0xa4"), BigNumber.from(100000)],
+  [50, createAddress("0xa5"), BigNumber.from(1000000)],
+];
+
 const TEST_BLOCK = 120;
 const PROTOCOL_ADDRESS = createAddress("0xa1");
 const tokenAddress = createAddress("0xa2");
@@ -77,12 +86,34 @@ describe("TokenInfoFetcher tests suite", () => {
 
     // clear mockProvider to use cache
     mockProvider.clear();
-    mockProvider;
     for (let [block, balance] of TEST_BALANCES) {
       const fetchedBalance = await fetcher.getBalance(block, PROTOCOL_ADDRESS, tokenAddress);
       expect(fetchedBalance).toStrictEqual(balance);
     }
     expect(mockProvider.call).toBeCalledTimes(6);
+    mockProvider.clear();
+  });
+
+  it("should fetch total supply and use cache correctly", async () => {
+    for (let [block, token, totalSupply] of TEST_TOTAL_SUPPLIES) {
+      mockProvider.addCallTo(token, block, TOKEN_IFACE, "totalSupply", {
+        inputs: [],
+        outputs: [totalSupply],
+      });
+
+      const fetchedTotalSupply = await fetcher.getTotalSupply(block, token);
+      expect(fetchedTotalSupply).toStrictEqual(totalSupply);
+    }
+    expect(mockProvider.call).toBeCalledTimes(5);
+
+    // clear mockProvider to use cache
+    mockProvider.clear();
+    for (let [block, token, totalSupply] of TEST_TOTAL_SUPPLIES) {
+      const fetchedTotalSupply = await fetcher.getTotalSupply(block, token);
+      expect(fetchedTotalSupply).toStrictEqual(totalSupply);
+    }
+    expect(mockProvider.call).toBeCalledTimes(5);
+
     mockProvider.clear();
   });
 

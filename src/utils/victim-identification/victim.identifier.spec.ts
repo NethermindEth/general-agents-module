@@ -19,6 +19,12 @@ jest.mock("forta-agent", () => {
   };
 });
 
+jest.mock("@openzeppelin/upgrades-core", () => {
+  return {
+    getImplementationAddressFromProxy: jest.fn().mockResolvedValue("0x1234567890"),
+  };
+});
+
 jest.mock("node-fetch");
 const { Response } = jest.requireActual("node-fetch");
 
@@ -176,7 +182,7 @@ describe("Victim Identifier tests suite", () => {
 
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(mockGetAlerts).toHaveBeenCalled();
-    expect(victims).toEqual({});
+    expect(victims).toEqual({ exploitationStage: {}, preparationStage: {} });
   });
 
   it("should not fetch the past alerts twice in the same block", async () => {
@@ -204,13 +210,13 @@ describe("Victim Identifier tests suite", () => {
 
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(mockGetAlerts).toHaveBeenCalledTimes(1);
-    expect(victims).toEqual({});
+    expect(victims).toEqual({ exploitationStage: {}, preparationStage: {} });
 
     mockGetAlerts.mockClear();
     const mockTxEvent2 = new TestTransactionEvent().setBlock(21123);
     const victims2 = await victimIdentifier.getIdentifiedVictims(mockTxEvent2);
     expect(mockGetAlerts).not.toHaveBeenCalled();
-    expect(victims2).toEqual({});
+    expect(victims2).toEqual({ exploitationStage: {}, preparationStage: {} });
   });
 
   it("should return preparation stage victims correctly when the tag can be found", async () => {
@@ -222,9 +228,14 @@ describe("Victim Identifier tests suite", () => {
       alerts: [
         {
           metadata: {
-            address1: createAddress("0x1234"),
-            address1again: createAddress("0x1234"),
-            address2: createAddress("0x5678"),
+            // Add 10 occurrences of the "0x1234"
+            ...Object.assign(
+              {},
+              ...Array.from({ length: 10 }, (_, i) => ({
+                [`address${i}`]: createAddress("0x1234"),
+              }))
+            ),
+            address10: createAddress("0x5678"),
           },
         },
       ],
@@ -311,17 +322,22 @@ describe("Victim Identifier tests suite", () => {
 
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000005678": {
-        holders: ["0x000000000000000000000000000000000022aabb", "0x0000000000000000000000000000000033aabbcc"],
-        protocolTwitter: "Victim5678Twitter",
-        protocolUrl: "victim5678.org",
-        tag: "Victim5678",
-      },
-      "0x0000000000000000000000000000000000001234": {
-        holders: ["0x000000000000000000000000000000000044aabb", "0x0000000000000000000000000000000055aabbcc"],
-        protocolTwitter: "Victim1234Twitter",
-        protocolUrl: "victim1234.org",
-        tag: "Victim1234",
+      exploitationStage: {},
+      preparationStage: {
+        "0x0000000000000000000000000000000000005678": {
+          holders: ["0x000000000000000000000000000000000022aabb", "0x0000000000000000000000000000000033aabbcc"],
+          protocolTwitter: "Victim5678Twitter",
+          protocolUrl: "victim5678.org",
+          tag: "Victim5678",
+          confidence: 0.6,
+        },
+        "0x0000000000000000000000000000000000001234": {
+          holders: ["0x000000000000000000000000000000000044aabb", "0x0000000000000000000000000000000055aabbcc"],
+          protocolTwitter: "Victim1234Twitter",
+          protocolUrl: "victim1234.org",
+          tag: "Victim1234",
+          confidence: 0,
+        },
       },
     });
   });
@@ -404,11 +420,15 @@ describe("Victim Identifier tests suite", () => {
     });
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": {
-        protocolUrl: "https://uniswap.org/",
-        protocolTwitter: "Uniswap",
-        tag: "Uniswap V3",
-        holders: ["0x000000000000000000000000000000000022aabb", "0x0000000000000000000000000000000033aabbcc"],
+      exploitationStage: {},
+      preparationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          protocolUrl: "https://uniswap.org/",
+          protocolTwitter: "Uniswap",
+          tag: "Uniswap V3",
+          holders: ["0x000000000000000000000000000000000022aabb", "0x0000000000000000000000000000000033aabbcc"],
+          confidence: 0,
+        },
       },
     });
   });
@@ -484,11 +504,15 @@ describe("Victim Identifier tests suite", () => {
 
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": {
-        protocolUrl: "https://worldcupinu.app/",
-        protocolTwitter: "wcierc20",
-        tag: "World Cup Inu 2022",
-        holders: [],
+      exploitationStage: {},
+      preparationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          protocolUrl: "https://worldcupinu.app/",
+          protocolTwitter: "wcierc20",
+          tag: "World Cup Inu 2022",
+          holders: [],
+          confidence: 0,
+        },
       },
     });
   });
@@ -562,11 +586,15 @@ describe("Victim Identifier tests suite", () => {
 
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": {
-        protocolUrl: "",
-        protocolTwitter: "",
-        tag: "DOGE",
-        holders: [],
+      exploitationStage: {},
+      preparationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          protocolUrl: "",
+          protocolTwitter: "",
+          tag: "DOGE",
+          holders: [],
+          confidence: 0,
+        },
       },
     });
   });
@@ -637,6 +665,16 @@ describe("Victim Identifier tests suite", () => {
           new Response(
             JSON.stringify({
               message: "OOOK",
+              result: [{ ContractName: "proxyyyyyy" }],
+            })
+          )
+        );
+      } else if (callCount === 5) {
+        // Call to the block explorer API to fetch the implementation contract name
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              message: "OOOK",
               result: [{ ContractName: "VerifiedContract22" }],
             })
           )
@@ -646,11 +684,15 @@ describe("Victim Identifier tests suite", () => {
 
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": {
-        protocolUrl: "",
-        protocolTwitter: "",
-        tag: "VerifiedContract22",
-        holders: [],
+      exploitationStage: {},
+      preparationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          protocolUrl: "",
+          protocolTwitter: "",
+          tag: "VerifiedContract22",
+          holders: [],
+          confidence: 0,
+        },
       },
     });
   });
@@ -698,7 +740,58 @@ describe("Victim Identifier tests suite", () => {
     });
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": { holders: [], protocolTwitter: "", protocolUrl: "", tag: "HEY" },
+      exploitationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          holders: [],
+          protocolTwitter: "",
+          protocolUrl: "",
+          tag: "HEY",
+          confidence: 0.4,
+        },
+      },
+      preparationStage: {},
+    });
+  });
+
+  it("should return an exploitation stage victim when its tag is found, exploited via an ERC20 Transfer when the USD value can't be fetched but the balance change is over 10% of the total supply", async () => {
+    const TRANSFER_IFACE = new Interface([ERC20_TRANSFER_EVENT]);
+    const TEST_TOKEN = createAddress("0x2222");
+    const FROM = createAddress("0x1234");
+    const TO = createAddress("0x5678");
+    const event = TRANSFER_IFACE.getEvent("Transfer");
+    const data = [FROM, TO, ethers.BigNumber.from("3424324324423423")];
+
+    const mockTxEvent = new TestTransactionEvent().setBlock(5444123).addEventLog(event, TEST_TOKEN, data);
+    mockProvider.setCode(FROM, "0x1", 5444123);
+
+    const TOKEN_IFACE = new Interface(TOKEN_ABI);
+
+    mockProvider.addCallTo(TEST_TOKEN, 5444123, TOKEN_IFACE, "totalSupply", {
+      inputs: [],
+      outputs: [ethers.BigNumber.from("4424324324423423")], // over 5% of the total supply
+    });
+
+    mockProvider.addCallTo(TEST_TOKEN, 5444123, TOKEN_IFACE, "decimals", {
+      inputs: [],
+      outputs: [18],
+    });
+
+    mockProvider.addCallTo(FROM, 5444123, TOKEN_IFACE, "symbol", {
+      inputs: [],
+      outputs: ["LpToken"],
+    });
+    const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
+    expect(victims).toStrictEqual({
+      exploitationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          holders: [],
+          protocolTwitter: "",
+          protocolUrl: "",
+          tag: "LpToken",
+          confidence: 1,
+        },
+      },
+      preparationStage: {},
     });
   });
 
@@ -745,7 +838,16 @@ describe("Victim Identifier tests suite", () => {
     });
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": { holders: [], protocolTwitter: "", protocolUrl: "", tag: "AWW" },
+      exploitationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          holders: [],
+          protocolTwitter: "",
+          protocolUrl: "",
+          tag: "AWW",
+          confidence: 1,
+        },
+      },
+      preparationStage: {},
     });
   });
 
@@ -822,18 +924,23 @@ describe("Victim Identifier tests suite", () => {
     });
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": {
-        holders: [],
-        protocolTwitter: "",
-        protocolUrl: "",
-        tag: "ERC20LostERC20",
+      exploitationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          holders: [],
+          protocolTwitter: "",
+          protocolUrl: "",
+          tag: "ERC20LostERC20",
+          confidence: 1,
+        },
+        "0x0000000000000000000000000000000000004444": {
+          holders: [],
+          protocolTwitter: "",
+          protocolUrl: "",
+          tag: "ERC20LostNative",
+          confidence: 1,
+        },
       },
-      "0x0000000000000000000000000000000000004444": {
-        holders: [],
-        protocolTwitter: "",
-        protocolUrl: "",
-        tag: "ERC20LostNative",
-      },
+      preparationStage: {},
     });
   });
 
@@ -842,6 +949,25 @@ describe("Victim Identifier tests suite", () => {
     const TRANSFER_TO = createAddress("0x5678");
     const createdContractAddress = createAddress("0x789");
     const extractedAddress = createAddress("0x11888");
+
+    mockAlertsResponse = {
+      alerts: [
+        {
+          metadata: {
+            address1: createAddress("0x1234"),
+            address1again: createAddress("0x1234"),
+            address2: createAddress("0x5678"),
+          },
+        },
+      ],
+      pageInfo: {
+        hasNextPage: false,
+        endCursor: {
+          alertId: "1234",
+          blockNumber: 0,
+        },
+      },
+    };
 
     const mockTxEvent: TestTransactionEventExtended = new TestTransactionEventExtended();
 
@@ -899,18 +1025,6 @@ describe("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
-        // Exploitation Stage Victim: Failed call to Luabase DB
-        return Promise.reject(new Response());
-      } else if (callCount === 4) {
-        // Exploitation Stage Victim: Failed call to get the contract creator address
-        return Promise.reject(new Response());
-      } else if (callCount === 5) {
-        // Exploitation Stage Victim: Failed call to Ethereum list DB
-        return Promise.reject(new Response());
-      } else if (callCount === 6) {
-        // Exploitation Stage Victim: Failed call to get the token holders
-        return Promise.reject(new Response());
-      } else if (callCount === 7) {
         // Preparation Stage Victim: Call to Luabase DB
         return Promise.resolve(
           new Response(
@@ -919,18 +1033,34 @@ describe("Victim Identifier tests suite", () => {
             })
           )
         );
-      } else if (callCount === 8) {
+      } else if (callCount === 4) {
         // Preparation Stage Victim: Call to the Ethplorer API
         return Promise.resolve(
           new Response(
             JSON.stringify({
               holders: [
                 { address: createAddress("0x22aabb"), balance: 133, share: 28 },
-                { address: createAddress("0x33aabbcc"), balance: 4233, share: 228 },
+                {
+                  address: createAddress("0x33aabbcc"),
+                  balance: 4233,
+                  share: 228,
+                },
               ],
             })
           )
         );
+      } else if (callCount === 5) {
+        // Exploitation Stage Victim: Failed call to Luabase DB
+        return Promise.reject(new Response());
+      } else if (callCount === 6) {
+        // Exploitation Stage Victim: Failed call to get the contract creator address
+        return Promise.reject(new Response());
+      } else if (callCount === 7) {
+        // Exploitation Stage Victim: Failed call to Ethereum list DB
+        return Promise.reject(new Response());
+      } else if (callCount === 8) {
+        // Exploitation Stage Victim: Failed call to get the token holders
+        return Promise.reject(new Response());
       }
     });
 
@@ -941,13 +1071,25 @@ describe("Victim Identifier tests suite", () => {
       outputs: ["AWW"],
     });
     const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
+
     expect(victims).toStrictEqual({
-      "0x0000000000000000000000000000000000001234": { holders: [], protocolTwitter: "", protocolUrl: "", tag: "AWW" },
-      "0x0000000000000000000000000000000000011888": {
-        holders: ["0x000000000000000000000000000000000022aabb", "0x0000000000000000000000000000000033aabbcc"],
-        protocolTwitter: "Victim5678Twitter",
-        protocolUrl: "victim5678.org",
-        tag: "Victim5678",
+      exploitationStage: {
+        "0x0000000000000000000000000000000000001234": {
+          holders: [],
+          protocolTwitter: "",
+          protocolUrl: "",
+          tag: "AWW",
+          confidence: 1,
+        },
+      },
+      preparationStage: {
+        "0x0000000000000000000000000000000000011888": {
+          holders: ["0x000000000000000000000000000000000022aabb", "0x0000000000000000000000000000000033aabbcc"],
+          protocolTwitter: "Victim5678Twitter",
+          protocolUrl: "victim5678.org",
+          tag: "Victim5678",
+          confidence: 1,
+        },
       },
     });
   });

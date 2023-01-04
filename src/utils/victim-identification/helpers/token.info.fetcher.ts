@@ -16,7 +16,7 @@ import {
 import fetch from "node-fetch";
 
 export default class TokenInfoFetcher {
-  provider: providers.Provider;
+  provider: providers.JsonRpcProvider;
   private cache: LRU<string, BigNumber | number | string>;
   private tokensPriceCache: LRU<string, number>;
   private tokenContract: Contract;
@@ -45,6 +45,21 @@ export default class TokenInfoFetcher {
     this.cache.set(key, balance);
 
     return balance;
+  }
+
+  public async getTotalSupply(block: number, tokenAddress: string): Promise<BigNumber> {
+    const token = this.tokenContract.attach(tokenAddress);
+
+    const key: string = `totalSupply-${tokenAddress}-${block}`;
+    if (this.cache.has(key)) return this.cache.get(key) as BigNumber;
+
+    const totalSupply: BigNumber = await token.totalSupply({
+      blockTag: block,
+    });
+
+    this.cache.set(key, totalSupply);
+
+    return totalSupply;
   }
 
   public async getSymbolOrName(chainId: number, block: number | string, tokenAddress: string): Promise<string> {

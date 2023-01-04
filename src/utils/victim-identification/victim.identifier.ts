@@ -9,6 +9,7 @@ import {
   wrappedNativeTokens,
   WRAPPED_NATIVE_TOKEN_EVENTS,
   ZERO,
+  MAX_USD_VALUE,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
 import {
@@ -24,7 +25,8 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   addressesExtractor: AddressesExtractor;
   private init: boolean;
   private protocols: string[][];
-  private victimOccurences: Record<string, number>;
+  private victimOccurrences: Record<string, number>;
+  private maxOccurrences: number;
   private isContractCache: LRU<string, boolean>;
 
   constructor(provider: ethers.providers.JsonRpcProvider, apiKeys: apiKeys) {
@@ -60,7 +62,8 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     this.init = false;
     this.protocols = [];
     this.getProtocols();
-    this.victimOccurences = {};
+    this.victimOccurrences = {};
+    this.maxOccurrences = 0;
     this.isContractCache = new LRU<string, boolean>({ max: 10000 });
   }
 
@@ -202,16 +205,51 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       })
     );
 
-    const victims: string[] = [];
-    balanceChangesMapUsd.forEach((record: Record<string, number>, key: string) => {
+    const victims: { address: string; confidence: number }[] = [];
+
+    balanceChangesMapUsd.forEach((record: Record<string, number>, address: string) => {
       const sum = Object.values(record).reduce((acc, value) => {
         return acc + value;
       }, 0);
       // If the sum of the values is less than -100 USD, add the address to the victims list
       if (sum < -100) {
-        victims.push(key);
+        const confidence = this.getExploitationStageConfidenceLevel(sum * -1, "usdValue") as number;
+        victims.push({ address, confidence });
       }
     });
+
+    // For tokens with no USD value fetched, check if the balance change is greater than 5% of the total supply
+    await Promise.all(
+      Array.from(balanceChangesMapUsd.entries()).map(async ([address, record]) => {
+        return Promise.all(
+          Object.keys(record).map(async (token) => {
+            const usdValue = record[token];
+
+            if (usdValue === 0) {
+              const value = balanceChangesMap.get(address);
+
+              if (value![token].isNegative()) {
+                const totalSupply = await this.getTotalSupply(txEvent.blockNumber, token);
+                const threshold = totalSupply.div(20); // 5%
+                const absValue = value![token].mul(-1);
+
+                if (absValue.gt(threshold)) {
+                  let percentage: number;
+                  try {
+                    percentage = absValue.mul(100).div(totalSupply).toNumber();
+                  } catch {
+                    percentage = 100;
+                  }
+
+                  const confidence = this.getExploitationStageConfidenceLevel(percentage, "totalSupply") as number;
+                  victims.push({ address, confidence });
+                }
+              }
+            }
+          })
+        );
+      })
+    );
 
     return victims;
   };
@@ -225,12 +263,12 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       this.init = true;
       blockNumberRange = {
         startBlockNumber: 0,
-        endBlockNumber: blockNumber,
+        endBlockNumber: blockNumber - 1,
       };
     } else {
       blockNumberRange = {
-        startBlockNumber: blockNumber,
-        endBlockNumber: blockNumber,
+        startBlockNumber: blockNumber - 1,
+        endBlockNumber: blockNumber - 1,
       };
     }
 
@@ -245,7 +283,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
           botIds: PREPARATION_BOT,
           chainId: chainId,
           blockNumberRange: blockNumberRange,
-          first: 6000,
+          first: 4000,
           startingCursor: startingCursor,
         });
 
@@ -255,7 +293,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             const values: string[] = Object.values(alert.metadata);
             const victimContracts: string[] = values.filter((value: string) => value.startsWith("0x"));
             victimContracts.forEach((victim: string) => {
-              this.victimOccurences[victim] = this.victimOccurences[victim] ? ++this.victimOccurences[victim] : 1;
+              this.victimOccurrences[victim] = this.victimOccurrences[victim] ? ++this.victimOccurrences[victim] : 1;
             });
           }
         });
@@ -271,10 +309,80 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       }
     }
 
-    return this.victimOccurences;
+    let maxOccurrences = 0;
+
+    for (const victim in this.victimOccurrences) {
+      if (this.victimOccurrences[victim] > maxOccurrences) {
+        maxOccurrences = this.victimOccurrences[victim];
+      }
+    }
+
+    this.maxOccurrences = maxOccurrences;
+
+    return this.victimOccurrences;
   };
 
-  private identifyVictims = async (victims: string[], chainId: number, blockNumber: number) => {
+  private getPreparationStageConfidenceLevels = (victims: Record<string, number>): Record<string, number> => {
+    // Create an object to store the confidence levels for each victim
+    const confidenceLevels: Record<string, number> = {};
+
+    // Loop through the victims
+    for (const victim in victims) {
+      /*
+        Calculate Confidence Level based on the number of occurrences of the victim address in previously deployed contracts
+        If the number of occurrences is equal to or greater than the maximum number of occurrences divided by 4 (this.maxOccurrences/4), the Confidence Level is 0.
+        Otherwise, the Confidence Level is calculated by dividing the number of occurrences by the maximum number of occurrences (divided by 4)
+        and then subtracting the result from 1.
+        The resulting Confidence Level is then multiplied by 10 and divided by 10, which has the effect of rounding the value to the nearest tenth.
+        The final Confidence Level will be a number between 0 and 1, with 0.1 increments (e.g. 0.1, 0.2, 0.3, etc.)
+       */
+      let confidenceLevel = Math.round((1 - victims[victim] / (this.maxOccurrences / 4)) * 10) / 10;
+
+      // Ensure that the confidence level is never less than 0
+      confidenceLevel = Math.max(confidenceLevel, 0);
+
+      // Store the confidence level in the confidenceLevels object
+      confidenceLevels[victim] = confidenceLevel;
+    }
+
+    // Return the confidenceLevels object
+    return confidenceLevels;
+  };
+
+  private getExploitationStageConfidenceLevel = (value: number, method: string) => {
+    // "value" is either the USD value or the percentage of total supply
+    if (method === "usdValue") {
+      /*
+        Calculate Confidence Level based on USD value.
+        If the value is MAX_USD_VALUE or more, the Confidence Level is 1.
+        Otherwise, the Confidence Level is calculated by:
+         - Dividing the value by the maximum value (MAX_USD_VALUE)
+         - Dividing the result by 10, which splits the range into 10 parts
+         - Rounding the result to the nearest tenth
+         - Dividing the result by 10, which scales the value down by a factor of 10 (range 0-1)
+        The resulting Confidence Level will be a number between 0 and 1, with 0.1 increments (e.g. 0.1, 0.2, 0.3, etc.)
+      */
+      const level = Math.round(value / (MAX_USD_VALUE / 10)) / 10;
+      return Math.min(1, level);
+    } else if (method === "totalSupply") {
+      if (value >= 30) {
+        return 1;
+      } else if (value >= 20) {
+        return 0.9;
+      } else if (value >= 10) {
+        return 0.8;
+      } else if (value >= 5) {
+        return 0.7;
+      }
+    }
+  };
+
+  private identifyVictims = async (
+    provider: ethers.providers.JsonRpcProvider,
+    victims: string[],
+    chainId: number,
+    blockNumber: number
+  ) => {
     let identifiedVictims: Record<
       string,
       { protocolUrl: string; protocolTwitter: string; tag: string; holders: string[] }
@@ -319,31 +427,37 @@ export default class VictimIdentifier extends TokenInfoFetcher {
 
               // If the tag is "Not Found", try to fetch the contract name
               if (tag === "Not Found") {
-                tag = await getContractName(victim, chainId);
+                tag = await getContractName(provider, victim, chainId);
               }
             }
           }
         }
-        // Skip the victim if the tag is empty or if it is a known false positive
+        // Skip the victim if it is a known false positive
         if (
-          tag === "Not Found" ||
-          tag === "" || // 0x227ad7bdeaefa4f23da290d19f17705949b65923e334b66288de5d6329e599c3
           tag.startsWith("MEV") ||
           tag.startsWith("Null") ||
           tag.startsWith("Fund") || // 0xa294cca691e4c83b1fc0c8d63d9a3eef0a196de1
-          tag.split(" ").includes("Hack") || // 0x1b4d1e3318b1bffca9562b7aca468009d971d59848b6c0672dd1600d481693b6
           tag.split(" ").includes("Exploiter")
         ) {
           return;
         }
-        let [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(this.protocols, tag);
-        if (protocolUrl === "" && protocolTwitter === "") {
-          [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(
-            this.protocols,
-            await this.getName(blockNumber, victim.toLowerCase())
-          );
+
+        let protocolUrl = "";
+        let protocolTwitter = "";
+        let holders: string[] = [];
+
+        if (tag !== "Not Found" && tag !== "") {
+          [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(this.protocols, tag);
+          if (protocolUrl === "" && protocolTwitter === "") {
+            [protocolUrl, protocolTwitter] = urlAndTwitterFetcher(
+              this.protocols,
+              await this.getName(blockNumber, victim.toLowerCase())
+            );
+          }
+          holders = await this.getHolders(victim, tag);
+        } else if (tag === "Not Found") {
+          tag = "";
         }
-        const holders = await this.getHolders(victim, tag);
 
         return {
           protocolUrl,
@@ -363,7 +477,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   public getIdentifiedVictims = async (txEvent: TransactionEvent) => {
     const { network: chainId, blockNumber } = txEvent;
     if (blockNumber !== this.latestBlockNumber) {
-      this.victimOccurences = await this.getVictimOccurences(txEvent);
+      this.victimOccurrences = await this.getVictimOccurences(txEvent);
       this.latestBlockNumber = blockNumber;
     }
 
@@ -371,7 +485,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     const extractedAddresses = await this.addressesExtractor.extractAddresses(txEvent);
     const sortedRecord: Record<string, number> = {};
     for (const victim of Array.from(extractedAddresses)) {
-      sortedRecord[victim] = this.victimOccurences.hasOwnProperty(victim) ? this.victimOccurences[victim] : 0;
+      sortedRecord[victim] = this.victimOccurrences.hasOwnProperty(victim) ? this.victimOccurrences[victim] : 0;
     }
     const sortedPreparationStageVictims: Record<string, number> = Object.fromEntries(
       Object.entries(sortedRecord).sort((a, b) => a[1] - b[1])
@@ -380,11 +494,68 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     // Fetch potential victims on the exploitation stage
     const exploitationStageVictims = await this.getExploitationStageVictims(txEvent);
 
-    const victimsToProcess = Array.from(
-      new Set([...exploitationStageVictims, ...Object.keys(sortedPreparationStageVictims)])
-    );
-    const victims = await this.identifyVictims(victimsToProcess, chainId, blockNumber);
+    // Calculate confidence levels for preparation stage victims
+    const preparationStageConfidenceLevels = this.getPreparationStageConfidenceLevels(sortedPreparationStageVictims);
 
-    return victims;
+    // Create the final object with the confidence levels
+    const preparationStageVictimsWithConfidence: Record<
+      string,
+      {
+        protocolUrl: string;
+        protocolTwitter: string;
+        tag: string;
+        holders: string[];
+        confidence: number;
+      }
+    > = {};
+
+    // Identify the preparation stage victims
+    const preparationStageIdentifiedVictims = await this.identifyVictims(
+      this.provider,
+      Object.keys(sortedPreparationStageVictims),
+      chainId,
+      blockNumber
+    );
+
+    // Add confidence property to the preparation stage victims objects
+    for (const victim in preparationStageConfidenceLevels) {
+      preparationStageVictimsWithConfidence[victim] = {
+        ...preparationStageIdentifiedVictims[victim],
+        confidence: preparationStageConfidenceLevels[victim],
+      };
+    }
+
+    // Identify the exploitation stage victims
+    const exploitationStageIdentifiedVictims = await this.identifyVictims(
+      this.provider,
+      exploitationStageVictims.map((victim) => victim.address),
+      chainId,
+      blockNumber
+    );
+
+    // Create the final object with the confidence levels
+    const exploitationStageVictimsWithConfidence: Record<
+      string,
+      {
+        protocolUrl: string;
+        protocolTwitter: string;
+        tag: string;
+        holders: string[];
+        confidence: number;
+      }
+    > = {};
+
+    // Add confidence property to the exploitation stage victims objects
+    for (const victim of exploitationStageVictims) {
+      exploitationStageVictimsWithConfidence[victim.address] = {
+        ...exploitationStageIdentifiedVictims[victim.address],
+        confidence: victim.confidence,
+      };
+    }
+
+    return {
+      exploitationStage: exploitationStageVictimsWithConfidence,
+      preparationStage: preparationStageVictimsWithConfidence,
+    };
   };
 }
