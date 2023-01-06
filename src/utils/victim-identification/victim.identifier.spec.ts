@@ -9,19 +9,13 @@ import { createAddress } from "..";
 import { TestTransactionEvent, MockEthersProvider } from "../../test";
 
 let mockAlertsResponse: AlertsResponse;
-let mockGetAlerts: jest.Mock;
+var mockGetAlerts: jest.Mock;
 
 jest.mock("forta-agent", () => {
   const original = jest.requireActual("forta-agent");
   return {
     ...original,
     getAlerts: (mockGetAlerts = jest.fn(() => Promise.resolve(mockAlertsResponse))),
-  };
-});
-
-jest.mock("@openzeppelin/upgrades-core", () => {
-  return {
-    getImplementationAddressFromProxy: jest.fn().mockResolvedValue("0x1234567890"),
   };
 });
 
@@ -113,6 +107,16 @@ class MockEthersProviderExtended extends MockEthersProvider {
 
   public setCode(address: string, code: string, blockNumber: number): MockEthersProviderExtended {
     when(this.getCode).calledWith(address, blockNumber).mockReturnValue(Promise.resolve(code));
+    return this;
+  }
+
+  public addStorageExtended(
+    contract: string,
+    slot: ethers.BigNumberish,
+    block: number,
+    result: string
+  ): MockEthersProvider {
+    when(this.getStorageAt).calledWith(contract, slot, block).mockReturnValue(Promise.resolve(result));
     return this;
   }
 }
@@ -636,6 +640,12 @@ describe("Victim Identifier tests suite", () => {
         "0x0000000000000000000000000000000000000000000000000000000000000000"
       );
     }
+    mockProvider.addStorageExtended(
+      extractedAddress1,
+      "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+      444123,
+      "0x000000000000000000000000587969add789c13f64bcc34ff253bd9bfb78f38a"
+    );
 
     jest.mock("node-fetch");
     const fetch = require("node-fetch");
