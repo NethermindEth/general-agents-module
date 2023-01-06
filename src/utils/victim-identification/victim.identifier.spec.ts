@@ -437,90 +437,6 @@ describe("Victim Identifier tests suite", () => {
     });
   });
 
-  it("should return a preparation stage victim when the victim tag exists on the Ethereum DB list", async () => {
-    const mockTxEvent = new TestTransactionEvent().setBlock(244123).setTo("");
-    mockProvider.setNetwork(1);
-
-    mockAlertsResponse = {
-      alerts: [
-        {
-          metadata: {
-            address1: createAddress("0x1234"),
-            address1again: createAddress("0x1234"),
-            address2: createAddress("0x5678"),
-          },
-        },
-      ],
-      pageInfo: {
-        hasNextPage: false,
-        endCursor: {
-          alertId: "1234",
-          blockNumber: 0,
-        },
-      },
-    };
-
-    const createdContractAddress = "0xBd770416a3345F91E4B34576cb804a576fa48EB1";
-    const extractedAddress1 = createAddress("0x1234");
-
-    mockProvider.addStorage(createdContractAddress, 0, 244123, extractedAddress1);
-    mockProvider.setCode(extractedAddress1, "0x1234", 244123);
-
-    for (let i = 1; i < 20; i++) {
-      mockProvider.addStorage(
-        createdContractAddress,
-        i,
-        244123,
-        "0x0000000000000000000000000000000000000000000000000000000000000000"
-      );
-    }
-
-    jest.mock("node-fetch");
-    const fetch = require("node-fetch");
-    const { Response } = jest.requireActual("node-fetch");
-
-    let callCount = 0;
-    fetch.mockImplementation(() => {
-      callCount += 1;
-      if (callCount === 1) {
-        // Call the Luabase DB to fetch the tag that "fails"
-        return Promise.resolve(new Response(JSON.stringify({})));
-      } else if (callCount === 2) {
-        // As the tag was not fetched in the previous call, it tries to fetch the contract creator address, but also "fails" (e.g. due to a block explorer API limit)
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              message: "NOTOK",
-            })
-          )
-        );
-      } else if (callCount === 3) {
-        // Then it successfully fetches the project using the Ethereum lists DB
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              project: "World Cup Inu 2022",
-            })
-          )
-        );
-      }
-    });
-
-    const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
-    expect(victims).toStrictEqual({
-      exploitationStage: {},
-      preparationStage: {
-        "0x0000000000000000000000000000000000001234": {
-          protocolUrl: "https://worldcupinu.app/",
-          protocolTwitter: "wcierc20",
-          tag: "World Cup Inu 2022",
-          holders: [],
-          confidence: 0,
-        },
-      },
-    });
-  });
-
   it("should return a preparation stage victim when the victim is an ERC20 token", async () => {
     const mockTxEvent = new TestTransactionEvent().setBlock(344123).setTo("");
     mockProvider.setNetwork(1);
@@ -667,9 +583,6 @@ describe("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
-        // Call to the Ethereum lists DB fails
-        return Promise.reject(new Response(JSON.stringify({})));
-      } else if (callCount === 4) {
         // Not mocking an ERC20 symbol/name call implying a failed call, so it then fetches the contract name
         return Promise.resolve(
           new Response(
@@ -679,7 +592,7 @@ describe("Victim Identifier tests suite", () => {
             })
           )
         );
-      } else if (callCount === 5) {
+      } else if (callCount === 4) {
         // Call to the block explorer API to fetch the implementation contract name
         return Promise.resolve(
           new Response(
@@ -1066,9 +979,6 @@ describe("Victim Identifier tests suite", () => {
         // Exploitation Stage Victim: Failed call to get the contract creator address
         return Promise.reject(new Response());
       } else if (callCount === 7) {
-        // Exploitation Stage Victim: Failed call to Ethereum list DB
-        return Promise.reject(new Response());
-      } else if (callCount === 8) {
         // Exploitation Stage Victim: Failed call to get the token holders
         return Promise.reject(new Response());
       }

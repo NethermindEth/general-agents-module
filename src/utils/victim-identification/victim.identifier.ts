@@ -664,26 +664,16 @@ export default class VictimIdentifier extends TokenInfoFetcher {
 
           // If the tag was still not found, try to fetch it from the Ethereum Lists database
           if (!tag) {
-            try {
-              const ethereumListsDbResponse = (await (
-                await fetch(
-                  `https://raw.githubusercontent.com/ethereum-lists/contracts/main/contracts/${chainId}/${ethers.utils.getAddress(
-                    victim
-                  )}.json`
-                )
-              ).json()) as any;
-              tag = ethereumListsDbResponse.project;
-            } catch {
-              // If an error occurs, try to fetch the tag using the ERC20 'symbol' or 'name' methods
-              tag = await this.getSymbolOrName(chainId, blockNumber, victim.toLowerCase());
+            // If the tag is still not found, try to fetch it using the ERC20 'symbol' or 'name' methods
+            tag = await this.getSymbolOrName(chainId, blockNumber, victim.toLowerCase());
 
-              // If the tag is "Not Found", try to fetch the contract name
-              if (tag === "Not Found") {
-                tag = await getContractName(provider, victim, chainId, blockNumber);
-              }
+            // If the tag is "Not Found", try to fetch the contract name
+            if (tag === "Not Found") {
+              tag = await getContractName(provider, victim, chainId, blockNumber);
             }
           }
         }
+
         // Skip the victim if it is a known false positive
         if (
           tag.startsWith("MEV") ||
