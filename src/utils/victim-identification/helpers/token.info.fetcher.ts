@@ -2,18 +2,135 @@ import { providers, Contract, BigNumber, ethers } from "ethers";
 import { Interface } from "ethers/lib/utils";
 import LRU from "lru-cache";
 import { MKR_TOKEN_ABI, TOKEN_ABI, SUBGRAPH_URL } from "./constants";
-import { restApis } from "./config";
-import {
-  getChainByChainId,
-  getNativeTokenByChainId,
-  getNativeTokenPrice,
-  getNativeTokenSymbolByChainId,
-  getTokenPriceUrl,
-  getTopTokenHoldersUrl,
-  getUniswapPrice,
-  uniswapV3Query,
-} from "./helper";
 import fetch from "node-fetch";
+
+const restApis: Record<string, string> = {
+  ethplorerKey: "",
+  luabaseKey: "",
+  moralisKey: "",
+};
+
+const getTopTokenHoldersUrl = (tokenAddress: string, key: string) => {
+  return `https://api.ethplorer.io/getTopTokenHolders/${tokenAddress}?apiKey=${key}&limit=1000`;
+};
+
+const uniswapV3Query = (pool: string) => {
+  return `
+  {
+    positions(where: {
+      pool: "${pool.toLowerCase()}"
+    }) {
+      owner
+    }
+  }
+  `;
+};
+
+const getMoralisChainByChainId = (chainId: number) => {
+  switch (Number(chainId)) {
+    case 56:
+      return "bsc";
+    case 137:
+      return "polygon";
+    case 250:
+      return "fantom";
+    case 43114:
+      return "avalanche";
+    default:
+      return "eth";
+  }
+};
+
+const getUniswapPrice = async (chainId: number, token: string) => {
+  if (restApis["moralisKey"] === "") return 0;
+  const options = {
+    method: "GET",
+    params: { chain: getMoralisChainByChainId(chainId) },
+    headers: { accept: "application/json", "X-API-Key": restApis["moralisKey"] },
+  };
+  const response = (await (
+    await fetch(`https://deep-index.moralis.io/api/v2/erc20/${token}/price`, options)
+  ).json()) as any;
+  return response.usdPrice;
+};
+
+const getTokenPriceUrl = (chain: string, token: string) => {
+  return `https://api.coingecko.com/api/v3/simple/token_price/${chain}?contract_addresses=${token}&vs_currencies=usd`;
+};
+
+const getChainByChainId = (chainId: number) => {
+  switch (Number(chainId)) {
+    case 10:
+      return "optimistic-ethereum";
+    case 56:
+      return "binance-smart-chain";
+    case 137:
+      return "polygon-pos";
+    case 250:
+      return "fantom";
+    case 42161:
+      return "arbitrum-one";
+    case 43114:
+      return "avalanche";
+    default:
+      return "ethereum";
+  }
+};
+
+const getNativeTokenByChainId = (chainId: number) => {
+  switch (Number(chainId)) {
+    case 10:
+      return "ethereum";
+    case 56:
+      return "binancecoin";
+    case 137:
+      return "matic-network";
+    case 250:
+      return "fantom";
+    case 42161:
+      return "ethereum";
+    case 43114:
+      return "avalanche-2";
+    default:
+      return "ethereum";
+  }
+};
+
+const getNativeTokenPrice = (chain: string) => {
+  return `https://api.coingecko.com/api/v3/simple/price?ids=${chain}&vs_currencies=usd`;
+};
+
+const getNativeTokenSymbolByChainId = (chainId: number) => {
+  switch (Number(chainId)) {
+    case 10:
+      return "ETH";
+    case 56:
+      return "BNB";
+    case 137:
+      return "MATIC";
+    case 250:
+      return "FTM";
+    case 42161:
+      return "ETH";
+    case 43114:
+      return "AVAX";
+    default:
+      return "ETH";
+  }
+};
+
+interface apiKeys {
+  ethplorerApiKey?: string;
+  luabaseApiKey?: string;
+  moralisApiKey?: string;
+  etherscanApiKey?: string;
+  optimisticEtherscanApiKey?: string;
+  bscscanApiKey?: string;
+  polygonscanApiKey?: string;
+  fantomscanApiKey?: string;
+  arbiscanApiKey?: string;
+  snowtraceApiKey?: string;
+}
 
 export default class TokenInfoFetcher {
   provider: providers.JsonRpcProvider;
@@ -22,7 +139,12 @@ export default class TokenInfoFetcher {
   private tokenContract: Contract;
   latestBlockNumber: number;
 
-  constructor(provider: providers.JsonRpcProvider) {
+  constructor(provider: providers.JsonRpcProvider, apiKeys: apiKeys) {
+    // Extract the keys or set default values
+    const { ethplorerApiKey = "freekey", moralisApiKey = "" } = apiKeys;
+    // Set the keys
+    restApis["ethplorerKey"] = ethplorerApiKey;
+    restApis["moralisKey"] = moralisApiKey;
     this.provider = provider;
     this.cache = new LRU<string, BigNumber | number | string>({
       max: 10000,
