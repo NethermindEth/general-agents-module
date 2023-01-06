@@ -6,20 +6,273 @@ import AddressesExtractor from "./helpers/addresses.extractor";
 import {
   ERC20_TRANSFER_EVENT,
   PREPARATION_BOT,
-  wrappedNativeTokens,
   WRAPPED_NATIVE_TOKEN_EVENTS,
   ZERO,
   MAX_USD_VALUE,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
-import {
-  urlAndTwitterFetcher,
-  getLuabaseChainByChainId,
-  fetchLuabaseDb,
-  getContractCreator,
-  getContractName,
-} from "./helpers/helper";
-import { apiKeys, etherscanApis, restApis } from "./helpers/config";
+import { toChecksumAddress } from "..";
+import { getWebsiteAndTwitter } from "./helpers/urlAndTwitter";
+
+const wrappedNativeTokens: Record<number, string> = {
+  1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  10: "0x4200000000000000000000000000000000000006",
+  56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  137: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+  43114: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+};
+
+interface apiKeys {
+  ethplorerApiKey?: string;
+  luabaseApiKey?: string;
+  moralisApiKey?: string;
+  etherscanApiKey?: string;
+  optimisticEtherscanApiKey?: string;
+  bscscanApiKey?: string;
+  polygonscanApiKey?: string;
+  fantomscanApiKey?: string;
+  arbiscanApiKey?: string;
+  snowtraceApiKey?: string;
+}
+
+const restApis: Record<string, string> = {
+  ethplorerKey: "",
+  luabaseKey: "",
+  moralisKey: "",
+};
+
+interface etherscanApisInterface {
+  [key: number]: {
+    key: string;
+    urlContractName: string;
+    urlContractCreation: string;
+  };
+}
+
+const etherscanApis: etherscanApisInterface = {
+  1: {
+    key: "",
+    urlContractName: "https://api.etherscan.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.etherscan.io/api?module=contract&action=getcontractcreation",
+  },
+  10: {
+    key: "",
+    urlContractName: "https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api-optimistic.etherscan.io/api?module=contract&action=getcontractcreation",
+  },
+  56: {
+    key: "",
+    urlContractName: "https://api.bscscan.com/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.bscscan.com/api?module=contract&action=getcontractcreation",
+  },
+  137: {
+    key: "",
+    urlContractName: "https://api.polygonscan.com/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.polygonscan.com/api?module=contract&action=getcontractcreation",
+  },
+  250: {
+    key: "",
+    urlContractName: "https://api.ftmscan.com/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.ftmscan.com/api?module=contract&action=getcontractcreation",
+  },
+  42161: {
+    key: "",
+    urlContractName: "https://api.arbiscan.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.arbiscan.io/api?module=contract&action=getcontractcreation",
+  },
+  43114: {
+    key: "",
+    urlContractName: "https://api.snowtrace.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.snowtrace.io/api?module=contract&action=getcontractcreation",
+  },
+};
+
+const urlAndTwitterFetcher = (protocols: string[][], tag: string): string[] => {
+  const correctProtocols = protocols
+    .filter((protocol) => {
+      const tagParts: string[] = tag.split(/[-.: ]/);
+      const protocolParts: string[] = protocol[0].split("-");
+      return (
+        protocol[0] === tagParts[0].toLowerCase() ||
+        protocolParts[0] === tagParts[0].toLowerCase() ||
+        (tagParts[0].length > 3 && protocolParts[0].startsWith(tagParts[0].toLowerCase()))
+      );
+    })
+    .sort();
+
+  return getWebsiteAndTwitter(tag, correctProtocols);
+};
+
+const getLuabaseChainByChainId = (chainId: number) => {
+  switch (Number(chainId)) {
+    case 250:
+      return "fantom";
+    case 137:
+      return "polygon";
+    default:
+      return "ethereum";
+  }
+};
+
+const fetchLuabaseDb = async (address: string, chain: string): Promise<string> => {
+  if (restApis["luabaseKey"] === "") return "";
+
+  const sqlQuery: string = `
+        select tag
+        from ${chain}.tags
+        where address='${address}'
+        limit 15
+      `;
+
+  const options = {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      block: {
+        details: {
+          sql: sqlQuery,
+          parameters: {},
+        },
+      },
+      api_key: restApis["luabaseKey"],
+    }),
+  };
+  let response;
+  try {
+    response = (await (await fetch("https://q.luabase.com/run", options)).json()) as any;
+    return response.data[0].tag;
+  } catch {
+    return "";
+  }
+};
+
+// Helper function to fetch implementation address
+const getStorageFallback = async (
+  provider: ethers.providers.JsonRpcProvider,
+  address: string,
+  blockNumber: number
+): Promise<string> => {
+  let storage = "0x0000000000000000000000000000000000000000000000000000000000000000"; // default: empty slot
+
+  // Check slots of the hashes: 1) "eip1967.proxy.implementation", 2) "org.zeppelinos.proxy.implementation"
+  for (const slot of [
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+    "0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3",
+  ]) {
+    storage = await provider.getStorageAt(address, slot, blockNumber);
+
+    const padded = storage.replace(/^0x/, "").padStart(64, "0");
+    storage = "0x" + padded;
+
+    if (!ethers.BigNumber.from(storage.replace(/^(0x)?/, "0x")).eq(ethers.BigNumber.from(0))) {
+      break;
+    }
+  }
+  return storage;
+};
+
+/* 
+  @OpenZeppelin's getImplementationAddress method simplified and using ethers.BigNumber instead of BigInt
+  Original version here: https://github.com/OpenZeppelin/openzeppelin-upgrades/blob/master/packages/core/src/eip-1967.ts#L20
+*/
+export const getImplementationAddress = async (
+  provider: ethers.providers.JsonRpcProvider,
+  address: string,
+  blockNumber: number
+) => {
+  let storage = "0x0000000000000000000000000000000000000000000000000000000000000000"; // default: empty slot
+  storage = await getStorageFallback(provider, address, blockNumber);
+
+  if (ethers.BigNumber.from(storage.replace(/^(0x)?/, "0x")).eq(ethers.BigNumber.from(0))) {
+    return undefined;
+  }
+
+  //Helper function
+  function parseAddress(addressString: string): string | undefined {
+    const buf = Buffer.from(addressString.replace(/^0x/, ""), "hex");
+    if (!buf.subarray(0, 12).equals(Buffer.alloc(12, 0))) {
+      return undefined;
+    }
+    const address = "0x" + buf.toString("hex", 12, 32); // grab the last 20 bytes
+    return toChecksumAddress(address);
+  }
+
+  //Helper function
+  function parseAddressFromStorage(storage: string): string {
+    const address = parseAddress(storage);
+    if (address === undefined) {
+      throw new Error(`Value in storage is not an address (${storage})`);
+    }
+    return address;
+  }
+
+  return parseAddressFromStorage(storage);
+};
+
+async function getContractName(
+  provider: ethers.providers.JsonRpcProvider,
+  address: string,
+  chainId: number,
+  blockNumber: number
+) {
+  const { urlContractName, key }: { urlContractName: string; key: string } = etherscanApis[chainId];
+  let url = `${urlContractName}&address=${address}&apikey=${key}`;
+  let result;
+  try {
+    result = (await (await fetch(url)).json()) as any;
+    if (result.message.startsWith("NOTOK")) {
+      console.log(`block explorer error occurred; skipping contract name check for ${address}`);
+      return "Not Found";
+    }
+    let contractName = result.result[0].ContractName;
+    if (contractName === "") {
+      return "Not Found";
+    }
+
+    if (contractName.toLowerCase().includes("proxy")) {
+      let implementation: string | undefined;
+      implementation = await getImplementationAddress(provider, address, blockNumber);
+
+      if (implementation !== undefined) {
+        url = `${urlContractName}&address=${implementation}&apikey=${key}`;
+        result = (await (await fetch(url)).json()) as any;
+
+        if (result.message.startsWith("NOTOK")) {
+          console.log(
+            `block explorer error occurred; skipping contract name check for implementation address at ${address}`
+          );
+          return "Not Found";
+        }
+
+        contractName = result.result[0].ContractName;
+        if (contractName === "") {
+          return "Not Found";
+        }
+
+        return contractName;
+      } else return "Not Found";
+    } else return contractName;
+  } catch {
+    return "Not Found";
+  }
+}
+
+const getContractCreator = async (address: string, chainId: number) => {
+  const { urlContractCreation, key }: { urlContractCreation: string; key: string } = etherscanApis[chainId];
+  const url = `${urlContractCreation}&contractaddresses=${address}&apikey=${key}`;
+
+  let result;
+  try {
+    result = (await (await fetch(url)).json()) as any;
+    if (result.message.startsWith("NOTOK")) {
+      console.log(`block explorer error occured; skipping contract creator check for ${address}`);
+      return "";
+    }
+    return result.result[0].contractCreator;
+  } catch {
+    return "";
+  }
+};
 
 export default class VictimIdentifier extends TokenInfoFetcher {
   addressesExtractor: AddressesExtractor;
@@ -30,7 +283,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   private isContractCache: LRU<string, boolean>;
 
   constructor(provider: ethers.providers.JsonRpcProvider, apiKeys: apiKeys) {
-    super(provider);
+    super(provider, apiKeys);
 
     // Extract the keys or set default values
     const {
@@ -410,28 +663,17 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             }
           }
 
-          // If the tag was still not found, try to fetch it from the Ethereum Lists database
           if (!tag) {
-            try {
-              const ethereumListsDbResponse = (await (
-                await fetch(
-                  `https://raw.githubusercontent.com/ethereum-lists/contracts/main/contracts/${chainId}/${ethers.utils.getAddress(
-                    victim
-                  )}.json`
-                )
-              ).json()) as any;
-              tag = ethereumListsDbResponse.project;
-            } catch {
-              // If an error occurs, try to fetch the tag using the ERC20 'symbol' or 'name' methods
-              tag = await this.getSymbolOrName(chainId, blockNumber, victim.toLowerCase());
+            // If the tag is still not found, try to fetch it using the ERC20 'symbol' or 'name' methods
+            tag = await this.getSymbolOrName(chainId, blockNumber, victim.toLowerCase());
 
-              // If the tag is "Not Found", try to fetch the contract name
-              if (tag === "Not Found") {
-                tag = await getContractName(provider, victim, chainId);
-              }
+            // If the tag is "Not Found", try to fetch the contract name
+            if (tag === "Not Found") {
+              tag = await getContractName(provider, victim, chainId, blockNumber);
             }
           }
         }
+
         // Skip the victim if it is a known false positive
         if (
           tag.startsWith("MEV") ||
@@ -454,7 +696,9 @@ export default class VictimIdentifier extends TokenInfoFetcher {
               await this.getName(blockNumber, victim.toLowerCase())
             );
           }
-          holders = await this.getHolders(victim, tag);
+          if (Number(chainId) === 1) {
+            holders = await this.getHolders(victim, tag);
+          }
         } else if (tag === "Not Found") {
           tag = "";
         }
@@ -533,6 +777,11 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       blockNumber
     );
 
+    // Filter the exploitation stage victims to keep only the ones that were identified
+    const filteredExploitationStageVictims = exploitationStageVictims.filter((victim) =>
+      Object.keys(exploitationStageIdentifiedVictims).includes(victim.address)
+    );
+
     // Create the final object with the confidence levels
     const exploitationStageVictimsWithConfidence: Record<
       string,
@@ -546,7 +795,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     > = {};
 
     // Add confidence property to the exploitation stage victims objects
-    for (const victim of exploitationStageVictims) {
+    for (const victim of filteredExploitationStageVictims) {
       exploitationStageVictimsWithConfidence[victim.address] = {
         ...exploitationStageIdentifiedVictims[victim.address],
         confidence: victim.confidence,

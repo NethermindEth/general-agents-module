@@ -61,12 +61,25 @@ const tokenAddress = createAddress("0xa2");
 const TOKEN_IFACE = new Interface(TOKEN_ABI);
 const MKR_TOKEN_IFACE = new Interface(MKR_TOKEN_ABI);
 
+const testKeys = {
+  ethplorerApiKey: "Test1",
+  luabaseApiKey: "Test2",
+  moralisApiKey: "Test3",
+  etherscanApiKey: "Test4",
+  optimisticEtherscanApiKey: "Test5",
+  bscscanApiKey: "Test6",
+  polygonscanApiKey: "Test7",
+  fantomscanApiKey: "Test8",
+  arbiscanApiKey: "Test9",
+  snowtraceApiKey: "Test10",
+};
+
 describe("TokenInfoFetcher tests suite", () => {
   const mockProvider: MockEthersProvider = new MockEthersProvider();
   let fetcher: TokenInfoFetcher;
 
   beforeAll(() => {
-    fetcher = new TokenInfoFetcher(mockProvider as any);
+    fetcher = new TokenInfoFetcher(mockProvider as any, testKeys);
   });
 
   afterEach(() => {
