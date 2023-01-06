@@ -706,7 +706,9 @@ export default class VictimIdentifier extends TokenInfoFetcher {
               await this.getName(blockNumber, victim.toLowerCase())
             );
           }
-          holders = await this.getHolders(victim, tag);
+          if (Number(chainId) === 1) {
+            holders = await this.getHolders(victim, tag);
+          }
         } else if (tag === "Not Found") {
           tag = "";
         }
@@ -785,6 +787,11 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       blockNumber
     );
 
+    // Filter the exploitation stage victims to keep only the ones that were identified
+    const filteredExploitationStageVictims = exploitationStageVictims.filter((victim) =>
+      Object.keys(exploitationStageIdentifiedVictims).includes(victim.address)
+    );
+
     // Create the final object with the confidence levels
     const exploitationStageVictimsWithConfidence: Record<
       string,
@@ -798,7 +805,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     > = {};
 
     // Add confidence property to the exploitation stage victims objects
-    for (const victim of exploitationStageVictims) {
+    for (const victim of filteredExploitationStageVictims) {
       exploitationStageVictimsWithConfidence[victim.address] = {
         ...exploitationStageIdentifiedVictims[victim.address],
         confidence: victim.confidence,
