@@ -154,6 +154,7 @@ const getStorageFallback = async (
 ): Promise<string> => {
   let storage = "0x0000000000000000000000000000000000000000000000000000000000000000"; // default: empty slot
 
+  // Check slots of the hashes: 1) "eip1967.proxy.implementation", 2) "org.zeppelinos.proxy.implementation"
   for (const slot of [
     "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
     "0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3",
@@ -662,7 +663,6 @@ export default class VictimIdentifier extends TokenInfoFetcher {
             }
           }
 
-          // If the tag was still not found, try to fetch it from the Ethereum Lists database
           if (!tag) {
             // If the tag is still not found, try to fetch it using the ERC20 'symbol' or 'name' methods
             tag = await this.getSymbolOrName(chainId, blockNumber, victim.toLowerCase());
