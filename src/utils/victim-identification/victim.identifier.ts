@@ -12,14 +12,136 @@ import {
   MAX_USD_VALUE,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
-import {
-  urlAndTwitterFetcher,
-  getLuabaseChainByChainId,
-  fetchLuabaseDb,
-  getContractCreator,
-  getContractName,
-} from "./helpers/helper";
+import { urlAndTwitterFetcher, getLuabaseChainByChainId, fetchLuabaseDb } from "./helpers/helper";
 import { apiKeys, etherscanApis, restApis } from "./helpers/config";
+import { toChecksumAddress } from "..";
+
+// Helper function to fetch implementation address
+const getStorageFallback = async (
+  provider: ethers.providers.JsonRpcProvider,
+  address: string,
+  blockNumber: number
+): Promise<string> => {
+  let storage = "0x0000000000000000000000000000000000000000000000000000000000000000"; // default: empty slot
+
+  for (const slot of [
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+    "0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3",
+  ]) {
+    storage = await provider.getStorageAt(address, slot, blockNumber);
+
+    const padded = storage.replace(/^0x/, "").padStart(64, "0");
+    storage = "0x" + padded;
+
+    if (!ethers.BigNumber.from(storage.replace(/^(0x)?/, "0x")).eq(ethers.BigNumber.from(0))) {
+      break;
+    }
+  }
+  return storage;
+};
+
+/* 
+  @OpenZeppelin's getImplementationAddress method simplified and using ethers.BigNumber instead of BigInt
+  Original version here: https://github.com/OpenZeppelin/openzeppelin-upgrades/blob/master/packages/core/src/eip-1967.ts#L20
+*/
+export const getImplementationAddress = async (
+  provider: ethers.providers.JsonRpcProvider,
+  address: string,
+  blockNumber: number
+) => {
+  let storage = "0x0000000000000000000000000000000000000000000000000000000000000000"; // default: empty slot
+  storage = await getStorageFallback(provider, address, blockNumber);
+
+  if (ethers.BigNumber.from(storage.replace(/^(0x)?/, "0x")).eq(ethers.BigNumber.from(0))) {
+    return undefined;
+  }
+
+  //Helper function
+  function parseAddress(addressString: string): string | undefined {
+    const buf = Buffer.from(addressString.replace(/^0x/, ""), "hex");
+    if (!buf.subarray(0, 12).equals(Buffer.alloc(12, 0))) {
+      return undefined;
+    }
+    const address = "0x" + buf.toString("hex", 12, 32); // grab the last 20 bytes
+    return toChecksumAddress(address);
+  }
+
+  //Helper function
+  function parseAddressFromStorage(storage: string): string {
+    const address = parseAddress(storage);
+    if (address === undefined) {
+      throw new Error(`Value in storage is not an address (${storage})`);
+    }
+    return address;
+  }
+
+  return parseAddressFromStorage(storage);
+};
+
+async function getContractName(
+  provider: ethers.providers.JsonRpcProvider,
+  address: string,
+  chainId: number,
+  blockNumber: number
+) {
+  const { urlContractName, key }: { urlContractName: string; key: string } = etherscanApis[chainId];
+  let url = `${urlContractName}&address=${address}&apikey=${key}`;
+  let result;
+  try {
+    result = (await (await fetch(url)).json()) as any;
+    if (result.message.startsWith("NOTOK")) {
+      console.log(`block explorer error occurred; skipping contract name check for ${address}`);
+      return "Not Found";
+    }
+    let contractName = result.result[0].ContractName;
+    if (contractName === "") {
+      return "Not Found";
+    }
+
+    if (contractName.toLowerCase().includes("proxy")) {
+      let implementation: string | undefined;
+      implementation = await getImplementationAddress(provider, address, blockNumber);
+
+      if (implementation !== undefined) {
+        url = `${urlContractName}&address=${implementation}&apikey=${key}`;
+        result = (await (await fetch(url)).json()) as any;
+
+        if (result.message.startsWith("NOTOK")) {
+          console.log(
+            `block explorer error occurred; skipping contract name check for implementation address at ${address}`
+          );
+          return "Not Found";
+        }
+
+        contractName = result.result[0].ContractName;
+        if (contractName === "") {
+          return "Not Found";
+        }
+
+        return contractName;
+      } else return "Not Found";
+    } else return contractName;
+  } catch {
+    return "Not Found";
+  }
+}
+
+const getContractCreator = async (address: string, chainId: number) => {
+  const { urlContractCreation, key }: { urlContractCreation: string; key: string } = etherscanApis[chainId];
+  const url = `${urlContractCreation}&contractaddresses=${address}&apikey=${key}`;
+
+  let result;
+  try {
+    result = (await (await fetch(url)).json()) as any;
+    if (result.message.startsWith("NOTOK")) {
+      console.log(`block explorer error occured; skipping contract creator check for ${address}`);
+      return "";
+    }
+    return result.result[0].contractCreator;
+  } catch {
+    return "";
+  }
+};
 
 export default class VictimIdentifier extends TokenInfoFetcher {
   addressesExtractor: AddressesExtractor;
@@ -30,7 +152,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   private isContractCache: LRU<string, boolean>;
 
   constructor(provider: ethers.providers.JsonRpcProvider, apiKeys: apiKeys) {
-    super(provider);
+    super(provider, apiKeys);
 
     // Extract the keys or set default values
     const {
@@ -427,7 +549,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
 
               // If the tag is "Not Found", try to fetch the contract name
               if (tag === "Not Found") {
-                tag = await getContractName(provider, victim, chainId);
+                tag = await getContractName(provider, victim, chainId, blockNumber);
               }
             }
           }
