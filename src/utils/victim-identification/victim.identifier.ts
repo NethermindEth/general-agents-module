@@ -6,15 +6,145 @@ import AddressesExtractor from "./helpers/addresses.extractor";
 import {
   ERC20_TRANSFER_EVENT,
   PREPARATION_BOT,
-  wrappedNativeTokens,
   WRAPPED_NATIVE_TOKEN_EVENTS,
   ZERO,
   MAX_USD_VALUE,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
-import { urlAndTwitterFetcher, getLuabaseChainByChainId, fetchLuabaseDb } from "./helpers/helper";
-import { apiKeys, etherscanApis, restApis } from "./helpers/config";
 import { toChecksumAddress } from "..";
+import { getWebsiteAndTwitter } from "./helpers/urlAndTwitter";
+
+const wrappedNativeTokens: Record<number, string> = {
+  1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  10: "0x4200000000000000000000000000000000000006",
+  56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  137: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+  43114: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+};
+
+interface apiKeys {
+  ethplorerApiKey?: string;
+  luabaseApiKey?: string;
+  moralisApiKey?: string;
+  etherscanApiKey?: string;
+  optimisticEtherscanApiKey?: string;
+  bscscanApiKey?: string;
+  polygonscanApiKey?: string;
+  fantomscanApiKey?: string;
+  arbiscanApiKey?: string;
+  snowtraceApiKey?: string;
+}
+
+const restApis: Record<string, string> = {
+  ethplorerKey: "",
+  luabaseKey: "",
+  moralisKey: "",
+};
+
+interface etherscanApisInterface {
+  [key: number]: {
+    key: string;
+    urlContractName: string;
+    urlContractCreation: string;
+  };
+}
+
+const etherscanApis: etherscanApisInterface = {
+  1: {
+    key: "",
+    urlContractName: "https://api.etherscan.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.etherscan.io/api?module=contract&action=getcontractcreation",
+  },
+  10: {
+    key: "",
+    urlContractName: "https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api-optimistic.etherscan.io/api?module=contract&action=getcontractcreation",
+  },
+  56: {
+    key: "",
+    urlContractName: "https://api.bscscan.com/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.bscscan.com/api?module=contract&action=getcontractcreation",
+  },
+  137: {
+    key: "",
+    urlContractName: "https://api.polygonscan.com/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.polygonscan.com/api?module=contract&action=getcontractcreation",
+  },
+  250: {
+    key: "",
+    urlContractName: "https://api.ftmscan.com/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.ftmscan.com/api?module=contract&action=getcontractcreation",
+  },
+  42161: {
+    key: "",
+    urlContractName: "https://api.arbiscan.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.arbiscan.io/api?module=contract&action=getcontractcreation",
+  },
+  43114: {
+    key: "",
+    urlContractName: "https://api.snowtrace.io/api?module=contract&action=getsourcecode",
+    urlContractCreation: "https://api.snowtrace.io/api?module=contract&action=getcontractcreation",
+  },
+};
+
+const urlAndTwitterFetcher = (protocols: string[][], tag: string): string[] => {
+  const correctProtocols = protocols
+    .filter((protocol) => {
+      const tagParts: string[] = tag.split(/[-.: ]/);
+      const protocolParts: string[] = protocol[0].split("-");
+      return (
+        protocol[0] === tagParts[0].toLowerCase() ||
+        protocolParts[0] === tagParts[0].toLowerCase() ||
+        (tagParts[0].length > 3 && protocolParts[0].startsWith(tagParts[0].toLowerCase()))
+      );
+    })
+    .sort();
+
+  return getWebsiteAndTwitter(tag, correctProtocols);
+};
+
+const getLuabaseChainByChainId = (chainId: number) => {
+  switch (Number(chainId)) {
+    case 250:
+      return "fantom";
+    case 137:
+      return "polygon";
+    default:
+      return "ethereum";
+  }
+};
+
+const fetchLuabaseDb = async (address: string, chain: string): Promise<string> => {
+  if (restApis["luabaseKey"] === "") return "";
+
+  const sqlQuery: string = `
+        select tag
+        from ${chain}.tags
+        where address='${address}'
+        limit 15
+      `;
+
+  const options = {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      block: {
+        details: {
+          sql: sqlQuery,
+          parameters: {},
+        },
+      },
+      api_key: restApis["luabaseKey"],
+    }),
+  };
+  let response;
+  try {
+    response = (await (await fetch("https://q.luabase.com/run", options)).json()) as any;
+    return response.data[0].tag;
+  } catch {
+    return "";
+  }
+};
 
 // Helper function to fetch implementation address
 const getStorageFallback = async (
