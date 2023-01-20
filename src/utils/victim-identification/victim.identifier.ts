@@ -24,7 +24,6 @@ const wrappedNativeTokens: Record<number, string> = {
 
 interface apiKeys {
   ethplorerApiKey?: string;
-  luabaseApiKey?: string;
   moralisApiKey?: string;
   etherscanApiKey?: string;
   optimisticEtherscanApiKey?: string;
@@ -37,7 +36,6 @@ interface apiKeys {
 
 const restApis: Record<string, string> = {
   ethplorerKey: "",
-  luabaseKey: "",
   moralisKey: "",
 };
 
@@ -261,7 +259,6 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     // Extract the keys or set default values
     const {
       ethplorerApiKey = "freekey",
-      luabaseApiKey = "",
       moralisApiKey = "",
       etherscanApiKey = "YourApiKeyToken",
       optimisticEtherscanApiKey = "YourApiKeyToken",
@@ -273,7 +270,6 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     } = apiKeys;
 
     // Set the keys
-    restApis["luabaseKey"] = luabaseApiKey;
     restApis["ethplorerKey"] = ethplorerApiKey;
     restApis["moralisKey"] = moralisApiKey;
     etherscanApis[1].key = etherscanApiKey;
@@ -620,13 +616,13 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       const result = await (async () => {
         let tag: string = "";
 
-        // Attempt to fetch the tag from the Luabase database
+        // Attempt to fetch the tag from Forta database
         tag = await fetchFortaLabel(victim.toLowerCase(), chainId);
         // If an error occurs, check if the victim is a contract
         if (!tag) {
           const contractCreator = await getContractCreator(victim.toLowerCase(), chainId);
 
-          // If the victim is a contract, try to fetch the tag from the Luabase database using the contract creator
+          // If the victim is a contract, try to fetch the tag from Forta database using the contract creator
           if (contractCreator) {
             tag = await fetchFortaLabel(contractCreator, chainId);
             // If the tag ends with "Deployer", extract the name before the colon

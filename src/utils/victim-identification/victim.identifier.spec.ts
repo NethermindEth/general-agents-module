@@ -123,7 +123,6 @@ class MockEthersProviderExtended extends MockEthersProvider {
 
 const testKeys = {
   ethplorerApiKey: "Test1",
-  luabaseApiKey: "Test2",
   moralisApiKey: "Test3",
   etherscanApiKey: "Test4",
   optimisticEtherscanApiKey: "Test5",
