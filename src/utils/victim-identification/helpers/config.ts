@@ -1,6 +1,5 @@
 export interface apiKeys {
   ethplorerApiKey?: string;
-  luabaseApiKey?: string;
   moralisApiKey?: string;
   etherscanApiKey?: string;
   optimisticEtherscanApiKey?: string;
@@ -13,7 +12,6 @@ export interface apiKeys {
 
 export const restApis: Record<string, string> = {
   ethplorerKey: "",
-  luabaseKey: "",
   moralisKey: "",
 };
 

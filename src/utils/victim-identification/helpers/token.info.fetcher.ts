@@ -6,7 +6,6 @@ import fetch from "node-fetch";
 
 const restApis: Record<string, string> = {
   ethplorerKey: "",
-  luabaseKey: "",
   moralisKey: "",
 };
 
@@ -121,7 +120,6 @@ const getNativeTokenSymbolByChainId = (chainId: number) => {
 
 interface apiKeys {
   ethplorerApiKey?: string;
-  luabaseApiKey?: string;
   moralisApiKey?: string;
   etherscanApiKey?: string;
   optimisticEtherscanApiKey?: string;

@@ -738,7 +738,6 @@ import { VictimIdentifier } from "forta-agent-tools";
 
 const keys = {
   ethplorerApiKey: "...",
-  luabaseApiKey: "...",
   moralisApiKey: "...",
   etherscanApiKey: "...",
   optimisticEtherscanApiKey: "...",
@@ -788,7 +787,6 @@ export default {
 
 - Create a config file with any of the following optional API keys:
   - Ethplorer API (Fetches the addresses of pool tokens holders)
-  - Luabase API (Fetches the block explorer tag)
   - Moralis API (Fetches token prices when CoinGecko calls fail)
   - Block Explorer APIs (Fetches the address of a contract's creator / a contract name)
     - Etherscan

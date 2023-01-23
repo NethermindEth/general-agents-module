@@ -123,7 +123,6 @@ class MockEthersProviderExtended extends MockEthersProvider {
 
 const testKeys = {
   ethplorerApiKey: "Test1",
-  luabaseApiKey: "Test2",
   moralisApiKey: "Test3",
   etherscanApiKey: "Test4",
   optimisticEtherscanApiKey: "Test5",
@@ -281,16 +280,16 @@ describe("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
-        // First call is to the Luabase DB for the 1st extracted contract address
+        // First call is to Forta DB for the 1st extracted contract address
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              data: [{ tag: "Victim5678" }],
+              events: [{ label: { label: "Victim5678" } }],
             })
           )
         );
       } else if (callCount === 2) {
-        // As the tag is fetched from Luabase on the previous call, the 2nd call is to Ethplorer API in regards to the holders
+        // As the tag is fetched from Forta on the previous call, the 2nd call is to Ethplorer API in regards to the holders
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -306,7 +305,7 @@ describe("Victim Identifier tests suite", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              data: [{ tag: "Victim1234" }],
+              events: [{ label: { label: "Victim1234" } }],
             })
           )
         );
@@ -406,7 +405,7 @@ describe("Victim Identifier tests suite", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              data: [{ tag: "Uniswap V3: Deployer" }],
+              events: [{ label: { label: "Uniswap V3: Deployer" } }],
             })
           )
         );
@@ -483,7 +482,7 @@ describe("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
-        // Luabase doesn't return the tag
+        // Forta DB doesn't return the tag
         return Promise.resolve(new Response(JSON.stringify({})));
       } else if (callCount === 2) {
         // Block explorer call to fetch the contract creator address "fails"
@@ -571,7 +570,7 @@ describe("Victim Identifier tests suite", () => {
     fetch.mockImplementation(() => {
       callCount += 1;
       if (callCount === 1) {
-        // Luabase doesn't return the tag
+        // Forta DB doesn't return the tag
         return Promise.resolve(new Response(JSON.stringify({})));
       } else if (callCount === 2) {
         // Block explorer call to fetch the contract creator address "fails"
@@ -948,11 +947,11 @@ describe("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 3) {
-        // Preparation Stage Victim: Call to Luabase DB
+        // Preparation Stage Victim: Call to Forta DB
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              data: [{ tag: "Victim5678" }],
+              events: [{ label: { label: "Victim5678" } }],
             })
           )
         );
@@ -973,7 +972,7 @@ describe("Victim Identifier tests suite", () => {
           )
         );
       } else if (callCount === 5) {
-        // Exploitation Stage Victim: Failed call to Luabase DB
+        // Exploitation Stage Victim: Failed call to Forta DB
         return Promise.reject(new Response());
       } else if (callCount === 6) {
         // Exploitation Stage Victim: Failed call to get the contract creator address

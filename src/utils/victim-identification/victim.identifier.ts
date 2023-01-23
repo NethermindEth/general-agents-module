@@ -24,7 +24,6 @@ const wrappedNativeTokens: Record<number, string> = {
 
 interface apiKeys {
   ethplorerApiKey?: string;
-  luabaseApiKey?: string;
   moralisApiKey?: string;
   etherscanApiKey?: string;
   optimisticEtherscanApiKey?: string;
@@ -37,7 +36,6 @@ interface apiKeys {
 
 const restApis: Record<string, string> = {
   ethplorerKey: "",
-  luabaseKey: "",
   moralisKey: "",
 };
 
@@ -103,44 +101,17 @@ const urlAndTwitterFetcher = (protocols: string[][], tag: string): string[] => {
   return getWebsiteAndTwitter(tag, correctProtocols);
 };
 
-const getLuabaseChainByChainId = (chainId: number) => {
-  switch (Number(chainId)) {
-    case 250:
-      return "fantom";
-    case 137:
-      return "polygon";
-    default:
-      return "ethereum";
-  }
-};
+const fetchFortaLabel = async (address: string, chainId: number): Promise<string> => {
+  if (![1, 137, 250].includes(chainId)) return "";
 
-const fetchLuabaseDb = async (address: string, chain: string): Promise<string> => {
-  if (restApis["luabaseKey"] === "") return "";
+  const LABELS_SOURCE = chainId === 1 ? "etherscan" : chainId === 137 ? "polygon" : "fantom";
 
-  const sqlQuery: string = `
-        select tag
-        from ${chain}.tags
-        where address='${address}'
-        limit 15
-      `;
-
-  const options = {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      block: {
-        details: {
-          sql: sqlQuery,
-          parameters: {},
-        },
-      },
-      api_key: restApis["luabaseKey"],
-    }),
-  };
+  const url = `https://api.forta.network/labels/state?entities=${address}&sourceIds=${LABELS_SOURCE}-tags&limit=1`;
   let response;
+
   try {
-    response = (await (await fetch("https://q.luabase.com/run", options)).json()) as any;
-    return response.data[0].tag;
+    response = await (await fetch(url)).json();
+    return response.events[0]["label"]["label"];
   } catch {
     return "";
   }
@@ -288,7 +259,6 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     // Extract the keys or set default values
     const {
       ethplorerApiKey = "freekey",
-      luabaseApiKey = "",
       moralisApiKey = "",
       etherscanApiKey = "YourApiKeyToken",
       optimisticEtherscanApiKey = "YourApiKeyToken",
@@ -300,7 +270,6 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     } = apiKeys;
 
     // Set the keys
-    restApis["luabaseKey"] = luabaseApiKey;
     restApis["ethplorerKey"] = ethplorerApiKey;
     restApis["moralisKey"] = moralisApiKey;
     etherscanApis[1].key = etherscanApiKey;
@@ -642,21 +611,20 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     > = {};
 
     // Retrieve the tag for the possible victim contract address
-    const chain = getLuabaseChainByChainId(chainId);
     for (const victim of victims) {
       // Process the promises one by one instead of using Promise.all to maintain the order
       const result = await (async () => {
         let tag: string = "";
 
-        // Attempt to fetch the tag from the Luabase database
-        tag = await fetchLuabaseDb(victim.toLowerCase(), chain);
+        // Attempt to fetch the tag from Forta database
+        tag = await fetchFortaLabel(victim.toLowerCase(), chainId);
         // If an error occurs, check if the victim is a contract
         if (!tag) {
           const contractCreator = await getContractCreator(victim.toLowerCase(), chainId);
 
-          // If the victim is a contract, try to fetch the tag from the Luabase database using the contract creator
+          // If the victim is a contract, try to fetch the tag from Forta database using the contract creator
           if (contractCreator) {
-            tag = await fetchLuabaseDb(contractCreator, chain);
+            tag = await fetchFortaLabel(contractCreator, chainId);
             // If the tag ends with "Deployer", extract the name before the colon
             if (tag.endsWith("Deployer")) {
               tag = tag.split(":")[0];
@@ -757,7 +725,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     const preparationStageIdentifiedVictims = await this.identifyVictims(
       this.provider,
       Object.keys(sortedPreparationStageVictims),
-      chainId,
+      Number(chainId),
       blockNumber
     );
 
@@ -773,7 +741,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     const exploitationStageIdentifiedVictims = await this.identifyVictims(
       this.provider,
       exploitationStageVictims.map((victim) => victim.address),
-      chainId,
+      Number(chainId),
       blockNumber
     );
 
