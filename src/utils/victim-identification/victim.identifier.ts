@@ -9,6 +9,7 @@ import {
   WRAPPED_NATIVE_TOKEN_EVENTS,
   ZERO,
   MAX_USD_VALUE,
+  WETH_ADDRESS,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
 import { toChecksumAddress } from "..";
@@ -396,8 +397,13 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       })
     );
 
-    // Remove empty records
-    balanceChangesMap.forEach((record: Record<string, ethers.BigNumber>, key: string) => {
+    // Remove empty records and filter out WETH
+    for (let key of Array.from(balanceChangesMap.keys())) {
+      if (key.toLowerCase() === WETH_ADDRESS) {
+        balanceChangesMap.delete(key);
+        continue;
+      }
+      let record = balanceChangesMap.get(key)!;
       Object.keys(record).forEach((token) => {
         if (record[token].eq(ZERO)) {
           delete record[token];
@@ -406,7 +412,8 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       if (Object.keys(record).length === 0) {
         balanceChangesMap.delete(key);
       }
-    });
+    }
+
     const balanceChangesMapUsd: Map<string, Record<string, number>> = new Map();
     // Get the USD value of the balance changes
     await Promise.all(
@@ -699,8 +706,12 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     for (const victim of Array.from(extractedAddresses)) {
       sortedRecord[victim] = this.victimOccurrences.hasOwnProperty(victim) ? this.victimOccurrences[victim] : 0;
     }
+
+    // Filter out WETH and sort the victims by the number of occurrences
     const sortedPreparationStageVictims: Record<string, number> = Object.fromEntries(
-      Object.entries(sortedRecord).sort((a, b) => a[1] - b[1])
+      Object.entries(sortedRecord)
+        .filter(([address]) => address.toLowerCase() !== WETH_ADDRESS)
+        .sort((a, b) => a[1] - b[1])
     );
 
     // Fetch potential victims on the exploitation stage
