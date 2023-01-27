@@ -294,10 +294,16 @@ export default class TokenInfoFetcher {
             throw new Error("Error: Can't fetch USD price on CoinGecko");
           }
         } catch {
-          if (chainId === 10 || chainId === 42161) return 0; // Moralis API is not available on Optimism & Arbitrum
+          if (chainId === 10) {
+            this.tokensPriceCache.set(`usdPrice-${token}-${block}`, 0);
+            return 0;
+          } // Moralis API is not available on Optimism
           try {
             usdPrice = await getUniswapPrice(chainId, token);
-            if (!usdPrice) return 0;
+            if (!usdPrice) {
+              this.tokensPriceCache.set(`usdPrice-${token}-${block}`, 0);
+              return 0;
+            }
           } catch {
             return 0;
           }
