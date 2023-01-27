@@ -243,9 +243,15 @@ export default class TokenInfoFetcher {
     const key: string = `decimals-${tokenAddress}-${block}`;
     if (this.cache.has(key)) return this.cache.get(key) as number;
 
-    const decimals: number = await token.decimals({
-      blockTag: block,
-    });
+    let decimals: number;
+
+    try {
+      decimals = await token.decimals({
+        blockTag: block,
+      });
+    } catch {
+      decimals = 0;
+    }
 
     this.cache.set(key, decimals);
 
