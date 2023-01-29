@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { Interface } from "ethers/lib/utils";
 import { when } from "jest-when";
 import { AlertsResponse } from "forta-agent/dist/sdk/graphql/forta";
-import { ERC20_TRANSFER_EVENT, TOKEN_ABI } from "./helpers/constants";
+import { ERC20_TRANSFER_EVENT, TOKEN_ABI, WETH_ADDRESS } from "./helpers/constants";
 import { ethers, Trace } from "forta-agent";
 import { createAddress } from "..";
 import { TestTransactionEvent, MockEthersProvider } from "../../test";
@@ -619,6 +619,57 @@ describe("Victim Identifier tests suite", () => {
     });
   });
 
+  it("should not return a preparation stage victim when the victim is WETH address", async () => {
+    const mockTxEvent = new TestTransactionEvent().setBlock(444123).setTo("");
+    mockProvider.setNetwork(1);
+
+    mockAlertsResponse = {
+      alerts: [
+        {
+          metadata: {
+            address1: createAddress("0x1234"),
+            address1again: createAddress("0x1234"),
+            address2: createAddress("0x5678"),
+          },
+        },
+      ],
+      pageInfo: {
+        hasNextPage: false,
+        endCursor: {
+          alertId: "1234",
+          blockNumber: 0,
+        },
+      },
+    };
+
+    const createdContractAddress = "0xBd770416a3345F91E4B34576cb804a576fa48EB1";
+    const extractedAddress1 = WETH_ADDRESS;
+
+    mockProvider.addStorage(createdContractAddress, 0, 444123, extractedAddress1);
+    mockProvider.setCode(extractedAddress1, WETH_ADDRESS, 444123);
+
+    for (let i = 1; i < 20; i++) {
+      mockProvider.addStorage(
+        createdContractAddress,
+        i,
+        444123,
+        "0x0000000000000000000000000000000000000000000000000000000000000000"
+      );
+    }
+    mockProvider.addStorageExtended(
+      extractedAddress1,
+      "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+      444123,
+      "0x000000000000000000000000587969add789c13f64bcc34ff253bd9bfb78f38a"
+    );
+
+    const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
+    expect(victims).toStrictEqual({
+      exploitationStage: {},
+      preparationStage: {},
+    });
+  });
+
   it("should return an exploitation stage victim when its tag is found, exploited via an ERC20 Transfer", async () => {
     const TRANSFER_IFACE = new Interface([ERC20_TRANSFER_EVENT]);
     const TEST_TOKEN = createAddress("0x2222");
@@ -671,6 +722,49 @@ describe("Victim Identifier tests suite", () => {
           confidence: 0.4,
         },
       },
+      preparationStage: {},
+    });
+  });
+
+  it("should not return an exploitation stage victim if the victim is WETH address", async () => {
+    const TRANSFER_IFACE = new Interface([ERC20_TRANSFER_EVENT]);
+    const FROM = createAddress("0x1234");
+    const TO = createAddress("0x5678");
+    const event = TRANSFER_IFACE.getEvent("Transfer");
+    const data = [FROM, TO, ethers.BigNumber.from("3424324324423423")];
+
+    const mockTxEvent = new TestTransactionEvent().setBlock(5444123).addEventLog(event, WETH_ADDRESS, data);
+    mockProvider.setCode(FROM, "0x1", 5444123);
+
+    jest.mock("node-fetch");
+    const fetch = require("node-fetch");
+    const { Response } = jest.requireActual("node-fetch");
+
+    let callCount = 0;
+    fetch.mockImplementation(() => {
+      callCount += 1;
+      if (callCount === 1) {
+        // In exploitation stage victims cases, the first call is to fetch the token price. Not adding a mock implementation for the rest of the calls implies that the tag ended up being fetched through the ERC20 token's symbol
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": { usd: 1500 },
+            })
+          )
+        );
+      }
+    });
+
+    const TOKEN_IFACE = new Interface(TOKEN_ABI);
+
+    mockProvider.addCallTo(WETH_ADDRESS, 5444123, TOKEN_IFACE, "decimals", {
+      inputs: [],
+      outputs: [18],
+    });
+
+    const victims = await victimIdentifier.getIdentifiedVictims(mockTxEvent);
+    expect(victims).toStrictEqual({
+      exploitationStage: {},
       preparationStage: {},
     });
   });
