@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { Interface } from "ethers/lib/utils";
 import { when } from "jest-when";
 import { AlertsResponse } from "forta-agent/dist/sdk/graphql/forta";
-import { ERC20_TRANSFER_EVENT, TOKEN_ABI, WETH_ADDRESS } from "./helpers/constants";
+import { ERC20_TRANSFER_EVENT, TOKEN_ABI } from "./helpers/constants";
 import { ethers, Trace } from "forta-agent";
 import { createAddress } from "..";
 import { TestTransactionEvent, MockEthersProvider } from "../../test";
@@ -148,6 +148,8 @@ const fetchProtocols = () => {
     )
   );
 };
+
+const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
 describe("Victim Identifier tests suite", () => {
   const mockProvider: MockEthersProviderExtended = new MockEthersProviderExtended();
