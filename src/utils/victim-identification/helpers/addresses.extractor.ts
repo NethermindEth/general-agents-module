@@ -1,19 +1,32 @@
 import { providers, ethers } from "ethers";
 import { EVM } from "evm";
+import LRU from "lru-cache";
 import { TransactionEvent } from "forta-agent";
 
-const CONTRACT_SLOT_ANALYSIS_DEPTH = 20;
+const CONTRACT_SLOT_ANALYSIS_DEPTH = 10;
 
 export default class AddressesExtractor {
   provider: providers.Provider;
+  private isContractCache: LRU<string, boolean>;
 
   constructor(provider: providers.JsonRpcProvider) {
     this.provider = provider;
+    this.isContractCache = new LRU<string, boolean>({ max: 10000 });
   }
 
   private isContract = async (address: string, blockNumber: number) => {
-    const code = await this.provider.getCode(address, blockNumber);
-    return code && code !== "0x";
+    let isContract = this.isContractCache.get(address);
+    if (isContract === undefined) {
+      const code = await this.provider.getCode(address, blockNumber);
+      if (code && code !== "0x") {
+        this.isContractCache.set(address, true);
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
   };
 
   private getStorageAddresses = async (address: string, blockNumber: number) => {
