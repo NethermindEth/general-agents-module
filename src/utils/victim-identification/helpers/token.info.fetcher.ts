@@ -173,9 +173,34 @@ export default class TokenInfoFetcher {
     const key: string = `totalSupply-${tokenAddress}-${block}`;
     if (this.cache.has(key)) return this.cache.get(key) as BigNumber;
 
-    const totalSupply: BigNumber = await token.totalSupply({
-      blockTag: block,
-    });
+    const retryCount = 1;
+    let totalSupply;
+
+    for (let i = 0; i <= retryCount; i++) {
+      try {
+        totalSupply = await token.totalSupply({
+          blockTag: block,
+        });
+        break;
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.log(`Error fetching total supply for token ${tokenAddress}: ${err.message}`);
+        } else {
+          console.log(`Unknown error when fetching total supply: ${err}`);
+        }
+
+        if (i === retryCount) {
+          totalSupply = ethers.constants.MaxUint256;
+          console.log(
+            `Failed to fetch total supply for ${tokenAddress} after retries, using default max value ${totalSupply.toString()}`
+          );
+          break;
+        }
+
+        console.log(`Retrying in 1 second...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
 
     this.cache.set(key, totalSupply);
 
@@ -183,7 +208,6 @@ export default class TokenInfoFetcher {
   }
 
   public async getSymbolOrName(chainId: number, block: number | string, tokenAddress: string): Promise<string> {
-    const token = this.tokenContract.attach(tokenAddress);
     const key: string = `symbol-${chainId}-${tokenAddress}-${block}`;
     if (this.cache.has(key)) return this.cache.get(key) as string;
 
@@ -191,6 +215,7 @@ export default class TokenInfoFetcher {
     if (tokenAddress === "native") {
       symbol = getNativeTokenSymbolByChainId(chainId);
     } else {
+      const token = this.tokenContract.attach(tokenAddress);
       try {
         symbol = await token.symbol({
           blockTag: block,
@@ -260,11 +285,18 @@ export default class TokenInfoFetcher {
 
   public async getValueInUsd(block: number, chainId: number, amount: string, token: string): Promise<number> {
     let response, usdPrice;
+    let foundInCache = false;
 
-    const key = `usdPrice-${token}-${block}`;
-    if (this.tokensPriceCache.has(key)) {
-      usdPrice = this.tokensPriceCache.get(key);
-    } else {
+    for (let i = block - 4; i <= block; i++) {
+      const key = `usdPrice-${token}-${i}`;
+      if (this.tokensPriceCache.has(key)) {
+        usdPrice = this.tokensPriceCache.get(key);
+        foundInCache = true;
+        break;
+      }
+    }
+
+    if (!foundInCache) {
       if (token === "native") {
         const chain = getNativeTokenByChainId(chainId);
 
@@ -277,12 +309,10 @@ export default class TokenInfoFetcher {
             retries--;
           }
         }
-        if (!response || !response[getNativeTokenByChainId(chainId)]) {
-          if (this.tokensPriceCache.has(`usdPrice-${token}-${block - 1}`)) {
-            usdPrice = this.tokensPriceCache.get(`usdPrice-${token}-${block - 1}`);
-          } else return 0;
+        if (!response || !response[chain]) {
+          return 0;
         } else {
-          usdPrice = response[getNativeTokenByChainId(chainId)].usd;
+          usdPrice = response[chain].usd;
         }
       } else {
         const chain = getChainByChainId(chainId);
