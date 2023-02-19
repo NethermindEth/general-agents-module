@@ -21,3 +21,5 @@ export const TOKEN_ABI = [
 ];
 
 export const MKR_TOKEN_ABI = ["function symbol() external view returns (bytes32)"];
+
+export const SAFE_TAGS = ["UNI-V2", "Uniswap", "spLP", "SLP", "KS2-RT", "PGL", "LBT", "JLP", "Cake-LP"];
