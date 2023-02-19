@@ -9,7 +9,7 @@ import {
   WRAPPED_NATIVE_TOKEN_EVENTS,
   ZERO,
   MAX_USD_VALUE,
-  WETH_ADDRESS,
+  SAFE_TAGS,
 } from "./helpers/constants";
 import TokenInfoFetcher from "./helpers/token.info.fetcher";
 import { toChecksumAddress } from "..";
@@ -19,8 +19,91 @@ const wrappedNativeTokens: Record<number, string> = {
   1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
   10: "0x4200000000000000000000000000000000000006",
   56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-  137: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+  137: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
   43114: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+};
+
+const safeTokensPerChain: Record<number, string[]> = {
+  1: [
+    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH
+    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+    "0x6B175474E89094C44Da98b954EedeAC495271d0F", // DAI
+    "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", // WBTC
+  ],
+  10: [
+    "0x4200000000000000000000000000000000000042", // OP
+    "0x4200000000000000000000000000000000000006", // WETH
+    "0x7f5c764cbc14f9669b88837ca1490cca17c31607", // USDC
+    "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", // USDT
+    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", // DAI
+    "0x68f180fcCe6836688e9084f035309E29Bf0A2095", // WBTC
+  ],
+  56: [
+    "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c", // WBNB
+    "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // ETH
+    "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", // USDC
+    "0x55d398326f99059fF775485246999027B3197955", // USDT
+    "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56", // BUSD
+    "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c", // BTC
+  ],
+  137: [
+    "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", // WMATIC
+    "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", // WETH
+    "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // USDC
+    "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", // USDT
+    "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063", // DAI
+    "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", // WBTC
+  ],
+  250: [
+    "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", // WFTM
+    "0x74b23882a30290451A17c44f4F05243b6b58C76d", // WETH
+    "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75", // USDC
+    "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E", // DAI
+  ],
+  42161: [
+    "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", // WETH
+    "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8", // USDC
+    "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", // USDT
+    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", // DAI
+    "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // WBTC
+  ],
+  43114: [
+    "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7", // WAVAX
+    "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB", // WETH
+    "0x152b9d0FdC40C096757F570A51E494bd4b943E50", // BTC
+    "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", // USDT
+    "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", // USDC
+  ],
+};
+
+const safeTagsPerChain: Record<number, string[]> = {
+  1: [
+    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH
+    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+    "0x6B175474E89094C44Da98b954EedeAC495271d0F", // DAI
+    "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", // WBTC
+  ],
+  10: ["UniswapV3Pool", "KS2-RT"],
+  56: [
+    "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c", // WBNB
+    "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // ETH
+    "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", // USDC
+    "0x55d398326f99059fF775485246999027B3197955", // USDT
+    "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56", // BUSD
+    "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c", // BTC
+  ],
+  137: ["UniswapV3Pool", "UNI-V2"],
+  250: ["spLP"],
+  42161: ["SLP"],
+  43114: [
+    "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7", // WAVAX
+    "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB", // WETH
+    "0x152b9d0FdC40C096757F570A51E494bd4b943E50", // BTC
+    "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", // USDT
+    "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", // USDC
+  ],
 };
 
 interface apiKeys {
@@ -315,13 +398,8 @@ export default class VictimIdentifier extends TokenInfoFetcher {
         let { from, to, value } = event.args;
         if (!from) {
           from = wrappedNativeTokens[txEvent.network];
-        }
-        let isFromContract = this.isContractCache.get(from);
-        if (isFromContract === undefined) {
-          isFromContract = (await this.provider.getCode(from)) !== "0x";
-          if (isFromContract) {
-            this.isContractCache.set(from, true);
-          }
+        } else {
+          from = ethers.utils.getAddress(from);
         }
 
         // Update the balances map for 'from'
@@ -329,77 +407,84 @@ export default class VictimIdentifier extends TokenInfoFetcher {
           let currentEntry = balanceChangesMap.get(from);
           currentEntry![token] = (currentEntry![token] || ZERO).sub(value);
           balanceChangesMap.set(from, currentEntry!);
-        } else if (isFromContract) {
+        } else {
           balanceChangesMap.set(from, { [token]: value.mul(-1) });
         }
 
         if (!to) {
           to = wrappedNativeTokens[txEvent.network];
-        }
-        let isToContract = this.isContractCache.get(to);
-        if (isToContract === undefined) {
-          isToContract = (await this.provider.getCode(to)) !== "0x";
-          if (isToContract) {
-            this.isContractCache.set(to, true);
-          }
+        } else {
+          to = ethers.utils.getAddress(to);
         }
 
         if (balanceChangesMap.has(to)) {
           let currentEntry = balanceChangesMap.get(to);
           currentEntry![token] = (currentEntry![token] || ZERO).add(value);
           balanceChangesMap.set(to, currentEntry!);
-        } else if (isToContract) {
+        } else {
           balanceChangesMap.set(to, { [token]: value });
         }
       })
     );
 
-    await Promise.all(
-      txEvent.traces.map(async (trace) => {
-        let { from, to, value, callType } = trace.action;
+    if (txEvent.traces.length > 0) {
+      await Promise.all(
+        txEvent.traces.map(async (trace) => {
+          let { from, to, value, callType } = trace.action;
 
-        if (value && value !== "0x0" && callType === "call") {
-          from = ethers.utils.getAddress(from);
-          to = ethers.utils.getAddress(to);
-          const bnValue = ethers.BigNumber.from(value);
-          // Determine whether 'from' and 'to' are contracts
-          let isFromContract = this.isContractCache.get(from);
-          if (isFromContract === undefined) {
-            isFromContract = (await this.provider.getCode(from)) !== "0x";
-            if (isFromContract) {
-              this.isContractCache.set(from, true);
+          if (value && value !== "0x0" && callType === "call") {
+            from = ethers.utils.getAddress(from);
+            to = ethers.utils.getAddress(to);
+            const bnValue = ethers.BigNumber.from(value);
+
+            // Update the native token balance for the from address
+            if (balanceChangesMap.has(from)) {
+              let currentEntry = balanceChangesMap.get(from);
+              currentEntry!["native"] = (currentEntry!["native"] || ZERO).sub(bnValue);
+              balanceChangesMap.set(from, currentEntry!);
+            } else {
+              balanceChangesMap.set(from, { ["native"]: bnValue.mul(-1) });
+            }
+            // Update the native token balance for the to address
+            if (balanceChangesMap.has(to)) {
+              let currentEntry = balanceChangesMap.get(to);
+              currentEntry!["native"] = (currentEntry!["native"] || ZERO).add(bnValue);
+              balanceChangesMap.set(to, currentEntry!);
+            } else {
+              balanceChangesMap.set(to, { ["native"]: bnValue });
             }
           }
-          let isToContract = this.isContractCache.get(to);
-          if (isToContract === undefined) {
-            isToContract = (await this.provider.getCode(to)) !== "0x";
-            if (isToContract) {
-              this.isContractCache.set(to, true);
-            }
-          }
-          // Update the native token balance for the from address
-          if (balanceChangesMap.has(from)) {
-            let currentEntry = balanceChangesMap.get(from);
-            currentEntry!["native"] = (currentEntry!["native"] || ZERO).sub(bnValue);
-            balanceChangesMap.set(from, currentEntry!);
-          } else if (isFromContract) {
-            balanceChangesMap.set(from, { ["native"]: bnValue.mul(-1) });
-          }
-          // Update the native token balance for the to address
-          if (balanceChangesMap.has(to)) {
-            let currentEntry = balanceChangesMap.get(to);
-            currentEntry!["native"] = (currentEntry!["native"] || ZERO).add(bnValue);
-            balanceChangesMap.set(to, currentEntry!);
-          } else if (isToContract) {
-            balanceChangesMap.set(to, { ["native"]: bnValue });
-          }
+        })
+      );
+    } else {
+      if (txEvent.to && txEvent.transaction.value !== "0x0") {
+        const from = ethers.utils.getAddress(txEvent.from);
+        const to = ethers.utils.getAddress(txEvent.to);
+        const bnValue = ethers.BigNumber.from(txEvent.transaction.value);
+
+        // Update the native token balance for the from address
+        if (balanceChangesMap.has(from)) {
+          let currentEntry = balanceChangesMap.get(from);
+          currentEntry!["native"] = ZERO.sub(bnValue);
+          balanceChangesMap.set(from, currentEntry!);
+        } else {
+          balanceChangesMap.set(from, { ["native"]: bnValue.mul(-1) });
         }
-      })
-    );
 
-    // Remove empty records and filter out WETH
+        // Update the native token balance for the to address
+        if (balanceChangesMap.has(to)) {
+          let currentEntry = balanceChangesMap.get(to);
+          currentEntry!["native"] = ZERO.add(bnValue);
+          balanceChangesMap.set(to, currentEntry!);
+        } else {
+          balanceChangesMap.set(to, { ["native"]: bnValue });
+        }
+      }
+    }
+
+    // Remove empty records and filter out WETH & WAVAX
     for (let key of Array.from(balanceChangesMap.keys())) {
-      if (key.toLowerCase() === WETH_ADDRESS) {
+      if (safeTokensPerChain[Number(txEvent.network)].includes(key)) {
         balanceChangesMap.delete(key);
         continue;
       }
@@ -413,6 +498,24 @@ export default class VictimIdentifier extends TokenInfoFetcher {
         balanceChangesMap.delete(key);
       }
     }
+
+    await Promise.all(
+      Array.from(balanceChangesMap.entries()).map(async ([key, _]) => {
+        if ([txEvent.from, ethers.constants.AddressZero].includes(key.toLowerCase())) {
+          balanceChangesMap.delete(key);
+          return;
+        }
+        let isContract = this.isContractCache.get(key);
+        if (isContract === undefined) {
+          const code = await this.provider.getCode(key);
+          if (code === "0x") {
+            balanceChangesMap.delete(key);
+          } else {
+            this.isContractCache.set(key, true);
+          }
+        }
+      })
+    );
 
     const balanceChangesMapUsd: Map<string, Record<string, number>> = new Map();
     // Get the USD value of the balance changes
@@ -441,7 +544,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
         return acc + value;
       }, 0);
       // If the sum of the values is less than -100 USD, add the address to the victims list
-      if (sum < -100) {
+      if (sum < -500) {
         const confidence = this.getExploitationStageConfidenceLevel(sum * -1, "usdValue") as number;
         victims.push({ address, confidence });
       }
@@ -454,7 +557,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
           Object.keys(record).map(async (token) => {
             const usdValue = record[token];
 
-            if (usdValue === 0) {
+            if (usdValue === 0 && token !== "native") {
               const value = balanceChangesMap.get(address);
 
               if (value![token].isNegative()) {
@@ -480,7 +583,7 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       })
     );
 
-    return victims;
+    return [victims, balanceChangesMap];
   };
 
   // Get the number of occurences of the victims in previously deployed contracts code
@@ -710,12 +813,15 @@ export default class VictimIdentifier extends TokenInfoFetcher {
     // Filter out WETH and sort the victims by the number of occurrences
     const sortedPreparationStageVictims: Record<string, number> = Object.fromEntries(
       Object.entries(sortedRecord)
-        .filter(([address]) => address.toLowerCase() !== WETH_ADDRESS)
+        .filter(([address]) => !safeTokensPerChain[Number(chainId)].includes(ethers.utils.getAddress(address)))
         .sort((a, b) => a[1] - b[1])
     );
 
     // Fetch potential victims on the exploitation stage
-    const exploitationStageVictims = await this.getExploitationStageVictims(txEvent);
+    const [exploitationStageVictims, balanceChanges] = (await this.getExploitationStageVictims(txEvent)) as [
+      { address: string; confidence: number }[],
+      Map<string, Record<string, ethers.BigNumber>>
+    ];
 
     // Calculate confidence levels for preparation stage victims
     const preparationStageConfidenceLevels = this.getPreparationStageConfidenceLevels(sortedPreparationStageVictims);
@@ -781,8 +887,64 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       };
     }
 
+    // Replace pools of known protocols with the underlying tokens
+    for (const victim in exploitationStageVictimsWithConfidence) {
+      const tag = exploitationStageVictimsWithConfidence[victim].tag;
+      let tokensToIdentify: string[] = [];
+
+      if (SAFE_TAGS.some((safeTag) => tag.startsWith(safeTag))) {
+        const balanceChange = balanceChanges.get(victim) as Record<string, ethers.BigNumber>;
+        for (let token in balanceChange) {
+          token = ethers.utils.getAddress(token);
+          if (
+            !safeTokensPerChain[Number(chainId)].includes(token) &&
+            !(token in exploitationStageVictimsWithConfidence)
+          ) {
+            tokensToIdentify.push(token);
+          }
+        }
+        // If the victim is a known protocol's pool and the sum of at least one of the tokens is 0, fetch the transfer events to find the token address
+        if (Object.keys(balanceChange).length < 2) {
+          const transferEvents = txEvent.filterLog(ERC20_TRANSFER_EVENT);
+          transferEvents.forEach((event) => {
+            const { from, to } = event.args;
+            if (from === victim || to === victim) {
+              const token = ethers.utils.getAddress(event.address);
+              if (
+                !safeTokensPerChain[Number(chainId)].includes(token) &&
+                !(token in exploitationStageVictimsWithConfidence) &&
+                !tokensToIdentify.includes(token)
+              ) {
+                tokensToIdentify.push(token);
+              }
+            }
+          });
+        }
+        if (tokensToIdentify.length > 0) {
+          const identifiedTokens = await this.identifyVictims(
+            this.provider,
+            tokensToIdentify,
+            Number(chainId),
+            blockNumber
+          );
+
+          for (const token in identifiedTokens) {
+            exploitationStageVictimsWithConfidence[token] = {
+              ...identifiedTokens[token],
+              confidence: exploitationStageVictimsWithConfidence[victim].confidence,
+            };
+          }
+        }
+        delete exploitationStageVictimsWithConfidence[victim];
+      }
+    }
+
+    const sortedExploitationStageVictims: typeof exploitationStageVictimsWithConfidence = Object.fromEntries(
+      Object.entries(exploitationStageVictimsWithConfidence).sort(([, a], [, b]) => b.confidence - a.confidence)
+    );
+
     return {
-      exploitationStage: exploitationStageVictimsWithConfidence,
+      exploitationStage: sortedExploitationStageVictims,
       preparationStage: preparationStageVictimsWithConfidence,
     };
   };
