@@ -1,7 +1,5 @@
 import { ethers } from "forta-agent";
 
-export const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
-
 export const MAX_USD_VALUE = 500000;
 
 export const PREPARATION_BOT = ["0x0b241032ca430d9c02eaa6a52d217bbff046f0d1b3f3d2aa928e42a97150ec91"]; // Malicious Contract Creation ML Bot v2
@@ -23,3 +21,5 @@ export const TOKEN_ABI = [
 ];
 
 export const MKR_TOKEN_ABI = ["function symbol() external view returns (bytes32)"];
+
+export const SAFE_TAGS = ["UNI-V2", "Uniswap", "spLP", "SLP", "KS2-RT", "PGL", "LBT", "JLP", "Cake-LP"];

@@ -206,6 +206,8 @@ export const getWebsiteAndTwitter = (tag: string, correctProtocols: string[][]) 
       return ["https://tellor.io/", "WeAreTellor"];
     case tag.startsWith("Tether USD (anyUSDT)") || tag.startsWith("anyUSDC"):
       return ["https://multichain.org/", "MultichainOrg"];
+    case tag.startsWith("The Sandbox"):
+      return ["https://www.sandbox.game/", "TheSandboxGame"];
     case tag.startsWith("THORWallet"):
       return ["https://www.thorwallet.org/", "THORWalletDEX"];
     case tag.startsWith("TNDR"):
