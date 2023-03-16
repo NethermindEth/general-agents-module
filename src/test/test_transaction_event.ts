@@ -42,8 +42,13 @@ export class TestTransactionEvent extends TransactionEvent {
     return this;
   }
 
-  public setTo(address: string): TestTransactionEvent {
-    this.transaction.to = address.toLowerCase();
+  public setTo(address: string | null): TestTransactionEvent {
+    this.transaction.to = address ? address.toLowerCase() : null;
+    return this;
+  }
+
+  public setNonce(value: number): TestTransactionEvent {
+    this.transaction.nonce = value;
     return this;
   }
 
