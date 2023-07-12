@@ -377,13 +377,10 @@ There are multiple methods you can use for creating the exact `TransactionEvent`
 - `setValue(value)` This method sets the `transaction.value` field in the event.
 - `setData(data)` This method sets the `transaction.data` field in the event.
 - `setGasUsed(value)` This method sets the `receipt.gasUsed` field in the event.
-- `setStatus(status)` This method sets the `receipt.status` field in the event.
 - `setTimestamp(timestamp)` This method sets the `block.timestamp` field in the event.
 - `setBlock(block)` This method sets the `block.number` field in the event.
-- `addEventLog(eventSignature, address, data, topics)` This method adds a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`, `address` argument is the zero address by default, `topics` is a spread list with the indexed event arguments, and `data` is the empty string by default.
+- `addEventLog(eventSignature, address, inputs)` This method adds a log to the `receipt.logs` field. The only mandatory argument is the `eventSignature`. `address` argument is the zero address by default, `inputs` corresponds to the event arguments values, it is an empty list by default.
   > The `keccak256` hash of the signature is added at the beginning of the `topics` list automatically.
-- `addAnonymousEventLog(address, data, topics)` This method adds a log to the `receipt.logs` field. `address` argument is the zero address by default, `topics` is a spread list with the indexed event arguments, and `data` is the empty string by default.
-- `addInterfaceEventLog(event, address, inputs)` This method adds a log to the `receipt.logs` field. `event` is an `ethers.utils.EventFragment` instance, `address` argument is the zero address by default, `inputs` argument is an array of event parameter values and is an empty array by default.
 - `addInvolvedAddresses(addresses)` This method adds a spread list of addresses to `addresses` field.
 - `addTraces(traceProps)` This method adds a list of `Trace` objects at the end of `traces` field in the event. The traces are created from the `traceProps` spread list.
   > `TraceProps` is a TS object with the following optional fields `{ function, to, from, arguments, output, value, traceAddress }`.
