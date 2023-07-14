@@ -240,6 +240,8 @@ export const getWebsiteAndTwitter = (tag: string, correctProtocols: string[][]) 
       return ["https://zksync.io/", "zksync"];
     case tag.endsWith("-f"):
       return ["https://curve.fi/", "curvefinance"];
+    case tag === "Pool":
+      return ["", ""];
     case correctProtocols.length > 0:
       return [correctProtocols[0][1], correctProtocols[0][2]];
     default:
