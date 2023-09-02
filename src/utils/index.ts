@@ -4,6 +4,7 @@ import { ProviderCache, ProviderCacheOptions } from "./provider.cache";
 import CachedContract from "./cached.contract";
 import { MulticallProvider, MulticallContract } from "./multicall.provider";
 import VictimIdentifier from "./victim-identification/victim.identifier";
+import { createTransactionHash } from "./transaction.helper";
 
 export const padAddress = (address: string) => ethers.utils.hexZeroPad(address, 20);
 export const createAddress = (address: string) => padAddress(address).toLowerCase();
@@ -18,4 +19,5 @@ export {
   MulticallProvider,
   MulticallContract,
   VictimIdentifier,
+  createTransactionHash,
 };
