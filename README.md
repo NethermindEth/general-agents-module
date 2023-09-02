@@ -441,7 +441,9 @@ import { MockTransactionData } from "forta-agent-tools/lib/test";
 import { ethers } from "forta-agent-tools"
 
 const mockTransactionData: MockTransactionData = new MockTransactionData();
-mockTransactionData.setValue(ethers.utils.parseEther("1.0")).setGasPrice(ethers.BigNumber.from(1000000)).setGasLimit(ethers.BigNumber.from(21000))
+mockTransactionData.setValue(ethers.utils.parseEther("1.0"))
+.setGasPrice(ethers.BigNumber.from(1000000))
+.setGasLimit(ethers.BigNumber.from(21000))
 
 mockTransaction.setHas("0x1234567890987654345678987654...");
 // or can generate the hash based on the current transaction config
@@ -461,7 +463,7 @@ mockTransaction.setTransactionReceipt(transactionReceipt) // if hash is not set,
 
 In this way the class can be used to shape the `MockTransactionData` into `ethers.providers.TransactionResponse` or/and `ethers.providers.TransactionReceipt`.
 
-You can get only the `TransactionResponse` or `TransactionReceipt` by the calling the methods.
+You can get only the `TransactionResponse` or `TransactionReceipt` by the calling the methods:
 
 ```ts
 ...
