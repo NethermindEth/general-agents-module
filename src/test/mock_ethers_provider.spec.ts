@@ -2,6 +2,7 @@ import { utils, Contract } from "ethers";
 import { ethers, keccak256 } from "forta-agent";
 import { createAddress } from "../utils";
 import MockEthersProvider from "./mock_ethers_provider";
+import MockTransactionData from "./mock_transaction_data";
 
 const EVENT_1_SIGHASH: string = keccak256("Event1()");
 const EVENT_2_SIGHASH: string = keccak256("Event2()");
@@ -215,5 +216,129 @@ describe("MockEthersProvider tests suite", () => {
       // check the value previously set
       expect(mockProvider.getSigner(addr).sendTransaction()).toStrictEqual(`old-call-from-${addr}`);
     }
+  });
+
+  it("should return the mocked transaction response", async () => {
+    const mockTransactionData: MockTransactionData = new MockTransactionData();
+
+    const txParams: Partial<ethers.providers.TransactionResponse> = {
+      nonce: 1,
+      gasLimit: ethers.BigNumber.from(21000),
+      gasPrice: ethers.BigNumber.from(1000000000),
+      to: createAddress("0x67"),
+      value: ethers.utils.parseEther("1"),
+      data: "0x",
+      chainId: 1,
+      from: createAddress("0x87"),
+      timestamp: Date.now(),
+      blockHash: ethers.utils.keccak256("0x1234"),
+      blockNumber: 1337,
+      confirmations: 1,
+      maxFeePerGas: ethers.BigNumber.from(1000000000),
+      maxPriorityFeePerGas: ethers.BigNumber.from(1000000000),
+      r: "0x",
+      s: "0x",
+      v: 0,
+      raw: "0x",
+      type: 1,
+    };
+
+    mockTransactionData.setTransactionResponse(txParams);
+
+    mockProvider.setTransactionResponse(mockTransactionData);
+
+    const transactionResponse: ethers.providers.TransactionResponse = await mockProvider.getTransaction(
+      mockTransactionData.hash
+    );
+    expect(transactionResponse).toStrictEqual(mockTransactionData.getTransactionResponse());
+
+    mockTransactionData.setHash(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+
+    mockProvider.setTransaction(mockTransactionData);
+
+    const txResponse: ethers.providers.TransactionResponse = await mockProvider.getTransaction(
+      mockTransactionData.hash
+    );
+    expect(txResponse).toStrictEqual(mockTransactionData.getTransactionResponse());
+  });
+
+  it("should return the mocked transaction receipt", async () => {
+    const mockTransactionData: MockTransactionData = new MockTransactionData();
+
+    const txReceiptParams: Partial<ethers.providers.TransactionReceipt> = {
+      to: createAddress("0x67"),
+      from: createAddress("0x87"),
+      contractAddress: createAddress("0x87"),
+      transactionIndex: 0,
+      gasUsed: ethers.BigNumber.from(21000),
+      logsBloom: "0x",
+      blockHash: ethers.utils.keccak256("0x1234"),
+      blockNumber: 1337,
+      confirmations: 1,
+      cumulativeGasUsed: ethers.BigNumber.from(21000),
+      byzantium: true,
+      logs: [],
+      status: 1,
+      type: 1,
+      effectiveGasPrice: ethers.BigNumber.from(1000000000),
+      root: "0x",
+    };
+
+    mockTransactionData.setTransactionReceipt(txReceiptParams);
+
+    mockProvider.setTransactionReceipt(mockTransactionData);
+
+    const transactionReceipt: ethers.providers.TransactionReceipt = await mockProvider.getTransactionReceipt(
+      mockTransactionData.hash
+    );
+    expect(transactionReceipt).toStrictEqual(mockTransactionData.getTransactionReceipt());
+
+    mockTransactionData.setHash(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+
+    mockProvider.setTransaction(mockTransactionData);
+
+    const txReceipt: ethers.providers.TransactionReceipt = await mockProvider.getTransactionReceipt(
+      mockTransactionData.hash
+    );
+    expect(txReceipt).toStrictEqual(mockTransactionData.getTransactionReceipt());
+  });
+
+  it("should return the mocked transaction data when set transaction is used", async () => {
+    const mockTransactionData: MockTransactionData = new MockTransactionData();
+
+    const txParams: Partial<ethers.providers.TransactionResponse> | Partial<ethers.providers.TransactionReceipt> = {
+      nonce: 0,
+      gasLimit: ethers.BigNumber.from(21000),
+      gasPrice: ethers.BigNumber.from(1000000000),
+      to: createAddress("0x67"),
+      value: ethers.BigNumber.from(1000000000),
+      data: "0x",
+      chainId: 1,
+      from: createAddress("0x87"),
+      timestamp: Date.now(),
+      blockHash: ethers.utils.keccak256("0x1234"),
+      blockNumber: 1337,
+      confirmations: 1,
+      maxFeePerGas: ethers.BigNumber.from(1000000000),
+      logsBloom: "0x",
+      logs: [],
+      cumulativeGasUsed: ethers.BigNumber.from(21000),
+      type: 1,
+    };
+
+    mockTransactionData.setTransactionResponse(txParams);
+    mockTransactionData.setTransactionReceipt(txParams as Partial<ethers.providers.TransactionReceipt>);
+
+    mockProvider.setTransaction(mockTransactionData);
+
+    const transactionResponse: ethers.providers.TransactionResponse = await mockProvider.getTransaction(
+      mockTransactionData.hash
+    );
+    const transactionReceipt: ethers.providers.TransactionReceipt = await mockProvider.getTransactionReceipt(
+      mockTransactionData.hash
+    );
+
+    expect(transactionResponse).toStrictEqual(mockTransactionData.getTransactionResponse());
+    expect(transactionReceipt).toStrictEqual(mockTransactionData.getTransactionReceipt());
   });
 });
