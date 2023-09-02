@@ -2,6 +2,7 @@ import { TestTransactionEvent } from "./test_transaction_event";
 import { TestBlockEvent } from "./test_block_event";
 import MockEthersProvider from "./mock_ethers_provider";
 import MockEthersSigner from "./mock_ethers_signer";
+import { MockTransactionData } from "./mock_transaction_data";
 
 import {
   Finding,
@@ -37,4 +38,4 @@ export const generalTestFindingGenerator = (..._: any[]): Finding => {
   });
 };
 
-export { TestTransactionEvent, TestBlockEvent, MockEthersProvider, MockEthersSigner };
+export { TestTransactionEvent, TestBlockEvent, MockEthersProvider, MockEthersSigner, MockTransactionData };
