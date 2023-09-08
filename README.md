@@ -468,9 +468,9 @@ You can get only the `TransactionResponse` or `TransactionReceipt` by the callin
 ```ts
 ...
 
-const txResponse: ethers.providers.TransactionResponse = mockTransactionData.getTransactionResponse();
+const txResponse: providers.TransactionResponse = mockTransactionData.getTransactionResponse();
 
-const txReceipt: ethers.providers.TransactionReceipt = mockTransactionData.getTransactionReceipt();
+const txReceipt: providers.TransactionReceipt = mockTransactionData.getTransactionReceipt();
 
 ```
 
