@@ -438,7 +438,7 @@ Basic Usage:
 
 ```ts
 import { MockTransactionData } from "forta-agent-tools/lib/test";
-import { ethers } from "forta-agent-tools"
+import { utils, BigNumber, providers } from "ethers";
 
 const mockTransactionData: MockTransactionData = new MockTransactionData();
 mockTransactionData.setValue(ethers.utils.parseEther("1.0"))
