@@ -447,7 +447,7 @@ mockTransactionData.setValue(ethers.utils.parseEther("1.0"))
 
 mockTransactionData.setHash("0x1234567890987654345678987654...");
 // or can generate the hash based on the current transaction config
-mockTransaction.generateHash();
+mockTransactionData.generateHash();
 
 const transactionResponse: Partial<ethers.providers.TransactionResponse> = {}  // Add the fields that you want to set for the TransactionResponse.
 
