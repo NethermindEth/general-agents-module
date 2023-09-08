@@ -441,9 +441,9 @@ import { MockTransactionData } from "forta-agent-tools/lib/test";
 import { utils, BigNumber, providers } from "ethers";
 
 const mockTransactionData: MockTransactionData = new MockTransactionData();
-mockTransactionData.setValue(ethers.utils.parseEther("1.0"))
-.setGasPrice(ethers.BigNumber.from(1000000))
-.setGasLimit(ethers.BigNumber.from(21000))
+mockTransactionData.setValue(utils.parseEther("1.0"))
+.setGasPrice(BigNumber.from(1000000))
+.setGasLimit(BigNumber.from(21000))
 
 mockTransactionData.setHash("0x1234567890987654345678987654...");
 // or can generate the hash based on the current transaction config
