@@ -245,7 +245,7 @@ describe("MockEthersProvider tests suite", () => {
 
     mockTransactionData.setTransactionResponse(txParams);
 
-    mockProvider.setTransactionResponse(mockTransactionData);
+    mockProvider.setTransaction(mockTransactionData);
 
     const transactionResponse: ethers.providers.TransactionResponse = await mockProvider.getTransaction(
       mockTransactionData.hash
@@ -286,7 +286,7 @@ describe("MockEthersProvider tests suite", () => {
 
     mockTransactionData.setTransactionReceipt(txReceiptParams);
 
-    mockProvider.setTransactionReceipt(mockTransactionData);
+    mockProvider.setTransaction(mockTransactionData);
 
     const transactionReceipt: ethers.providers.TransactionReceipt = await mockProvider.getTransactionReceipt(
       mockTransactionData.hash

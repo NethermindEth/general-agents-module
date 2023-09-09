@@ -172,13 +172,13 @@ export default class MockEthersProvider {
     this.setTransactionReceipt(transaction);
   }
 
-  public setTransactionResponse(transaction: MockTransactionData) {
+  private setTransactionResponse(transaction: MockTransactionData) {
     when(this.getTransaction)
       .calledWith(transaction.hash)
       .mockReturnValue(Promise.resolve(transaction.getTransactionResponse()));
   }
 
-  public setTransactionReceipt(transaction: MockTransactionData) {
+  private setTransactionReceipt(transaction: MockTransactionData) {
     when(this.getTransactionReceipt)
       .calledWith(transaction.transactionHash)
       .mockReturnValue(Promise.resolve(transaction.getTransactionReceipt()));
