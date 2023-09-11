@@ -432,7 +432,7 @@ Parameters description:
 This is a helper class for mocking the interfaces `ethers.providers.TransactionResponse` and `ethers.providers.TransactionReceipt` by implementing them.
 Since this class implements both of these interfaces, the instance of this class can be used for ethers `TransactionResponse` and `TransactionReceipt`.
 
-The class is instansiated with default values for all the fields and has set functions to set the values for each of these fields.
+The class is instantiated with default values for all the fields and has set functions to set the values for each of these fields.
 
 Basic Usage:
 
