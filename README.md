@@ -427,6 +427,122 @@ Parameters description:
 - `block`: It is the `BlockEvent` that the bot will handle.
 - `tx#`: These are the `TransactionEvent` objects asociated with the `BlockEvent` that the bot will handle.
 
+### MockTransactionData
+
+This is a helper class for mocking the interfaces `ethers.providers.TransactionResponse` and `ethers.providers.TransactionReceipt` by implementing them.
+Since this class implements both of these interfaces, the instance of this class can be used for ethers `TransactionResponse` and `TransactionReceipt`.
+
+The class is instantiated with default values for all the fields and has set functions to set the values for each of these fields.
+
+Basic Usage:
+
+```ts
+import { MockTransactionData } from "forta-agent-tools/lib/test";
+import { utils, BigNumber, providers } from "ethers";
+
+const mockTransactionData: MockTransactionData = new MockTransactionData();
+mockTransactionData.setValue(utils.parseEther("1.0"))
+.setGasPrice(BigNumber.from(1000000))
+.setGasLimit(BigNumber.from(21000))
+
+mockTransactionData.setHash("0x1234567890987654345678987654...");
+// or can generate the hash based on the current transaction config
+mockTransactionData.generateHash();
+
+const transactionResponse: Partial<providers.TransactionResponse> = {   // Add the fields that you want to set for the TransactionResponse.
+  hash: '0x3fda39a81c47dc37d84c761c3cbbea375866c1fbdfcf91566eaa4c4ef62c70ad',
+  type: 2,
+  accessList: [],
+  blockHash: '0x25e44bfb2c3a47703c86884110a6d5c5a7a655b02fe1ca3a9d135e7459efab95',
+  blockNumber: 18095175,
+  transactionIndex: 109,
+  confirmations: 22,
+  from: '0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5',
+  gasPrice: BigNumber.from("9999762606"),
+  maxPriorityFeePerGas: BigNumber.from("0"),
+  maxFeePerGas: BigNumber.from("9999762606"),
+  gasLimit: BigNumber.from(0x5208),
+  to: '0x4675C7e5BaAFBFFbca748158bEcBA61ef3b0a263',
+  value: BigNumber.from("63002772804144528"),
+  nonce: 436110,
+  data: '0x',
+  r: '0xa62a979dd4713a8c12de05167f68ddbfab947886d44eb0806f9b4f8c0b7d4ca5',
+  s: '0x72058708dfe24365969eff435447a92cd9ee0348e898b5ea1d26211f77241a6d',
+  v: 1,
+  creates: null,
+  chainId: 1
+}
+
+mockTransaction.setTransactionResponse(transactionResponse)  // if hash is not set, the hash will be generated.
+
+const transactionReceipt: Partial<providers.TransactionReceipt> = { // Add the fields that you want to set for the TransactionReceipt.
+  to: '0x4675C7e5BaAFBFFbca748158bEcBA61ef3b0a263',
+  from: '0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5',
+  contractAddress: null,
+  transactionIndex: 109,
+  gasUsed: BigNumber.from(21000),
+  logsBloom: '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+  blockHash: '0x25e44bfb2c3a47703c86884110a6d5c5a7a655b02fe1ca3a9d135e7459efab95',
+  transactionHash: '0x3fda39a81c47dc37d84c761c3cbbea375866c1fbdfcf91566eaa4c4ef62c70ad',
+  logs: [],
+  blockNumber: 18095175,
+  confirmations: 33,
+  cumulativeGasUsed: BigNumber.from(12276572),
+  effectiveGasPrice: BigNumber.from("9999762606"),
+  status: 1,
+  type: 2,
+  byzantium: true
+}
+
+mockTransaction.setTransactionReceipt(transactionReceipt) // if hash is not set, the hash will be generated.
+
+...
+
+```
+
+In this way the class can be used to shape the `MockTransactionData` into `ethers.providers.TransactionResponse` or/and `ethers.providers.TransactionReceipt`.
+
+You can get only the `TransactionResponse` or `TransactionReceipt` by the calling the methods:
+
+```ts
+...
+
+const txResponse: providers.TransactionResponse = mockTransactionData.getTransactionResponse();
+
+const txReceipt: providers.TransactionReceipt = mockTransactionData.getTransactionReceipt();
+
+```
+
+All of the set methods in the `MockTransactionData` will return the type `MockTransactionData`. So these set methods can be chained.
+Some of the methods that the MockTransactionData provides to set the transaction field values:
+
+- `setHash(hash: string)`: The method accepts a string and sets it as the txn hash for the `MockTransactionData`.
+- `generateHash()`: The method generates the txn hash based on the current `MockTransactionData` config and sets it as the txn hash.
+- `setFrom(address: string)`: Sets the from Address
+- `setTo(address: string)`: Sets the to Address
+- `setNonce(value: number)`: Sets the Nonce.
+- `setContractAddress(address: string)`: Sets the contract Address field of the transaction.
+- `setGasPrice(value: string)`: Sets the Gas price for the `MockTransactionData`
+- `setGasLimit(value: string)`: Sets the gas limit for the `MockTransactionData`
+- `setData(data: string)`: Sets the data of the transaction.
+- `setLogs(logs: ethers.providers.Log[])`: Sets the logs field in the transaction receipt field of the `MockTransactionData`
+- `setLogsBloom(value: string)`: Sets the logsBloom value.
+- `setTimestamp(timestamp: number)`: Sets the timestamp of the transaction.
+- `setStatus`: Sets the Transaction Status.
+- `setConfirmations(confirmations: number)`: Sets the number of confirmations for the transaction.
+- `setTransactionResponse(transaction: Partial<ethers.providers.TransactionResponse>)`: Sets all the values for the ethers `TransactionResponse` based on the given optional/partial fields. Generates the transaction hash if not given.
+- `setTransactionReceipt(receipt: Partial<ethers.providers.TransactionReceipt>)`: Sets all the values for the ethers `TransactionReceipt` based on the given optional/partial fields. Generates the transaction hash if not given.
+- `setBlockHash(hash: string)`: Sets the Block hash.
+- `setBlockNumber(blockNumber: number)`: Sets the block number.
+- `setMaxPriorityFeePerGas(value: string)`: Sets the Max Priority fee for the transaction.
+- `setMaxFeePerGas(value: string)`: Sets the Max Fee field of the transaction.
+- `setTransactionType(type: number)`: Sets the value of type in the transaction. The type refers to the "Typed-Transaction features".
+- `setTransactionIndex(index: number)`: Sets the "transactionIndex" field in the transaction.
+- `setChainId(chainId: number)`: Sets the chainId of the transaction.
+- `setGasUsed(value: string)`: Sets the gasUsed field in the transaction.
+- `setCumulativeGasUsed(value: string)`: Sets the cumulativeGasUsed field in the transaction.
+- `setEffectiveGasPrice(value: string)`: Sets the effectiveGasPrice field in the transaction.
+
 ### MockEthersProvider
 
 This is a helper class for mocking the `ethers.providers.Provider` class.
@@ -467,6 +583,7 @@ This mock provides some methods to set up the values that the provider should re
 - `addSigner(addr)`. This function prepares a valid signer for the given address that uses the provider being used.
 - `addLogs(logs)`. This method allows you to add entries to the logs record that will be filtered in `getLogs` if the filter specified wasn't yet added in `addFilteredLogs`.
 - `setNetwork(chainId, ensAddress?, name?)`. This method allows you to set up the network information (`chainId`, `ensAddress` and `name`) that will be returned when there's a call to `getNetwork`.
+- `setTransaction(transaction: MockTransactionData)`: This method accepts the transaction parameter of type `MockTransactionData` and allows you to set the return value for both `ethers.providers.getTransaction(hash: string)` and `ethers.providers.getTransactionReceipt(hash: string)`
 - `clear()`. This function clears all the mocked data.
 
 All the data you set in the provider will be used until the `clear` function is called.

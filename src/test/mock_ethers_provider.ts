@@ -4,6 +4,7 @@ import { Log, Filter, FilterByBlockHash } from "@ethersproject/abstract-provider
 import { ethers } from "forta-agent";
 import MockEthersSigner from "./mock_ethers_signer";
 import { createAddress, toChecksumAddress } from "../utils";
+import MockTransactionData from "./mock_transaction_data";
 
 interface CallParams {
   inputs: any[];
@@ -18,6 +19,8 @@ export default class MockEthersProvider {
   public getStorageAt: any;
   public getBlockNumber: any;
   public getNetwork: any;
+  public getTransaction: any;
+  public getTransactionReceipt: any;
   public readonly _isProvider: boolean;
 
   private logs: Array<ethers.providers.Log>;
@@ -31,6 +34,10 @@ export default class MockEthersProvider {
     this.getStorageAt = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getStorageAt"));
     this.getBlockNumber = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getBlockNumber"));
     this.getNetwork = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getNetwork"));
+    this.getTransaction = jest.fn().mockImplementation(this.unconfiguredAsyncMockImplementation("getTransaction"));
+    this.getTransactionReceipt = jest
+      .fn()
+      .mockImplementation(this.unconfiguredAsyncMockImplementation("getTransactionReceipt"));
 
     this.logs = [];
   }
@@ -158,6 +165,23 @@ export default class MockEthersProvider {
 
   public setNetwork(chainId: number, ensAddress: string = createAddress("0x0"), name: string = "") {
     when(this.getNetwork).calledWith().mockReturnValue({ chainId, ensAddress, name });
+  }
+
+  public setTransaction(transaction: MockTransactionData) {
+    this.setTransactionResponse(transaction);
+    this.setTransactionReceipt(transaction);
+  }
+
+  private setTransactionResponse(transaction: MockTransactionData) {
+    when(this.getTransaction)
+      .calledWith(transaction.hash)
+      .mockReturnValue(Promise.resolve(transaction.getTransactionResponse()));
+  }
+
+  private setTransactionReceipt(transaction: MockTransactionData) {
+    when(this.getTransactionReceipt)
+      .calledWith(transaction.transactionHash)
+      .mockReturnValue(Promise.resolve(transaction.getTransactionReceipt()));
   }
 
   public clear(): void {
