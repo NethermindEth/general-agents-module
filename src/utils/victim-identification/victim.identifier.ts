@@ -1,5 +1,5 @@
 import { ethers, TransactionEvent, getAlerts } from "forta-agent";
-import { AlertsResponse } from "forta-agent/dist/sdk/graphql/forta";
+import { AlertsResponse } from "forta-agent";
 import LRU from "lru-cache";
 import fetch from "node-fetch";
 import AddressesExtractor from "./helpers/addresses.extractor";
