@@ -405,6 +405,137 @@ There are multiple methods you can use for creating the exact `BlockEvent` you w
 - `addTransactions(txns)` This method adds the hashes of a spread list of transaction events at the end of `block.transactions` field in the event.
 - `addTransactionsHashes(hashes)` This method adds a hashes spread list to the end of `block.transactions` field in the event.
 
+### TestAlertEvent
+
+The concept of a ` TestAlertEvent`` class does not actually exist. It was not implemented because the  `forta-agent`library provides built-in static methods that serve the purpose that`TestAlertEvent` would have fulfilled.
+
+#### Creating Alert
+
+In the `forta-agent` SDK, you'll find a class called `Alert`, which essentially represents an `Alert` within the context of the `AlertEvent` in Forta.
+
+- You cannot directly instantiate an `Alert` object through its constructor because it has a private constructor. Instead, there's a static method named `fromObject`.
+- To use it, call `Alert.fromObject(alertInput: AlertInput)`, where `AlertInput` is an interface containing all the properties an `Alert` can have. Each property in `AlertInput` is optional, allowing you to create an `Alert` with only the properties you need for your use case or testing.
+- For more details about `Alert` and its properties, refer to the official [forta-docs](https://docs.forta.network/en/latest/sdk/#alert).
+
+#### Creating AlertEvent
+
+`AlertEvent` is a class with a constructor that takes a single argument of type `Alert`.
+
+- You can use the `Alert` object created using the above method to obtain an `AlertEvent` object.
+- All other properties in `AlertEvent` are simply getters, serving as aliases to the property methods of the `Alert` class.
+- To learn more about `AlertEvent` and its properties, consult the official [forta-docs](https://docs.forta.network/en/latest/sdk/#alertevent).
+
+To create an `Alert` object, utilize the static method `Alert.fromObject(alertInput: AlertInput)`, and then proceed to create an `AlertEvent`. Refer to the code snippet below for an example.
+
+#### How to Use it
+
+```ts
+import { Alert, AlertEvent, EntityType, Label } from "forta-agent";
+import { AlertInput } from "../utils/alert.type";
+import { createAddress, createTransactionHash } from "../utils";
+
+let alert: Alert;
+let alertEvent: AlertEvent;
+let alertInput: AlertInput;
+
+const createAlert = (alertInput: AlertInput): Alert => {
+  return Alert.fromObject(alertInput);
+};
+
+const getLabel = (name: string, value: string): Label => {
+  return Label.fromObject({
+    entityType: EntityType.Transaction,
+    entity: createTransactionHash({ to: createAddress("0x1234") }),
+    label: name,
+    confidence: 1,
+    metadata: { value: value },
+  });
+};
+
+const getAlertInput = (): AlertInput => {
+  let alertInput: AlertInput = {
+    addresses: [createAddress("0x1234"), createAddress("0x5678"), createAddress("0x9abc")],
+    alertId: createTransactionHash({ to: createAddress("0x1234") }),
+    hash: createTransactionHash({ to: createAddress("0x45678987654") }),
+    contracts: [
+      { address: createAddress("0x1234"), name: "Contract1" },
+      { address: createAddress("0x5678"), name: "Contract2" },
+      { address: createAddress("0x9abc"), name: "Contract3" },
+    ],
+    createdAt: "2021-01-01T00:00:00.000Z",
+    description: "Test Alert",
+    findingType: "Info",
+    name: "Test Alert",
+    protocol: "Test",
+    scanNodeCount: 1,
+    severity: "Info",
+    alertDocumentType: "Alert",
+    relatedAlerts: [createTransactionHash({ to: createAddress("0x1234") })],
+    chainId: 1,
+    labels: [getLabel("label1", "value1"), getLabel("label2", "value2")],
+    source: {
+      transactionHash: createTransactionHash({ to: createAddress("0x1234") }),
+      block: {
+        timestamp: "2021-01-01T00:00:00.000Z",
+        chainId: 1,
+        hash: createTransactionHash({ to: createAddress("0x1234") }),
+        number: 1,
+      },
+      bot: {
+        id: "botId",
+        reference: "botReference",
+        image: "botImage",
+      },
+      sourceAlert: {
+        hash: createTransactionHash({ to: createAddress("0x1234") }),
+        botId: "botId",
+        timestamp: "2021-01-01T00:00:00.000Z",
+        chainId: 1,
+      },
+    },
+    metadata: {
+      metadata1: "value1",
+      metadata2: "value2",
+    },
+    projects: [
+      {
+        id: "projectId",
+        name: "projectName",
+        contacts: {
+          securityEmailAddress: "securityEmailAddress",
+          generalEmailAddress: "generalEmailAddress",
+        },
+        website: "website",
+        token: {
+          symbol: "symbol",
+          name: "name",
+          decimals: 1,
+          chainId: 1,
+          address: createAddress("0x1234"),
+        },
+        social: {
+          twitter: "twitter",
+          github: "github",
+          everest: "everest",
+          coingecko: "coingecko",
+        },
+      },
+    ],
+    addressBloomFilter: {
+      bitset: "bitset",
+      k: "k",
+      m: "m",
+    },
+  };
+
+  return alertInput;
+};
+
+alertInput = getAlertInput();
+alert = createAlert(alertInput);
+alertEvent = new AlertEvent(alert);
+```
+
 ### runBlock
 
 This is a helper function to simulate the execution of `run block` cli command when the bot has implemented a `handleTransaction` and a `handleBlock`.
