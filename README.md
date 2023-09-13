@@ -407,7 +407,7 @@ There are multiple methods you can use for creating the exact `BlockEvent` you w
 
 ### TestAlertEvent
 
-The concept of a `TestAlertEvent` class does not actually exist. It was not implemented because the `forta-agent` library provides built-in static methods that serve the purpose that `TestAlertEvent` would have fulfilled.
+The concept of a `TestAlertEvent` class does not actually exist. It was not implemented because the `forta-agent` library provides built-in static methods that serve the purpose that `TestAlertEvent` would have fulfilled. Below we are providing some instructions on how to use `forta-agent` to create an `AlertEvent` you could use for testing.
 
 #### Creating Alert
 
@@ -415,7 +415,7 @@ In the `forta-agent` SDK, you'll find a class called `Alert`, which essentially 
 
 - You cannot directly instantiate an `Alert` object through its constructor because it has a private constructor. Instead, there's a static method named `fromObject`.
 - To use it, call `Alert.fromObject(alertInput: AlertInput)`, where `AlertInput` is an interface containing all the properties an `Alert` can have. Each property in `AlertInput` is optional, allowing you to create an `Alert` with only the properties you need for your use case or testing.
-- For more details about `Alert` and its properties, refer to the official [forta-docs](https://docs.forta.network/en/latest/sdk/#alert).
+- For more details about `Alert` and its properties, refer to the official [forta-docs](https://docs.forta.network/en/latest/sdk/#alert), and for more details about `AlertInput`'s properties, refer to our implementation in [alert.type.ts](https://github.com/Macbeth98/general-agents-module/blob/test/alertEvent/src/utils/alert.type.ts#L56-L76).
 
 #### Creating AlertEvent
 
@@ -425,9 +425,9 @@ In the `forta-agent` SDK, you'll find a class called `Alert`, which essentially 
 - All other properties in `AlertEvent` are simply getters, serving as aliases to the property methods of the `Alert` class.
 - To learn more about `AlertEvent` and its properties, consult the official [forta-docs](https://docs.forta.network/en/latest/sdk/#alertevent).
 
-To create an `Alert` object, utilize the static method `Alert.fromObject(alertInput: AlertInput)`, and then proceed to create an `AlertEvent`. Refer to the code snippet below for an example.
+Refer to the code snippet below for an example.
 
-#### How to Use it
+#### Basic Usage:
 
 ```ts
 import { Alert, AlertEvent, EntityType, Label } from "forta-agent";
