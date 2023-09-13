@@ -2,7 +2,7 @@ import VictimIdentifier from "./victim.identifier";
 import fetch from "node-fetch";
 import { Interface } from "ethers/lib/utils";
 import { when } from "jest-when";
-import { AlertsResponse } from "forta-agent/dist/sdk/graphql/forta";
+import { AlertsResponse } from "forta-agent";
 import { ERC20_TRANSFER_EVENT, TOKEN_ABI } from "./helpers/constants";
 import { ethers, Trace } from "forta-agent";
 import { createAddress } from "..";
@@ -149,6 +149,10 @@ const fetchProtocols = () => {
   );
 };
 
+const mockHasAddress = (address: string): boolean => {
+  return address !== ethers.constants.AddressZero;
+};
+
 const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
 describe("Victim Identifier tests suite", () => {
@@ -173,6 +177,9 @@ describe("Victim Identifier tests suite", () => {
             address1: createAddress("0x1234"),
             address2: createAddress("0x5678"),
             address2Again: createAddress("0x5678"),
+          },
+          hasAddress: (address: string): boolean => {
+            return false;
           },
         },
       ],
@@ -202,6 +209,7 @@ describe("Victim Identifier tests suite", () => {
             address2: createAddress("0x5678"),
             address2Again: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
@@ -242,6 +250,7 @@ describe("Victim Identifier tests suite", () => {
             ),
             address10: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
@@ -359,6 +368,7 @@ describe("Victim Identifier tests suite", () => {
             address1again: createAddress("0x1234"),
             address2: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
@@ -450,6 +460,7 @@ describe("Victim Identifier tests suite", () => {
             address1again: createAddress("0x1234"),
             address2: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
@@ -532,6 +543,7 @@ describe("Victim Identifier tests suite", () => {
             address1again: createAddress("0x1234"),
             address2: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
@@ -633,6 +645,7 @@ describe("Victim Identifier tests suite", () => {
             address1again: createAddress("0x1234"),
             address2: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
@@ -976,6 +989,7 @@ describe("Victim Identifier tests suite", () => {
             address1again: createAddress("0x1234"),
             address2: createAddress("0x5678"),
           },
+          hasAddress: mockHasAddress,
         },
       ],
       pageInfo: {
