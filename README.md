@@ -407,7 +407,7 @@ There are multiple methods you can use for creating the exact `BlockEvent` you w
 
 ### TestAlertEvent
 
-The concept of a ` TestAlertEvent`` class does not actually exist. It was not implemented because the  `forta-agent`library provides built-in static methods that serve the purpose that`TestAlertEvent` would have fulfilled.
+The concept of a ` TestAlertEvent` class does not actually exist. It was not implemented because the `forta-agent`library provides built-in static methods that serve the purpose that`TestAlertEvent` would have fulfilled.
 
 #### Creating Alert
 
