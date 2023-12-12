@@ -133,7 +133,7 @@ const testKeys = {
 };
 
 const fetchProtocols = () => {
-  const mockFetch = jest.mocked(fetch, true);
+  const mockFetch = jest.mocked(fetch);
   mockFetch.mockResolvedValueOnce(
     Promise.resolve(
       new Response(
