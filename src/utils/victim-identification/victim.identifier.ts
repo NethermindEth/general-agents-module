@@ -1,5 +1,4 @@
-import { ethers, TransactionEvent, getAlerts } from "forta-agent";
-import { AlertsResponse } from "forta-agent";
+import { ethers, TransactionEvent, getAlerts, Alert, AlertsResponse } from "forta-agent";
 import LRU from "lru-cache";
 import fetch from "node-fetch";
 import AddressesExtractor from "./helpers/addresses.extractor";
@@ -589,18 +588,36 @@ export default class VictimIdentifier extends TokenInfoFetcher {
   // Get the number of occurences of the victims in previously deployed contracts code
   private getVictimOccurences = async (txEvent: TransactionEvent) => {
     const { network: chainId, blockNumber } = txEvent;
-    let blockNumberRange;
+    let alertQueryOptions;
 
     if (!this.init) {
       this.init = true;
-      blockNumberRange = {
-        startBlockNumber: 0,
-        endBlockNumber: blockNumber - 1,
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 3);
+
+      const blockDateRange = {
+        startDate,
+        endDate,
+      };
+      alertQueryOptions = {
+        botIds: PREPARATION_BOT,
+        chainId: chainId,
+        alertId: "SUSPICIOUS-CONTRACT-CREATION",
+        blockDateRange,
+        first: 3000,
       };
     } else {
-      blockNumberRange = {
+      const blockNumberRange = {
         startBlockNumber: blockNumber - 1,
         endBlockNumber: blockNumber - 1,
+      };
+      alertQueryOptions = {
+        botIds: PREPARATION_BOT,
+        chainId: chainId,
+        alertId: "SUSPICIOUS-CONTRACT-CREATION",
+        blockNumberRange,
+        first: 3000,
       };
     }
 
@@ -612,18 +629,17 @@ export default class VictimIdentifier extends TokenInfoFetcher {
       try {
         // Attempt to get the preparation stage alerts
         const preparationStageAlerts: AlertsResponse = await getAlerts({
-          botIds: PREPARATION_BOT,
-          chainId: chainId,
-          blockNumberRange: blockNumberRange,
-          first: 4000,
-          startingCursor: startingCursor,
+          ...alertQueryOptions,
+          startingCursor,
         });
 
         // Loop through the preparation stage alerts, and extract the addresses contained in the metadata
-        preparationStageAlerts.alerts.forEach((alert) => {
+        preparationStageAlerts.alerts.forEach((alert: Alert) => {
           if (alert.metadata) {
             const values: string[] = Object.values(alert.metadata);
-            const victimContracts: string[] = values.filter((value: string) => value.startsWith("0x"));
+            const victimContracts: string[] = values.filter(
+              (value: string) => value.startsWith("0x") && !value.includes(",") && value.length > 10
+            );
             victimContracts.forEach((victim: string) => {
               this.victimOccurrences[victim] = this.victimOccurrences[victim] ? ++this.victimOccurrences[victim] : 1;
             });

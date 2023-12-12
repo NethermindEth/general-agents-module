@@ -2,9 +2,8 @@ import VictimIdentifier from "./victim.identifier";
 import fetch from "node-fetch";
 import { Interface } from "ethers/lib/utils";
 import { when } from "jest-when";
-import { AlertsResponse } from "forta-agent";
 import { ERC20_TRANSFER_EVENT, TOKEN_ABI } from "./helpers/constants";
-import { ethers, Trace } from "forta-agent";
+import { ethers, Trace, AlertsResponse } from "forta-agent";
 import { createAddress } from "..";
 import { TestTransactionEvent, MockEthersProvider } from "../../test";
 

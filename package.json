@@ -36,7 +36,7 @@
     "ethers": "^5.7.2",
     "ethers-multicall": "^0.2.3",
     "evm": "^0.2.0",
-    "forta-agent": "^0.1.40",
+    "forta-agent": "0.1.41",
     "jest-when": "^3.5.1",
     "lru-cache": "^7.12.0",
     "node-fetch": "^2.6.7"

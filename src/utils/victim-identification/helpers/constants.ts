@@ -2,7 +2,7 @@ import { ethers } from "forta-agent";
 
 export const MAX_USD_VALUE = 500000;
 
-export const PREPARATION_BOT = ["0x0b241032ca430d9c02eaa6a52d217bbff046f0d1b3f3d2aa928e42a97150ec91"]; // Malicious Contract Creation ML Bot v2
+export const PREPARATION_BOT = ["0x9aaa5cd64000e8ba4fa2718a467b90055b70815d60351914cc1cbe89fe1c404c"]; // Malicious Contract Creation ML Bot v2
 export const SUBGRAPH_URL = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3";
 
 export const ZERO = ethers.constants.Zero;
